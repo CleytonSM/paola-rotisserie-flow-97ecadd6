@@ -179,6 +179,20 @@ export const deleteAccountReceivable = async (id: string): Promise<DatabaseResul
   return { data, error };
 };
 
+export const updateAccountReceivableStatus = async (
+  id: string, 
+  status: string
+): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_receivable')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
 // ============= DASHBOARD ANALYTICS =============
 export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
   const weekAgo = new Date();
