@@ -26,9 +26,11 @@ export const getSuppliers = async (): Promise<DatabaseResult<any[]>> => {
 
 export const createSupplier = async (supplier: any): Promise<DatabaseResult<any>> => {
   // Remove formatação do CNPJ (apenas números)
+  // Telefone é mantido formatado para exibição
   const cleanedSupplier = {
     ...supplier,
-    cnpj: supplier.cnpj ? supplier.cnpj.replace(/\D/g, '') : null
+    cnpj: supplier.cnpj ? supplier.cnpj.replace(/\D/g, '') : null,
+    email: supplier.email?.trim() || null
   };
   
   const { data, error } = await supabase
