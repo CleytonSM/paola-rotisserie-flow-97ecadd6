@@ -25,9 +25,15 @@ export const getSuppliers = async (): Promise<DatabaseResult<any[]>> => {
 };
 
 export const createSupplier = async (supplier: any): Promise<DatabaseResult<any>> => {
+  // Remove formatação do CNPJ (apenas números)
+  const cleanedSupplier = {
+    ...supplier,
+    cnpj: supplier.cnpj ? supplier.cnpj.replace(/\D/g, '') : null
+  };
+  
   const { data, error } = await supabase
     .from('suppliers')
-    .insert(supplier)
+    .insert(cleanedSupplier)
     .select()
     .single();
   
@@ -52,9 +58,15 @@ export const getClients = async (searchTerm?: string): Promise<DatabaseResult<an
 };
 
 export const createClient = async (client: any): Promise<DatabaseResult<any>> => {
+  // Remove formatação do CPF/CNPJ (apenas números)
+  const cleanedClient = {
+    ...client,
+    cpf_cnpj: client.cpf_cnpj ? client.cpf_cnpj.replace(/\D/g, '') : null
+  };
+  
   const { data, error } = await supabase
     .from('clients')
-    .insert(client)
+    .insert(cleanedClient)
     .select()
     .single();
   
