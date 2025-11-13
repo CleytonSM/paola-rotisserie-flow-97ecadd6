@@ -3,15 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { StatsCard } from "@/components/StatsCard";
 import { TrendingUp, TrendingDown, AlertCircle, DollarSign } from "lucide-react";
-import { getWeeklyBalance, getPendingCounts } from "@/services/database";
+import { getWeeklyBalance, getPendingCounts, getProfitHistory } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Line, LineChart, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState({ balance: 0, totalReceivable: 0, totalPayable: 0 });
   const [pending, setPending] = useState({ pendingPayables: 0, pendingReceivables: 0 });
+  const [profitData, setProfitData] = useState<any[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -30,9 +34,10 @@ export default function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     
-    const [balanceResult, pendingResult] = await Promise.all([
+    const [balanceResult, pendingResult, profitResult] = await Promise.all([
       getWeeklyBalance(),
       getPendingCounts(),
+      getProfitHistory(),
     ]);
 
     if (balanceResult.error) {
@@ -47,6 +52,12 @@ export default function Dashboard() {
       setPending(pendingResult.data);
     }
 
+    if (profitResult.error) {
+      toast.error("Erro ao carregar histórico de lucros");
+    } else if (profitResult.data) {
+      setProfitData(profitResult.data);
+    }
+
     setLoading(false);
   };
 
@@ -55,6 +66,12 @@ export default function Dashboard() {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  };
+
+  const formatMonthYear = (monthStr: string) => {
+    const [year, month] = monthStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
   };
 
   return (
@@ -155,6 +172,88 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Lucros: Histórico e Projeção</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="h-80 bg-muted/50 animate-pulse rounded-lg" />
+            ) : (
+              <ChartContainer
+                config={{
+                  profit: {
+                    label: "Lucro",
+                    color: "hsl(var(--primary))",
+                  },
+                }}
+                className="h-80"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={profitData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="month" 
+                      tickFormatter={formatMonthYear}
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => formatCurrency(value)}
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <ChartTooltip 
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-background border border-border p-3 rounded-lg shadow-lg">
+                            <p className="font-semibold">{formatMonthYear(data.month)}</p>
+                            <p className={`text-sm ${data.profit >= 0 ? 'text-secondary' : 'text-destructive'}`}>
+                              {formatCurrency(data.profit)}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {data.type === 'historical' ? 'Histórico' : 'Projeção'}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend 
+                      formatter={(value, entry: any) => {
+                        const type = entry.payload?.type;
+                        return type === 'historical' ? 'Histórico' : 'Projeção';
+                      }}
+                    />
+                    {profitData.filter(d => d.type === 'historical').length > 0 && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="profit" 
+                        data={profitData.filter(d => d.type === 'historical')}
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                        dot={{ fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2, r: 4 }}
+                        name="Histórico"
+                      />
+                    )}
+                    {profitData.filter(d => d.type === 'projected').length > 0 && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="profit" 
+                        data={profitData.filter(d => d.type === 'projected')}
+                        stroke="hsl(var(--secondary))" 
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={{ fill: 'hsl(var(--secondary))', stroke: 'white', strokeWidth: 2, r: 4 }}
+                        name="Projeção"
+                      />
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
