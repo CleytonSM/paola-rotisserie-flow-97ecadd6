@@ -48,6 +48,12 @@ export const Header = () => {
             Contas a Receber
           </Link>
           <Link 
+            to="/suppliers" 
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            Fornecedores
+          </Link>
+          <Link 
             to="/reports" 
             className="text-sm font-medium text-foreground hover:text-primary transition-colors"
           >
@@ -99,6 +105,13 @@ export const Header = () => {
               className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
             >
               Contas a Receber
+            </Link>
+            <Link 
+              to="/suppliers" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+            >
+              Fornecedores
             </Link>
             <Link 
               to="/reports" 
