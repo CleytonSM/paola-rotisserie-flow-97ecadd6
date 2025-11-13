@@ -20,6 +20,7 @@ const payableSchema = z.object({
   payment_method: z.string(),
   notes: z.string().optional(),
   due_date: z.string().optional(),
+  status: z.string().optional(),
 });
 
 export default function Payable() {
@@ -37,6 +38,7 @@ export default function Payable() {
     payment_method: "cash",
     notes: "",
     due_date: "",
+    status: "pending",
   });
 
   useEffect(() => {
@@ -81,6 +83,7 @@ export default function Payable() {
       payment_method: account.payment_method,
       notes: account.notes || "",
       due_date: account.due_date ? new Date(account.due_date).toISOString().split('T')[0] : "",
+      status: account.status || "pending",
     });
     setDialogOpen(true);
   };
@@ -127,7 +130,7 @@ export default function Payable() {
         toast.success(editingId ? "Conta atualizada com sucesso!" : "Conta criada com sucesso!");
         setDialogOpen(false);
         setEditingId(null);
-        setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "", due_date: "" });
+        setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "", due_date: "", status: "pending" });
         loadData();
       }
     } catch (err) {
@@ -143,7 +146,9 @@ export default function Payable() {
       toast.error("Erro ao atualizar status");
     } else {
       toast.success("Status atualizado!");
-      loadData();
+      setAccounts(accounts.map(acc => 
+        acc.id === id ? { ...acc, status: newStatus } : acc
+      ));
     }
   };
 
@@ -195,7 +200,7 @@ export default function Payable() {
             setDialogOpen(open);
             if (!open) {
               setEditingId(null);
-              setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "", due_date: "" });
+              setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "", due_date: "", status: "pending" });
             }
           }}>
             <DialogTrigger asChild>
@@ -260,6 +265,19 @@ export default function Payable() {
                     value={formData.due_date}
                     onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="paid">Pago</SelectItem>
+                      <SelectItem value="overdue">Vencido</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
                   {editingId ? "Salvar" : "Adicionar"}
