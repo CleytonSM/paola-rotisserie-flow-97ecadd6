@@ -1,73 +1,129 @@
-# Welcome to your Lovable project
+# Paola Gonçalves Rotisserie - Sistema de Gestão Financeira
 
-## Project info
+Sistema completo de gestão financeira para rotisseria, desenvolvido com React + Vite + Lovable Cloud.
 
-**URL**: https://lovable.dev/projects/682a34e4-8bba-466c-a7d8-1a5e91484a26
+## 🚀 Tecnologias
 
-## How can I edit this code?
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS com design system personalizado
+- **Backend**: Lovable Cloud (Supabase)
+- **Validação**: Zod
+- **Roteamento**: React Router v6
+- **UI Components**: Shadcn/ui
+- **Notificações**: Sonner
 
-There are several ways of editing your application.
+## 🎨 Design System
 
-**Use Lovable**
+- **Cor Primária**: #FFC107 (Amarelo vibrante)
+- **Cor Secundária**: #4CAF50 (Verde folha)
+- **Tipografia**: 
+  - Headers: Playfair Display
+  - Body: Inter
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/682a34e4-8bba-466c-a7d8-1a5e91484a26) and start prompting.
+## 📋 Funcionalidades
 
-Changes made via Lovable will be committed automatically to this repo.
+### ✅ Implementado
 
-**Use your preferred IDE**
+- **Autenticação**: Login e cadastro com email/senha
+- **Dashboard**: Visão geral financeira dos últimos 7 dias
+  - Saldo semanal
+  - Total recebido/pago
+  - Contas pendentes
+- **Contas a Pagar**: 
+  - Adicionar pagamentos
+  - Vincular fornecedores
+  - Marcar como pago
+- **Contas a Receber**: 
+  - Adicionar entradas
+  - Busca de clientes por nome/CPF/CNPJ
+  - Cálculo automático de taxas para cartão
+- **Relatórios**: 
+  - Visão completa do fluxo financeiro
+  - Export PDF (em desenvolvimento)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🗄️ Banco de Dados
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+O sistema usa as seguintes tabelas:
 
-Follow these steps:
+- `suppliers` - Fornecedores
+- `clients` - Clientes (com CPF/CNPJ)
+- `accounts_payable` - Contas a pagar
+- `accounts_receivable` - Contas a receber (com cálculo automático de net_value)
+- `sales` - Vendas (hub para expansão futura)
+- `purchases` - Compras (hub para expansão futura)
+- `sales_items` - Itens de venda (preparado para futuro)
+- `purchase_items` - Itens de compra (preparado para futuro)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🔒 Segurança
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Row Level Security (RLS) ativado em todas as tabelas
+- Políticas de acesso para usuários autenticados
+- Validação de entrada com Zod
+- Auto-confirm email habilitado (para testes)
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 🏗️ Arquitetura
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Camada de Serviços Abstraída
+
+Todo acesso ao backend está isolado em `/src/services`:
+
+- **`database.ts`**: Abstração completa de queries/mutations
+  - Expõe interfaces genéricas `DatabaseQuery<T>` e `DatabaseMutation<T>`
+  - Implementação atual usa Supabase, mas pode ser trocada facilmente
+  - Exemplo: `getSuppliers()`, `createAccountPayable()`, etc.
+
+- **`auth.ts`**: Abstração de autenticação
+  - Interface `AuthResult` genérica
+  - Funções: `signIn()`, `signUp()`, `signOut()`, `getCurrentSession()`
+
+### Por que essa arquitetura?
+
+Esta estrutura permite **migração futura fácil** para backend dedicado:
+
+```typescript
+// Hoje (Supabase interno)
+export const getSuppliers = async () => {
+  const { data, error } = await supabase.from('suppliers').select('*');
+  return { data, error };
+};
+
+// Amanhã (API externa - apenas trocar implementação)
+export const getSuppliers = async () => {
+  const response = await fetch('/api/suppliers');
+  const data = await response.json();
+  return { data, error: null };
+};
 ```
 
-**Edit a file directly in GitHub**
+**Nenhum componente conhece Supabase diretamente!**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🚀 Deploy
 
-**Use GitHub Codespaces**
+Este projeto está hospedado no Lovable. Para atualizar:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Edite o código via Lovable
+2. Clique em "Publish" no canto superior direito
+3. Suas mudanças estarão ao vivo!
 
-## What technologies are used for this project?
+## 📱 Responsividade
 
-This project is built with:
+Interface 100% responsiva:
+- Mobile-first design
+- Menu hamburguer para navegação mobile
+- Cards e tabelas adaptáveis
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🔄 Próximos Passos
 
-## How can I deploy this project?
+- [ ] Implementar export PDF com jsPDF
+- [ ] Adicionar gráficos com Chart.js
+- [ ] Sistema de produtos e estoque
+- [ ] Notificações por email (Resend)
+- [ ] Relatórios customizáveis
 
-Simply open [Lovable](https://lovable.dev/projects/682a34e4-8bba-466c-a7d8-1a5e91484a26) and click on Share -> Publish.
+## 📄 Licença
 
-## Can I connect a custom domain to my Lovable project?
+Sistema desenvolvido para Paola Gonçalves Rotisserie.
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+**Bem-vindo à Paola Gonçalves Rotisserie** 🍰✨

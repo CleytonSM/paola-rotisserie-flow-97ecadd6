@@ -1,0 +1,177 @@
+/**
+ * Camada de abstração para acesso ao banco de dados
+ * Esta camada isola a implementação do Supabase, facilitando migração futura
+ */
+
+import { supabase } from "@/integrations/supabase/client";
+
+// Tipos genéricos para queries
+export type DatabaseQuery<T> = (params?: any) => Promise<DatabaseResult<T>>;
+export type DatabaseMutation<T> = (data: any) => Promise<DatabaseResult<T>>;
+
+export interface DatabaseResult<T> {
+  data: T | null;
+  error: Error | null;
+}
+
+// ============= SUPPLIERS =============
+export const getSuppliers = async (): Promise<DatabaseResult<any[]>> => {
+  const { data, error } = await supabase
+    .from('suppliers')
+    .select('*')
+    .order('name');
+  
+  return { data, error };
+};
+
+export const createSupplier = async (supplier: any): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('suppliers')
+    .insert(supplier)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+// ============= CLIENTS =============
+export const getClients = async (searchTerm?: string): Promise<DatabaseResult<any[]>> => {
+  let query = supabase.from('clients').select('*');
+  
+  if (searchTerm) {
+    query = query.or(`name.ilike.%${searchTerm}%,cpf_cnpj.ilike.%${searchTerm}%`);
+  }
+  
+  const { data, error } = await query.order('name');
+  return { data, error };
+};
+
+export const createClient = async (client: any): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('clients')
+    .insert(client)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+// ============= ACCOUNTS PAYABLE =============
+export const getAccountsPayable = async (): Promise<DatabaseResult<any[]>> => {
+  const { data, error } = await supabase
+    .from('accounts_payable')
+    .select(`
+      *,
+      supplier:suppliers(id, name)
+    `)
+    .order('payment_date', { ascending: false });
+  
+  return { data, error };
+};
+
+export const createAccountPayable = async (account: any): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_payable')
+    .insert(account)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+export const updateAccountPayableStatus = async (
+  id: string, 
+  status: string
+): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_payable')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+// ============= ACCOUNTS RECEIVABLE =============
+export const getAccountsReceivable = async (): Promise<DatabaseResult<any[]>> => {
+  const { data, error } = await supabase
+    .from('accounts_receivable')
+    .select(`
+      *,
+      client:clients(id, name, cpf_cnpj)
+    `)
+    .order('receipt_date', { ascending: false });
+  
+  return { data, error };
+};
+
+export const createAccountReceivable = async (account: any): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_receivable')
+    .insert(account)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+// ============= DASHBOARD ANALYTICS =============
+export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  
+  // Buscar entradas
+  const { data: receivables, error: recError } = await supabase
+    .from('accounts_receivable')
+    .select('net_value')
+    .gte('receipt_date', weekAgo.toISOString())
+    .eq('status', 'received');
+  
+  if (recError) return { data: null, error: recError };
+  
+  // Buscar saídas
+  const { data: payables, error: payError } = await supabase
+    .from('accounts_payable')
+    .select('value')
+    .gte('payment_date', weekAgo.toISOString())
+    .eq('status', 'paid');
+  
+  if (payError) return { data: null, error: payError };
+  
+  const totalReceivable = receivables?.reduce((sum, r) => sum + Number(r.net_value), 0) || 0;
+  const totalPayable = payables?.reduce((sum, p) => sum + Number(p.value), 0) || 0;
+  
+  return {
+    data: {
+      balance: totalReceivable - totalPayable,
+      totalReceivable,
+      totalPayable,
+    },
+    error: null,
+  };
+};
+
+export const getPendingCounts = async (): Promise<DatabaseResult<any>> => {
+  const { data: pendingPayables, error: payError } = await supabase
+    .from('accounts_payable')
+    .select('id', { count: 'exact' })
+    .eq('status', 'pending');
+  
+  if (payError) return { data: null, error: payError };
+  
+  const { data: pendingReceivables, error: recError } = await supabase
+    .from('accounts_receivable')
+    .select('id', { count: 'exact' })
+    .eq('status', 'pending');
+  
+  if (recError) return { data: null, error: recError };
+  
+  return {
+    data: {
+      pendingPayables: pendingPayables?.length || 0,
+      pendingReceivables: pendingReceivables?.length || 0,
+    },
+    error: null,
+  };
+};
