@@ -114,6 +114,16 @@ export default function Payable() {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
+  const translatePaymentMethod = (method: string) => {
+    const translations: Record<string, string> = {
+      'cash': 'Dinheiro',
+      'card': 'Cartão',
+      'pix': 'PIX',
+      'boleto': 'Boleto'
+    };
+    return translations[method] || method;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -237,7 +247,7 @@ export default function Payable() {
                   <div className="flex justify-between items-center">
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">
-                        Método: <span className="font-medium text-foreground">{account.payment_method}</span>
+                        Método: <span className="font-medium text-foreground">{translatePaymentMethod(account.payment_method)}</span>
                       </p>
                       {account.notes && (
                         <p className="text-sm text-muted-foreground">
