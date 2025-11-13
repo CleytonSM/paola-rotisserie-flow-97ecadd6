@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Payable from "./pages/Payable";
 import Receivable from "./pages/Receivable";
 import Reports from "./pages/Reports";
+import Suppliers from "./pages/Suppliers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/payable" element={<Payable />} />
           <Route path="/receivable" element={<Receivable />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/suppliers" element={<Suppliers />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
