@@ -54,6 +54,12 @@ export const Header = () => {
             Fornecedores
           </Link>
           <Link 
+            to="/clients" 
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            Clientes
+          </Link>
+          <Link 
             to="/reports" 
             className="text-sm font-medium text-foreground hover:text-primary transition-colors"
           >
@@ -112,6 +118,13 @@ export const Header = () => {
               className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
             >
               Fornecedores
+            </Link>
+            <Link 
+              to="/clients" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+            >
+              Clientes
             </Link>
             <Link 
               to="/reports" 
