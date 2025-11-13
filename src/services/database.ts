@@ -252,3 +252,83 @@ export const getPendingCounts = async (): Promise<DatabaseResult<any>> => {
     error: null,
   };
 };
+
+export const getProfitHistory = async (): Promise<DatabaseResult<{
+  month: string;
+  profit: number;
+  type: 'historical' | 'projected';
+}[]>> => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const { data: receivables, error: receivablesError } = await supabase
+      .from('accounts_receivable')
+      .select('net_value, receipt_date')
+      .gte('receipt_date', sixMonthsAgo.toISOString());
+
+    if (receivablesError) throw receivablesError;
+
+    const { data: payables, error: payablesError } = await supabase
+      .from('accounts_payable')
+      .select('value, payment_date')
+      .gte('payment_date', sixMonthsAgo.toISOString());
+
+    if (payablesError) throw payablesError;
+
+    // Agrupar por mês
+    const monthlyData = new Map<string, { receivable: number; payable: number }>();
+
+    receivables?.forEach((r) => {
+      const month = new Date(r.receipt_date).toISOString().slice(0, 7);
+      const current = monthlyData.get(month) || { receivable: 0, payable: 0 };
+      current.receivable += Number(r.net_value);
+      monthlyData.set(month, current);
+    });
+
+    payables?.forEach((p) => {
+      const month = new Date(p.payment_date).toISOString().slice(0, 7);
+      const current = monthlyData.get(month) || { receivable: 0, payable: 0 };
+      current.payable += Number(p.value);
+      monthlyData.set(month, current);
+    });
+
+    // Converter para array e ordenar
+    const historical = Array.from(monthlyData.entries())
+      .map(([month, data]) => ({
+        month,
+        profit: data.receivable - data.payable,
+        type: 'historical' as const,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    // Calcular projeção simples (média dos últimos 3 meses)
+    const lastThreeMonths = historical.slice(-3);
+    const avgProfit = lastThreeMonths.length > 0
+      ? lastThreeMonths.reduce((sum, m) => sum + m.profit, 0) / lastThreeMonths.length
+      : 0;
+
+    // Gerar 3 meses de projeção
+    const projected = [];
+    const now = new Date();
+    for (let i = 1; i <= 3; i++) {
+      const projectedDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      projected.push({
+        month: projectedDate.toISOString().slice(0, 7),
+        profit: avgProfit,
+        type: 'projected' as const,
+      });
+    }
+
+    return {
+      data: [...historical, ...projected],
+      error: null,
+    };
+  } catch (error) {
+    console.error('Error getting profit history:', error);
+    return {
+      data: null,
+      error: error as Error,
+    };
+  }
+};
