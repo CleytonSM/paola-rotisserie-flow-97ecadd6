@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search } from "lucide-react";
-import { getAccountsReceivable, createAccountReceivable, getClients } from "@/services/database";
+import { Plus, Search, Pencil } from "lucide-react";
+import { getAccountsReceivable, createAccountReceivable, updateAccountReceivable, getClients } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -28,6 +28,7 @@ export default function Receivable() {
   const [clients, setClients] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     client_id: "",
     gross_value: "",
@@ -84,6 +85,18 @@ export default function Receivable() {
     }
   };
 
+  const handleEdit = (account: any) => {
+    setEditingId(account.id);
+    setFormData({
+      client_id: account.client_id || "",
+      gross_value: account.gross_value.toString(),
+      payment_method: account.payment_method,
+      card_brand: account.card_brand || "",
+      tax_rate: account.tax_rate?.toString() || "",
+    });
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -96,13 +109,16 @@ export default function Receivable() {
         tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) : undefined,
       });
 
-      const { error } = await createAccountReceivable(validated);
+      const { error } = editingId 
+        ? await updateAccountReceivable(editingId, validated)
+        : await createAccountReceivable(validated);
 
       if (error) {
-        toast.error("Erro ao criar entrada");
+        toast.error(editingId ? "Erro ao atualizar entrada" : "Erro ao criar entrada");
       } else {
-        toast.success("Entrada criada com sucesso!");
+        toast.success(editingId ? "Entrada atualizada com sucesso!" : "Entrada criada com sucesso!");
         setDialogOpen(false);
+        setEditingId(null);
         setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "" });
         loadData();
       }
@@ -150,7 +166,13 @@ export default function Receivable() {
             <p className="text-muted-foreground">Gerencie seus recebimentos</p>
           </div>
           
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setEditingId(null);
+              setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "" });
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-secondary hover:bg-secondary-hover text-secondary-foreground">
                 <Plus className="h-4 w-4 mr-2" />
@@ -159,7 +181,7 @@ export default function Receivable() {
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Adicionar Entrada</DialogTitle>
+                <DialogTitle>{editingId ? "Editar Entrada" : "Adicionar Entrada"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -226,7 +248,7 @@ export default function Receivable() {
                   </>
                 )}
                 <Button type="submit" className="w-full bg-secondary hover:bg-secondary-hover">
-                  Adicionar
+                  {editingId ? "Salvar" : "Adicionar"}
                 </Button>
               </form>
             </DialogContent>
@@ -272,7 +294,7 @@ export default function Receivable() {
               <Card key={account.id} className="border-secondary/20">
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-lg">
                         {account.client?.name || "Venda avulsa"}
                       </CardTitle>
@@ -281,15 +303,25 @@ export default function Receivable() {
                         {account.client?.cpf_cnpj && ` • ${maskCpfCnpj(account.client.cpf_cnpj)}`}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-secondary">
-                        {formatCurrency(account.net_value)}
-                      </p>
-                      {account.gross_value !== account.net_value && (
-                        <p className="text-xs text-muted-foreground line-through">
-                          {formatCurrency(account.gross_value)}
+                    <div className="flex items-start gap-3">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleEdit(account)}
+                        className="h-8 w-8 text-muted-foreground hover:text-secondary"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-secondary">
+                          {formatCurrency(account.net_value)}
                         </p>
-                      )}
+                        {account.gross_value !== account.net_value && (
+                          <p className="text-xs text-muted-foreground line-through">
+                            {formatCurrency(account.gross_value)}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>

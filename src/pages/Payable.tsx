@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Check } from "lucide-react";
-import { getAccountsPayable, createAccountPayable, getSuppliers, updateAccountPayableStatus } from "@/services/database";
+import { Plus, Check, Pencil } from "lucide-react";
+import { getAccountsPayable, createAccountPayable, updateAccountPayable, getSuppliers, updateAccountPayableStatus } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -26,6 +26,7 @@ export default function Payable() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     supplier_id: "",
     value: "",
@@ -67,6 +68,17 @@ export default function Payable() {
     setLoading(false);
   };
 
+  const handleEdit = (account: any) => {
+    setEditingId(account.id);
+    setFormData({
+      supplier_id: account.supplier_id || "",
+      value: account.value.toString(),
+      payment_method: account.payment_method,
+      notes: account.notes || "",
+    });
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -76,16 +88,20 @@ export default function Payable() {
         value: parseFloat(formData.value),
       });
 
-      const { error } = await createAccountPayable({
-        ...validated,
-        status: "paid",
-      });
+      const accountData = editingId 
+        ? validated 
+        : { ...validated, status: "paid" };
+
+      const { error } = editingId
+        ? await updateAccountPayable(editingId, accountData)
+        : await createAccountPayable(accountData);
 
       if (error) {
-        toast.error("Erro ao criar conta");
+        toast.error(editingId ? "Erro ao atualizar conta" : "Erro ao criar conta");
       } else {
-        toast.success("Conta criada com sucesso!");
+        toast.success(editingId ? "Conta atualizada com sucesso!" : "Conta criada com sucesso!");
         setDialogOpen(false);
+        setEditingId(null);
         setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "" });
         loadData();
       }
@@ -135,7 +151,13 @@ export default function Payable() {
             <p className="text-muted-foreground">Gerencie seus pagamentos</p>
           </div>
           
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setEditingId(null);
+              setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "" });
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary-hover text-primary-foreground">
                 <Plus className="h-4 w-4 mr-2" />
@@ -144,7 +166,7 @@ export default function Payable() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Adicionar Conta a Pagar</DialogTitle>
+                <DialogTitle>{editingId ? "Editar Conta a Pagar" : "Adicionar Conta a Pagar"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -192,7 +214,7 @@ export default function Payable() {
                   />
                 </div>
                 <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
-                  Adicionar
+                  {editingId ? "Salvar" : "Adicionar"}
                 </Button>
               </form>
             </DialogContent>
@@ -221,7 +243,7 @@ export default function Payable() {
               <Card key={account.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-lg">
                         {account.supplier?.name || "Sem fornecedor"}
                       </CardTitle>
@@ -229,17 +251,27 @@ export default function Payable() {
                         {formatDate(account.payment_date)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-destructive">
-                        {formatCurrency(account.value)}
-                      </p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        account.status === 'paid' 
-                          ? 'bg-secondary/20 text-secondary' 
-                          : 'bg-primary/20 text-primary-foreground'
-                      }`}>
-                        {account.status === 'paid' ? 'Pago' : 'Pendente'}
-                      </span>
+                    <div className="flex items-start gap-3">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleEdit(account)}
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-destructive">
+                          {formatCurrency(account.value)}
+                        </p>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          account.status === 'paid' 
+                            ? 'bg-secondary/20 text-secondary' 
+                            : 'bg-primary/20 text-primary-foreground'
+                        }`}>
+                          {account.status === 'paid' ? 'Pago' : 'Pendente'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
