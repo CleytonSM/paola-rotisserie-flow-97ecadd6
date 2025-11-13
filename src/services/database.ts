@@ -110,6 +110,20 @@ export const updateAccountPayableStatus = async (
   return { data, error };
 };
 
+export const updateAccountPayable = async (
+  id: string,
+  account: any
+): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_payable')
+    .update(account)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
 // ============= ACCOUNTS RECEIVABLE =============
 export const getAccountsReceivable = async (): Promise<DatabaseResult<any[]>> => {
   const { data, error } = await supabase
@@ -127,6 +141,20 @@ export const createAccountReceivable = async (account: any): Promise<DatabaseRes
   const { data, error } = await supabase
     .from('accounts_receivable')
     .insert(account)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+export const updateAccountReceivable = async (
+  id: string,
+  account: any
+): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_receivable')
+    .update(account)
+    .eq('id', id)
     .select()
     .single();
   
