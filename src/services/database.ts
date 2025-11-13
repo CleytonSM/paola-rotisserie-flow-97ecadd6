@@ -39,7 +39,12 @@ export const getClients = async (searchTerm?: string): Promise<DatabaseResult<an
   let query = supabase.from('clients').select('*');
   
   if (searchTerm) {
-    query = query.or(`name.ilike.%${searchTerm}%,cpf_cnpj.ilike.%${searchTerm}%`);
+    // Sanitize input to prevent SQL injection - escape wildcards and limit length
+    const sanitized = searchTerm
+      .slice(0, 100) // Max 100 characters
+      .replace(/[%_]/g, '\\$&'); // Escape SQL wildcards
+    
+    query = query.or(`name.ilike.%${sanitized}%,cpf_cnpj.ilike.%${sanitized}%`);
   }
   
   const { data, error } = await query.order('name');
