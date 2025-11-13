@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { getAccountsReceivable, createAccountReceivable, updateAccountReceivable, deleteAccountReceivable, getClients } from "@/services/database";
+import { getAccountsReceivable, createAccountReceivable, updateAccountReceivable, deleteAccountReceivable, getClients, updateAccountReceivableStatus } from "@/services/database";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ const receivableSchema = z.object({
   payment_method: z.string(),
   card_brand: z.string().optional(),
   tax_rate: z.number().min(0).max(100).optional(),
+  due_date: z.string().optional(),
 });
 
 export default function Receivable() {
@@ -38,6 +39,7 @@ export default function Receivable() {
     payment_method: "cash",
     card_brand: "",
     tax_rate: "",
+    due_date: "",
   });
 
   useEffect(() => {
@@ -96,6 +98,7 @@ export default function Receivable() {
       payment_method: account.payment_method,
       card_brand: account.card_brand || "",
       tax_rate: account.tax_rate?.toString() || "",
+      due_date: account.due_date ? new Date(account.due_date).toISOString().split('T')[0] : "",
     });
     setDialogOpen(true);
   };
@@ -141,7 +144,7 @@ export default function Receivable() {
         toast.success(editingId ? "Entrada atualizada com sucesso!" : "Entrada criada com sucesso!");
         setDialogOpen(false);
         setEditingId(null);
-        setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "" });
+        setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "", due_date: "" });
         loadData();
       }
     } catch (err) {
@@ -169,6 +172,31 @@ export default function Receivable() {
     return translations[method] || method;
   };
 
+  const getAccountStatus = (account: any) => {
+    if (account.status === 'received') return 'received';
+    if (account.due_date && new Date(account.due_date) < new Date()) return 'overdue';
+    return 'pending';
+  };
+
+  const translateStatus = (status: string) => {
+    const translations: Record<string, string> = {
+      'received': 'Recebido',
+      'pending': 'Pendente',
+      'overdue': 'Vencido'
+    };
+    return translations[status] || status;
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    const { error } = await updateAccountReceivableStatus(id, newStatus);
+    if (error) {
+      toast.error("Erro ao atualizar status");
+    } else {
+      toast.success("Status atualizado!");
+      loadData();
+    }
+  };
+
   const maskCpfCnpj = (value: string) => {
     if (!value) return "";
     if (value.length === 11) {
@@ -192,7 +220,7 @@ export default function Receivable() {
             setDialogOpen(open);
             if (!open) {
               setEditingId(null);
-              setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "" });
+              setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "", due_date: "" });
             }
           }}>
             <DialogTrigger asChild>

@@ -19,6 +19,7 @@ const payableSchema = z.object({
   value: z.number().positive("Valor deve ser positivo"),
   payment_method: z.string(),
   notes: z.string().optional(),
+  due_date: z.string().optional(),
 });
 
 export default function Payable() {
@@ -35,6 +36,7 @@ export default function Payable() {
     value: "",
     payment_method: "cash",
     notes: "",
+    due_date: "",
   });
 
   useEffect(() => {
@@ -78,6 +80,7 @@ export default function Payable() {
       value: account.value.toString(),
       payment_method: account.payment_method,
       notes: account.notes || "",
+      due_date: account.due_date ? new Date(account.due_date).toISOString().split('T')[0] : "",
     });
     setDialogOpen(true);
   };
@@ -112,7 +115,7 @@ export default function Payable() {
 
       const accountData = editingId 
         ? validated 
-        : { ...validated, status: "paid" };
+        : { ...validated, status: "pending" };
 
       const { error } = editingId
         ? await updateAccountPayable(editingId, accountData)
@@ -124,7 +127,7 @@ export default function Payable() {
         toast.success(editingId ? "Conta atualizada com sucesso!" : "Conta criada com sucesso!");
         setDialogOpen(false);
         setEditingId(null);
-        setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "" });
+        setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "", due_date: "" });
         loadData();
       }
     } catch (err) {
@@ -134,12 +137,12 @@ export default function Payable() {
     }
   };
 
-  const handleMarkAsPaid = async (id: string) => {
-    const { error } = await updateAccountPayableStatus(id, "paid");
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    const { error } = await updateAccountPayableStatus(id, newStatus);
     if (error) {
       toast.error("Erro ao atualizar status");
     } else {
-      toast.success("Marcado como pago!");
+      toast.success("Status atualizado!");
       loadData();
     }
   };
@@ -162,6 +165,21 @@ export default function Payable() {
     return translations[method] || method;
   };
 
+  const getAccountStatus = (account: any) => {
+    if (account.status === 'paid') return 'paid';
+    if (account.due_date && new Date(account.due_date) < new Date()) return 'overdue';
+    return 'pending';
+  };
+
+  const translateStatus = (status: string) => {
+    const translations: Record<string, string> = {
+      'paid': 'Pago',
+      'pending': 'Pendente',
+      'overdue': 'Vencido'
+    };
+    return translations[status] || status;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -177,7 +195,7 @@ export default function Payable() {
             setDialogOpen(open);
             if (!open) {
               setEditingId(null);
-              setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "" });
+              setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "", due_date: "" });
             }
           }}>
             <DialogTrigger asChild>
@@ -235,6 +253,14 @@ export default function Payable() {
                     placeholder="Ex: Compra semanal"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Data de Vencimento</Label>
+                  <Input
+                    type="date"
+                    value={formData.due_date}
+                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  />
+                </div>
                 <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
                   {editingId ? "Salvar" : "Adicionar"}
                 </Button>
@@ -270,8 +296,13 @@ export default function Payable() {
                         {account.supplier?.name || "Sem fornecedor"}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {formatDate(account.payment_date)}
+                        Pagamento: {formatDate(account.payment_date)}
                       </p>
+                      {account.due_date && (
+                        <p className="text-sm text-muted-foreground">
+                          Vencimento: {formatDate(account.due_date)}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-start gap-2">
                       <Button
@@ -294,13 +325,29 @@ export default function Payable() {
                         <p className="text-2xl font-bold text-destructive">
                           {formatCurrency(account.value)}
                         </p>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          account.status === 'paid' 
-                            ? 'bg-secondary/20 text-secondary' 
-                            : 'bg-primary/20 text-primary-foreground'
-                        }`}>
-                          {account.status === 'paid' ? 'Pago' : 'Pendente'}
-                        </span>
+                        <Select 
+                          value={getAccountStatus(account)} 
+                          onValueChange={(value) => handleStatusChange(account.id, value)}
+                        >
+                          <SelectTrigger className="w-[120px] h-8">
+                            <SelectValue>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                getAccountStatus(account) === 'paid' 
+                                  ? 'bg-secondary/20 text-secondary' 
+                                  : getAccountStatus(account) === 'overdue'
+                                  ? 'bg-destructive/20 text-destructive'
+                                  : 'bg-primary/20 text-primary-foreground'
+                              }`}>
+                                {translateStatus(getAccountStatus(account))}
+                              </span>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pendente</SelectItem>
+                            <SelectItem value="paid">Pago</SelectItem>
+                            <SelectItem value="overdue">Vencido</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
@@ -317,17 +364,6 @@ export default function Payable() {
                         </p>
                       )}
                     </div>
-                    {account.status === 'pending' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleMarkAsPaid(account.id)}
-                        className="border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
-                      >
-                        <Check className="h-4 w-4 mr-2" />
-                        Marcar como Pago
-                      </Button>
-                    )}
                   </div>
                 </CardContent>
               </Card>
