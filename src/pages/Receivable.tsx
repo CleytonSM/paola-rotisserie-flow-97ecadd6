@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, Pencil } from "lucide-react";
-import { getAccountsReceivable, createAccountReceivable, updateAccountReceivable, getClients } from "@/services/database";
+import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { getAccountsReceivable, createAccountReceivable, updateAccountReceivable, deleteAccountReceivable, getClients } from "@/services/database";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -29,6 +30,8 @@ export default function Receivable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     client_id: "",
     gross_value: "",
@@ -95,6 +98,25 @@ export default function Receivable() {
       tax_rate: account.tax_rate?.toString() || "",
     });
     setDialogOpen(true);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingId) return;
+
+    const { error } = await deleteAccountReceivable(deletingId);
+    if (error) {
+      toast.error("Erro ao excluir entrada");
+    } else {
+      toast.success("Entrada excluída com sucesso!");
+      loadData();
+    }
+    setDeleteDialogOpen(false);
+    setDeletingId(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -303,7 +325,7 @@ export default function Receivable() {
                         {account.client?.cpf_cnpj && ` • ${maskCpfCnpj(account.client.cpf_cnpj)}`}
                       </p>
                     </div>
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -311,6 +333,14 @@ export default function Receivable() {
                         className="h-8 w-8 text-muted-foreground hover:text-secondary"
                       >
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleDeleteClick(account.id)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-secondary">
@@ -343,6 +373,23 @@ export default function Receivable() {
           </div>
         )}
       </main>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta entrada? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -124,6 +124,15 @@ export const updateAccountPayable = async (
   return { data, error };
 };
 
+export const deleteAccountPayable = async (id: string): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_payable')
+    .delete()
+    .eq('id', id);
+  
+  return { data, error };
+};
+
 // ============= ACCOUNTS RECEIVABLE =============
 export const getAccountsReceivable = async (): Promise<DatabaseResult<any[]>> => {
   const { data, error } = await supabase
@@ -157,6 +166,15 @@ export const updateAccountReceivable = async (
     .eq('id', id)
     .select()
     .single();
+  
+  return { data, error };
+};
+
+export const deleteAccountReceivable = async (id: string): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('accounts_receivable')
+    .delete()
+    .eq('id', id);
   
   return { data, error };
 };
