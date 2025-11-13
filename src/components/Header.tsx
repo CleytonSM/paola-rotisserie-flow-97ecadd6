@@ -1,13 +1,14 @@
 import { Logo } from "./Logo";
 import { Button } from "./ui/button";
 import { LogOut, Menu } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { signOut } from "@/services/auth";
 import { toast } from "sonner";
 import { useState } from "react";
 
 export const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -18,6 +19,13 @@ export const Header = () => {
       toast.success("Logout realizado");
       navigate("/auth");
     }
+  };
+
+  const isSelectedClassName = "text-primary";
+  const isNotSelectedClassName = "text-foreground hover:text-primary";
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -31,37 +39,61 @@ export const Header = () => {
         <nav className="hidden md:flex items-center gap-6">
           <Link 
             to="/" 
-            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/") 
+                ? isSelectedClassName
+                : isNotSelectedClassName
+            }`}
           >
             Dashboard
           </Link>
           <Link 
             to="/payable" 
-            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/payable") 
+                ? isSelectedClassName
+                : isNotSelectedClassName
+            }`}
           >
             Contas a Pagar
           </Link>
           <Link 
             to="/receivable" 
-            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/receivable") 
+                ? isSelectedClassName
+                : isNotSelectedClassName
+            }`}
           >
             Contas a Receber
           </Link>
           <Link 
             to="/suppliers" 
-            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/suppliers") 
+                ? isSelectedClassName
+                : isNotSelectedClassName
+            }`}
           >
             Fornecedores
           </Link>
           <Link 
             to="/clients" 
-            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/clients") 
+                ? isSelectedClassName
+                : isNotSelectedClassName
+            }`}
           >
             Clientes
           </Link>
           <Link 
             to="/reports" 
-            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/reports") 
+                ? isSelectedClassName
+                : isNotSelectedClassName
+            }`}
           >
             Relatórios
           </Link>
@@ -94,42 +126,66 @@ export const Header = () => {
             <Link 
               to="/" 
               onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive("/")
+                  ? "bg-accent text-primary font-semibold"
+                  : "text-foreground hover:bg-accent"
+              }`}
             >
               Dashboard
             </Link>
             <Link 
               to="/payable" 
               onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive("/payable")
+                  ? "bg-accent text-primary font-semibold"
+                  : "text-foreground hover:bg-accent"
+              }`}
             >
               Contas a Pagar
             </Link>
             <Link 
               to="/receivable" 
               onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive("/receivable")
+                  ? "bg-accent text-primary font-semibold"
+                  : "text-foreground hover:bg-accent"
+              }`}
             >
               Contas a Receber
             </Link>
             <Link 
               to="/suppliers" 
               onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive("/suppliers")
+                  ? "bg-accent text-primary font-semibold"
+                  : "text-foreground hover:bg-accent"
+              }`}
             >
               Fornecedores
             </Link>
             <Link 
               to="/clients" 
               onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive("/clients")
+                  ? "bg-accent text-primary font-semibold"
+                  : "text-foreground hover:bg-accent"
+              }`}
             >
               Clientes
             </Link>
             <Link 
               to="/reports" 
               onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive("/reports")
+                  ? "bg-accent text-primary font-semibold"
+                  : "text-foreground hover:bg-accent"
+              }`}
             >
               Relatórios
             </Link>
