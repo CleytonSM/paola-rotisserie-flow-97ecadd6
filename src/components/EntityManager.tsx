@@ -342,7 +342,13 @@ export function EntityManager<T extends { id: string; name: string }>({
               Nenhum resultado encontrado para "{searchTerm}"
             </p>
           ) : (
-            <div className="space-y-3">
+            <div 
+              className={`space-y-3 ${
+                filteredItems.length > 3 
+                  ? "max-h-[450px] overflow-y-auto pr-2" 
+                  : ""
+              }`}
+            >
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
