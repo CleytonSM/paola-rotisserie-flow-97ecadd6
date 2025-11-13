@@ -121,6 +121,16 @@ export default function Receivable() {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
+  const translatePaymentMethod = (method: string) => {
+    const translations: Record<string, string> = {
+      'cash': 'Dinheiro',
+      'card': 'Cartão',
+      'pix': 'PIX',
+      'boleto': 'Boleto'
+    };
+    return translations[method] || method;
+  };
+
   const maskCpfCnpj = (value: string) => {
     if (!value) return "";
     if (value.length === 11) {
@@ -286,7 +296,7 @@ export default function Receivable() {
                 <CardContent>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      Método: <span className="font-medium text-foreground">{account.payment_method}</span>
+                      Método: <span className="font-medium text-foreground">{translatePaymentMethod(account.payment_method)}</span>
                       {account.card_brand && ` • ${account.card_brand}`}
                     </p>
                     {account.tax_rate && (
