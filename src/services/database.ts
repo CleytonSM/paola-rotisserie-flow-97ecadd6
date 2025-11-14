@@ -203,7 +203,7 @@ export const getAccountsReceivable = async (): Promise<DatabaseResult<any[]>> =>
       *,
       client:clients(id, name, cpf_cnpj)
     `)
-    .order('receipt_date', { ascending: false });
+    .order('entry_date', { ascending: false });
   
   return { data, error };
 };
@@ -264,7 +264,7 @@ export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
   const { data: receivables, error: recError } = await supabase
     .from('accounts_receivable')
     .select('net_value')
-    .gte('receipt_date', weekAgo.toISOString())
+    .gte('entry_date', weekAgo.toISOString())
     .eq('status', 'received');
   
   if (recError) return { data: null, error: recError };
@@ -389,8 +389,8 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
 
     const { data: receivables, error: receivablesError } = await supabase
       .from('accounts_receivable')
-      .select('net_value, receipt_date')
-      .gte('receipt_date', sixMonthsAgo.toISOString());
+      .select('net_value, entry_date')
+      .gte('entry_date', sixMonthsAgo.toISOString());
 
     if (receivablesError) throw receivablesError;
 
@@ -405,7 +405,7 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
     const monthlyData = new Map<string, { receivable: number; payable: number }>();
 
     receivables?.forEach((r) => {
-      const month = new Date(r.receipt_date).toISOString().slice(0, 7);
+      const month = new Date(r.entry_date).toISOString().slice(0, 7);
       const current = monthlyData.get(month) || { receivable: 0, payable: 0 };
       current.receivable += Number(r.net_value);
       monthlyData.set(month, current);
@@ -456,4 +456,53 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
       error: error as Error,
     };
   }
+};
+
+// ============= REFRESH TOKENS =============
+export const revokeRefreshTokens = async (userId: string): Promise<DatabaseResult<void>> => {
+  const { error } = await supabase
+    .from('refresh_tokens')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .is('revoked_at', null);
+  
+  return { data: null, error };
+};
+
+export const saveRefreshToken = async (
+  userId: string,
+  tokenHash: string,
+  expiresAt: Date
+): Promise<DatabaseResult<void>> => {
+  const { error } = await supabase
+    .from('refresh_tokens')
+    .insert({
+      user_id: userId,
+      token_hash: tokenHash,
+      expires_at: expiresAt.toISOString(),
+      device_info: navigator.userAgent,
+    });
+  
+  return { data: null, error };
+};
+
+export const getValidRefreshToken = async (
+  userId: string,
+  tokenHash: string
+): Promise<DatabaseResult<boolean>> => {
+  const { data, error } = await supabase
+    .from('refresh_tokens')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('token_hash', tokenHash)
+    .is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .limit(1)
+    .single();
+  
+  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+    return { data: null, error };
+  }
+  
+  return { data: !!data, error: null };
 };

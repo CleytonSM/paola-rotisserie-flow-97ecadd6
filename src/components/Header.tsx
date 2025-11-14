@@ -3,21 +3,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, Menu, X } from "lucide-react";
 
-import { Button } from "@/components/ui/button"; // ATUALIZADO: Caminho de importação Shadcn
-// import { signOut } from "@/services/auth"; // ATUALIZADO: Comentado para corrigir o erro de compilação
+import { Button } from "@/components/ui/button";
+import { signOut } from "@/services/auth";
 import { toast } from "sonner";
-
-// --- INÍCIO DO MOCK ---
-// Adicionando simulação para corrigir o erro de "Could not resolve"
-// Em seu projeto real, remova isso e use sua importação real
-const signOut = async () => {
-  console.log("MOCK: signOut() chamado");
-  // Simula um logout bem-sucedido
-  return { error: null };
-  // Para simular um erro:
-  // return { error: { message: "Erro simulado ao sair" } };
-};
-// --- FIM DO MOCK ---
 
 // Componente interno para o link da navegação desktop com animação
 const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => {

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -40,7 +41,7 @@ const receivableSchema = z.object({
   payment_method: z.string(),
   card_brand: z.string().optional(),
   tax_rate: z.number().min(0).max(100).optional(),
-  due_date: z.string().optional(),
+  entry_date: z.string().min(1, "Data de entrada é obrigatória"),
 });
 
 type Client = {
@@ -57,7 +58,7 @@ type AccountReceivable = {
   payment_method: string;
   card_brand?: string;
   tax_rate?: number;
-  due_date?: string;
+  entry_date: string;
   status: "pending" | "received";
   client?: Client;
 };
@@ -88,7 +89,7 @@ export default function Receivable() {
     payment_method: "cash",
     card_brand: "",
     tax_rate: "",
-    due_date: "",
+    entry_date: undefined as Date | undefined,
   });
 
   // --- Carregamento de Dados ---
@@ -137,7 +138,7 @@ export default function Receivable() {
       payment_method: account.payment_method,
       card_brand: account.card_brand || "",
       tax_rate: account.tax_rate?.toString() || "",
-      due_date: account.due_date ? new Date(account.due_date).toISOString().split("T")[0] : "",
+      entry_date: account.entry_date ? new Date(account.entry_date) : undefined,
     });
     setDialogOpen(true);
   };
@@ -169,7 +170,7 @@ export default function Receivable() {
         payment_method: formData.payment_method,
         card_brand: formData.card_brand || undefined,
         tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) : undefined,
-        due_date: formData.due_date || undefined,
+        entry_date: formData.entry_date ? formData.entry_date.toISOString().split("T")[0] : "",
       });
 
       const { error } = editingId
@@ -208,7 +209,7 @@ export default function Receivable() {
   };
   
   const resetFormData = () => {
-     setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "", due_date: "" });
+      setFormData({ client_id: "", gross_value: "", payment_method: "cash", card_brand: "", tax_rate: "", entry_date: undefined });
   };
 
   // --- Funções Utilitárias e de Formatação ---
@@ -232,9 +233,7 @@ export default function Receivable() {
 
   const getAccountStatus = (account: AccountReceivable): "received" | "pending" | "overdue" => {
     if (account.status === "received") return "received";
-    if (account.due_date && new Date(account.due_date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0) && account.status !== "received") {
-      return "overdue";
-    }
+    // Removida lógica de vencimento baseada em due_date
     return "pending";
   };
 
@@ -295,7 +294,7 @@ export default function Receivable() {
               Contas a Receber
             </h1>
             <p className="mt-2 text-lg text-muted-foreground">
-              Gerencie seus recebimentos e entradas.
+              Gerencie suas entradas e recebimentos.
             </p>
           </div>
           <Dialog
@@ -336,8 +335,12 @@ export default function Receivable() {
                   <Input type="number" step="0.01" value={formData.gross_value} onChange={(e) => setFormData({ ...formData, gross_value: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Data de Vencimento (Opcional)</Label>
-                  <Input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} />
+                  <Label>Data de Entrada *</Label>
+                  <DatePicker
+                    date={formData.entry_date}
+                    setDate={(date) => setFormData({ ...formData, entry_date: date })}
+                    placeholder="Selecione uma data"
+                  />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Método de Pagamento</Label>
@@ -399,7 +402,7 @@ export default function Receivable() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="font-display text-xs uppercase tracking-wide">Cliente</TableHead>
-                    <TableHead className="font-display text-xs uppercase tracking-wide">Vencimento</TableHead>
+                    <TableHead className="font-display text-xs uppercase tracking-wide">Data de Entrada</TableHead>
                     <TableHead className="font-display text-xs uppercase tracking-wide">Status</TableHead>
                     <TableHead className="font-display text-xs uppercase tracking-wide text-right">Valor Líquido</TableHead>
                     <TableHead className="font-display text-xs uppercase tracking-wide text-right">Ações</TableHead>
@@ -428,8 +431,8 @@ export default function Receivable() {
                             <div className="font-medium text-foreground">{account.client?.name || "Venda Avulsa"}</div>
                             <div className="hidden text-sm text-muted-foreground md:inline">{maskCpfCnpj(account.client?.cpf_cnpj)}</div>
                           </TableCell>
-                          <TableCell className={cn("font-sans", status === 'overdue' && "text-destructive")}>
-                            {formatDate(account.due_date)}
+                          <TableCell className="font-sans">
+                            {formatDate(account.entry_date)}
                           </TableCell>
                           <TableCell>
                             <Select value={status} onValueChange={(value) => handleStatusChange(account.id, value as "pending" | "received")}>
