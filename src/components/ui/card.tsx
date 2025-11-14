@@ -2,8 +2,18 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// ATUALIZADO:
+// - rounded-lg -> rounded-2xl (mais suave)
+// - shadow-sm -> shadow-md shadow-[#F0E6D2]/30 (sombra de papel sutil)
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-2xl border bg-card text-card-foreground shadow-md shadow-[#F0E6D2]/30",
+      className,
+    )}
+    {...props}
+  />
 ));
 Card.displayName = "Card";
 
@@ -14,9 +24,17 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardHeader.displayName = "CardHeader";
 
+// ATUALIZADO:
+// - Adicionado font-display (Cormorant Garamond) por padrão
+// - Ajustado tracking-tight para tracking-wide (mais elegante)
+// - Ajustado text-2xl
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight", className)} {...props} />
+    <h3
+      ref={ref}
+      className={cn("font-display text-2xl font-semibold leading-none tracking-wide", className)}
+      {...props}
+    />
   ),
 );
 CardTitle.displayName = "CardTitle";

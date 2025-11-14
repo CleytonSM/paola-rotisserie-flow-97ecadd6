@@ -42,6 +42,37 @@ export const createSupplier = async (supplier: any): Promise<DatabaseResult<any>
   return { data, error };
 };
 
+export const updateSupplier = async (
+  id: string,
+  supplier: any
+): Promise<DatabaseResult<any>> => {
+  // Remove formatação do CNPJ (apenas números)
+  // Telefone é mantido formatado para exibição
+  const cleanedSupplier = {
+    ...supplier,
+    cnpj: supplier.cnpj ? supplier.cnpj.replace(/\D/g, '') : null,
+    email: supplier.email?.trim() || null
+  };
+  
+  const { data, error } = await supabase
+    .from('suppliers')
+    .update(cleanedSupplier)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+export const deleteSupplier = async (id: string): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('suppliers')
+    .delete()
+    .eq('id', id);
+  
+  return { data, error };
+};
+
 // ============= CLIENTS =============
 export const getClients = async (searchTerm?: string): Promise<DatabaseResult<any[]>> => {
   let query = supabase.from('clients').select('*');
@@ -71,6 +102,35 @@ export const createClient = async (client: any): Promise<DatabaseResult<any>> =>
     .insert(cleanedClient)
     .select()
     .single();
+  
+  return { data, error };
+};
+
+export const updateClient = async (
+  id: string,
+  client: any
+): Promise<DatabaseResult<any>> => {
+  // Remove formatação do CPF/CNPJ (apenas números)
+  const cleanedClient = {
+    ...client,
+    cpf_cnpj: client.cpf_cnpj ? client.cpf_cnpj.replace(/\D/g, '') : null
+  };
+  
+  const { data, error } = await supabase
+    .from('clients')
+    .update(cleanedClient)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  return { data, error };
+};
+
+export const deleteClient = async (id: string): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('clients')
+    .delete()
+    .eq('id', id);
   
   return { data, error };
 };
@@ -236,21 +296,84 @@ export const getPendingCounts = async (): Promise<DatabaseResult<any>> => {
     .from('accounts_payable')
     .select('id', { count: 'exact' })
     .eq('status', 'pending');
-  
+
   if (payError) return { data: null, error: payError };
-  
+
   const { data: pendingReceivables, error: recError } = await supabase
     .from('accounts_receivable')
     .select('id', { count: 'exact' })
     .eq('status', 'pending');
-  
+
   if (recError) return { data: null, error: recError };
-  
+
   return {
     data: {
       pendingPayables: pendingPayables?.length || 0,
       pendingReceivables: pendingReceivables?.length || 0,
     },
+    error: null,
+  };
+};
+
+export const getUnpaidPayablesCount = async (): Promise<DatabaseResult<number>> => {
+  const { count, error } = await supabase
+    .from('accounts_payable')
+    .select('*', { count: 'exact', head: true })
+    .neq('status', 'paid');
+
+  if (error) return { data: null, error };
+
+  return {
+    data: count || 0,
+    error: null,
+  };
+};
+
+export const getClientsCount = async (): Promise<DatabaseResult<number>> => {
+  const { count, error } = await supabase
+    .from('clients')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) return { data: null, error };
+
+  return {
+    data: count || 0,
+    error: null,
+  };
+};
+
+export const getSuppliersCount = async (): Promise<DatabaseResult<number>> => {
+  const { count, error } = await supabase
+    .from('suppliers')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) return { data: null, error };
+
+  return {
+    data: count || 0,
+    error: null,
+  };
+};
+
+export const getUpcomingPayablesCount = async (): Promise<DatabaseResult<number>> => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const sevenDaysLater = new Date();
+  sevenDaysLater.setDate(today.getDate() + 7);
+  sevenDaysLater.setHours(23, 59, 59, 999);
+
+  const { count, error } = await supabase
+    .from('accounts_payable')
+    .select('*', { count: 'exact', head: true })
+    .not('due_date', 'is', null)
+    .gte('due_date', today.toISOString())
+    .lte('due_date', sevenDaysLater.toISOString())
+    .neq('status', 'paid');
+
+  if (error) return { data: null, error };
+
+  return {
+    data: count || 0,
     error: null,
   };
 };

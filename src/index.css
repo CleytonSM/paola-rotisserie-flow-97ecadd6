@@ -2,47 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Definição do novo design system "Claude"
+  Quente, clássico, acolhedor e premium.
 */
 
 @layer base {
   :root {
-    /* Cores principais - Amarelo vibrante #FFC107 e Verde folha #4CAF50 */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    /* Fundo principal: #FFFBF5 (creme claro) */
+    --background: 39 100% 98%;
+    /* Texto principal: #2E2E2E (quase preto, clássico) */
+    --foreground: 0 0% 18%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    /* Fundo de Card/Popover: #FFFEFB */
+    --card: 48 100% 99%;
+    --card-foreground: 0 0% 18%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover: 48 100% 99%;
+    --popover-foreground: 0 0% 18%;
 
-    /* Primary: Amarelo vibrante #FFC107 (45deg, 100%, 51%) */
-    --primary: 45 100% 51%;
-    --primary-foreground: 0 0% 0%;
-    --primary-hover: 43 100% 47%;
+    /* Primária (CTAs): #FFB300 (amarelo-dourado quente) */
+    --primary: 42 100% 50%;
+    /* Texto do botão primário: #1F2937 (alto contraste) */
+    --primary-foreground: 215 28% 17%;
+    /* Hover da primária: #E6A100 */
+    --primary-hover: 42 100% 45%;
 
-    /* Secondary: Verde folha #4CAF50 (122deg, 39%, 49%) */
-    --secondary: 122 39% 49%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 122 39% 45%;
+    /* Secundária (Apoio): #5DAB57 (verde-oliva acolhedor) */
+    --secondary: 115 30% 51%;
+    /* Texto da secundária: #FFFEFB */
+    --secondary-foreground: 48 100% 99%;
+    /* Hover da secundária: #559C4F */
+    --secondary-hover: 115 30% 47%;
 
-    /* Neutros minimalistas */
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 62%;
-
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 10%;
-
+    /* Destrutivo (mantido para semântica) */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 91%;
-    --input: 0 0% 91%;
-    --ring: 45 100% 51%;
+    /* Tertiary (Azul Clássico) */
+    --tertiary: 240 100% 25%;
+    --tertiary-foreground: 0 0% 100%;
+    --tertiary-hover: 240 100% 20%;
 
-    --radius: 0.75rem;
+    /* Neutros Quentes */
+    /* Muted (Inputs): #F8F4F0 */
+    --muted: 38 33% 95%;
+    /* Texto secundário: #6B7280 */
+    --muted-foreground: 215 9% 51%;
+
+    /* Accent (Hover sutil): #F8F4F0 */
+    --accent: 38 33% 95%;
+    --accent-foreground: 0 0% 18%;
+
+    /* Bordas: #F0E6D2 (tom de papel) */
+    --border: 40 48% 88%;
+    /* Input (fundo, igual ao muted) */
+    --input: 38 33% 95%;
+    
+    /* Ring (Foco): #FFB300 */
+    --ring: 42 100% 50%;
+
+    /* Cantos mais arredondados */
+    --radius: 1rem;
 
     /* Transições suaves */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -55,6 +75,14 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans leading-relaxed;
+    /* Melhora a legibilidade da fonte */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Títulos com a fonte de display */
+  /*h1, h2, h3, h4, h5, h6, .font-display {
+    @apply font-display tracking-wide;
+  }*/
 }
