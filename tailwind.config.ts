@@ -14,50 +14,61 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'serif'],
+        // Tipografia: "Satoshi" (corpo) + "Cormorant Garamond" (títulos)
+        sans: ['Satoshi', 'system-ui', 'sans-serif'],
+        display: ['Cormorant Garamond', 'serif'],
       },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        // Paleta de Cores: Quente, Clássica, Acolhedora
+        border: "hsl(var(--border))", // #F0E6D2
+        input: "hsl(var(--input))", // #F8F4F0 (filled style)
+        ring: "hsl(var(--ring))", // #FFB300
+
+        background: "hsl(var(--background))", // #FFFBF5 (creme claro)
+        foreground: "hsl(var(--foreground))", // #2E2E2E (quase preto)
+
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-          hover: "hsl(var(--primary-hover))",
+          DEFAULT: "hsl(var(--primary))", // #FFB300 (amarelo-dourado)
+          foreground: "hsl(var(--primary-foreground))", // #1F2937 (texto escuro para CTAs)
+          hover: "hsl(var(--primary-hover))", // #E6A100 (amarelo mais escuro)
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-          hover: "hsl(var(--secondary-hover))",
+          DEFAULT: "hsl(var(--secondary))", // #5DAB57 (verde-oliva)
+          foreground: "hsl(var(--secondary-foreground))", // #FFFEFB (texto claro)
+          hover: "hsl(var(--secondary-hover))", // #559C4F (verde mais escuro)
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
+          DEFAULT: "hsl(var(--destructive))", // Mantido (vermelho)
           foreground: "hsl(var(--destructive-foreground))",
         },
+        /* Azul Escuro */
+        tertiary: {
+          DEFAULT: "hsl(var(--tertiary))", // #000080 (azul escuro)
+          foreground: "hsl(var(--tertiary-foreground))", // #FFFFFF (texto claro)
+          hover: "hsl(var(--tertiary-hover))", // #000080 (azul escuro)
+        },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "hsl(var(--muted))", // #F8F4F0 (fundo de input)
+          foreground: "hsl(var(--muted-foreground))", // #6B7280 (texto secundário)
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "hsl(var(--accent))", // #F8F4F0 (hover sutil)
+          foreground: "hsl(var(--accent-foreground))", // #2E2E2E
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "hsl(var(--popover))", // #FFFEFB (fundo de card)
+          foreground: "hsl(var(--popover-foreground))", // #2E2E2E
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "hsl(var(--card))", // #FFFEFB (fundo de card)
+          foreground: "hsl(var(--card-foreground))", // #2E2E2E
         },
       },
       borderRadius: {
+        // Cantos mais arredondados
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 8px)",
       },
       keyframes: {
         "accordion-down": {

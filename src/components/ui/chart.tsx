@@ -45,7 +45,22 @@ const ChartContainer = React.forwardRef<
         data-chart={chartId}
         ref={ref}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          // ATUALIZADO:
+          // - As classes CSS aqui (ex: [&_.recharts...]) irão herdar automaticamente
+          // - as novas variáveis do index.css (border, muted-foreground).
+          "flex aspect-video justify-center text-xs",
+          "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground",
+          "[&_.recharts-cartesian-grid_line]:stroke-border/50",
+          "[&_.recharts-curve.recharts-tooltip-cursor]:stroke-border",
+          "[&_.recharts-dot[stroke='#fff']]:stroke-transparent",
+          "[&_.recharts-layer]:outline-none",
+          "[&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border",
+          "[&_.recharts-radial-bar-background-sector]:fill-muted",
+          "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted",
+          "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border",
+          "[&_.recharts-sector[stroke='#fff']]:stroke-transparent",
+          "[&_.recharts-sector]:outline-none",
+          "[&_.recharts-surface]:outline-none",
           className,
         )}
         {...props}
@@ -154,7 +169,8 @@ const ChartTooltipContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+          // ATUALIZADO: Estilos de tooltip alinhados com o design "Claude"
+          "grid min-w-[8rem] items-start gap-1.5 rounded-xl border border-border bg-card p-3 text-xs shadow-lg shadow-[#F0E6D2]/40",
           className,
         )}
       >
@@ -208,7 +224,10 @@ const ChartTooltipContent = React.forwardRef<
                         <span className="text-muted-foreground">{itemConfig?.label || item.name}</span>
                       </div>
                       {item.value && (
-                        <span className="font-mono font-medium tabular-nums text-foreground">
+                        // ATUALIZADO:
+                        // - Removido font-mono
+                        // - Adicionado font-sans (Satoshi) e tabular-nums (para alinhamento)
+                        <span className="font-sans font-medium tabular-nums text-foreground">
                           {item.value.toLocaleString()}
                         </span>
                       )}
@@ -244,6 +263,7 @@ const ChartLegendContent = React.forwardRef<
   return (
     <div
       ref={ref}
+      // ATUALIZADO: Herda font-sans (Satoshi) do body, que é o correto.
       className={cn("flex items-center justify-center gap-4", verticalAlign === "top" ? "pb-3" : "pt-3", className)}
     >
       {payload.map((item) => {
