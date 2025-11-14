@@ -42,7 +42,8 @@ const payableSchema = z.object({
   value: z.number().positive("Valor deve ser positivo"),
   payment_method: z.string(),
   notes: z.string().optional(),
-  due_date: z.date().optional(), // Mudado para Date
+  due_date: z.date().optional(),
+  payment_date: z.date().optional(),
   status: z.string().optional(),
 });
 
@@ -57,7 +58,8 @@ type AccountPayable = {
   value: number;
   payment_method: string;
   notes?: string;
-  due_date?: string; // Mantém string do DB
+  due_date?: string;
+  payment_date?: string;
   status: "pending" | "paid";
   supplier?: Supplier;
 };
@@ -68,7 +70,8 @@ type FormData = {
   value: string;
   payment_method: string;
   notes: string;
-  due_date: Date | undefined; // Mudado para Date
+  due_date: Date | undefined;
+  payment_date: Date | undefined;
   status: string;
 };
 
@@ -96,7 +99,8 @@ export default function Payable() {
     value: "",
     payment_method: "cash",
     notes: "",
-    due_date: undefined, // Valor inicial para Date
+    due_date: undefined,
+    payment_date: undefined,
     status: "pending",
   });
 
@@ -145,7 +149,8 @@ export default function Payable() {
       value: account.value.toString(),
       payment_method: account.payment_method,
       notes: account.notes || "",
-      due_date: account.due_date ? new Date(account.due_date) : undefined, // Converte string para Date
+      due_date: account.due_date ? new Date(account.due_date) : undefined,
+      payment_date: account.payment_date ? new Date(account.payment_date) : undefined,
       status: account.status || "pending",
     });
     setDialogOpen(true);
@@ -172,19 +177,27 @@ export default function Payable() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Converte o valor para float e a data (se existir)
+      // Se status for "paid" e payment_date não estiver definido, define como hoje
+      let paymentDate = formData.payment_date;
+      if (formData.status === "paid" && !paymentDate) {
+        paymentDate = new Date();
+      }
+
+      // Converte o valor para float e as datas (se existirem)
       const dataToValidate = {
         ...formData,
         value: parseFloat(formData.value),
         due_date: formData.due_date,
+        payment_date: paymentDate,
       };
 
       const validated = payableSchema.parse(dataToValidate);
 
-      // Converte a data para string ISO para o Supabase
+      // Converte as datas para string ISO para o Supabase
       const dataToSubmit = {
         ...validated,
         due_date: validated.due_date ? validated.due_date.toISOString() : undefined,
+        payment_date: validated.payment_date ? validated.payment_date.toISOString() : null,
       };
 
       const { error } = editingId
@@ -211,13 +224,23 @@ export default function Payable() {
     const account = accounts.find((acc) => acc.id === id);
     if (!account || getAccountStatus(account) === newStatus) return;
 
-    const { error } = await updateAccountPayableStatus(id, newStatus);
+    // Se mudando para "paid" e não tem payment_date, define como hoje
+    const updateData: { status: string; payment_date?: string } = { status: newStatus };
+    if (newStatus === "paid" && !account.payment_date) {
+      updateData.payment_date = new Date().toISOString();
+    }
+
+    const { error } = await updateAccountPayable(id, updateData);
     if (error) {
       toast.error("Erro ao atualizar status");
     } else {
       toast.success("Status atualizado!");
       setAccounts(
-        accounts.map((acc) => (acc.id === id ? { ...acc, status: newStatus } : acc)),
+        accounts.map((acc) => 
+          acc.id === id 
+            ? { ...acc, status: newStatus, payment_date: updateData.payment_date || acc.payment_date } 
+            : acc
+        ),
       );
     }
   };
@@ -228,7 +251,8 @@ export default function Payable() {
       value: "",
       payment_method: "cash",
       notes: "",
-      due_date: undefined, // Reseta para undefined
+      due_date: undefined,
+      payment_date: undefined,
       status: "pending",
     });
   };
@@ -249,7 +273,7 @@ export default function Payable() {
     if (
       account.due_date &&
       new Date(account.due_date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0) &&
-      account.status !== "paid"
+      account.status === "pending"
     ) {
       return "overdue";
     }
@@ -389,12 +413,17 @@ export default function Payable() {
                 </div>
                 <div className="space-y-2">
                   <Label>Data de Vencimento</Label>
-                  {/* === COMPONENTE APLICADO === */}
                   <DatePicker
                     date={formData.due_date}
                     setDate={(date) => setFormData({ ...formData, due_date: date })}
                   />
-                  {/* ============================ */}
+                </div>
+                <div className="space-y-2">
+                  <Label>Data de Pagamento</Label>
+                  <DatePicker
+                    date={formData.payment_date}
+                    setDate={(date) => setFormData({ ...formData, payment_date: date })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Método de Pagamento</Label>
@@ -480,6 +509,7 @@ export default function Payable() {
                   <TableRow>
                     <TableHead className="font-display text-xs uppercase tracking-wide">Fornecedor</TableHead>
                     <TableHead className="font-display text-xs uppercase tracking-wide">Vencimento</TableHead>
+                    <TableHead className="font-display text-xs uppercase tracking-wide">Pagamento</TableHead>
                     <TableHead className="font-display text-xs uppercase tracking-wide">Status</TableHead>
                     <TableHead className="font-display text-xs uppercase tracking-wide text-right">Valor</TableHead>
                     <TableHead className="font-display text-xs uppercase tracking-wide text-right">Ações</TableHead>
@@ -488,11 +518,11 @@ export default function Payable() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Carregando...</TableCell>
+                      <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Carregando...</TableCell>
                     </TableRow>
                   ) : filteredAccounts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                         {statusFilter === 'all' && searchTerm === '' && !dateRange?.from
                           ? "Nenhuma conta registrada."
                           : "Nenhuma conta encontrada com esses filtros."
@@ -510,6 +540,9 @@ export default function Payable() {
                           </TableCell>
                           <TableCell className={cn("font-sans", status === 'overdue' && "text-destructive")}>
                             {formatDate(account.due_date)}
+                          </TableCell>
+                          <TableCell className="font-sans">
+                            {formatDate(account.payment_date)}
                           </TableCell>
                           <TableCell>
                             <Select value={status} onValueChange={(value) => handleStatusChange(account.id, value as "pending" | "paid")}>

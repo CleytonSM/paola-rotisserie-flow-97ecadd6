@@ -23,7 +23,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import type { DateRange } from "react-day-picker";
 
 type AccountReceivable = { id: string; net_value: number; entry_date: string | null; created_at: string; client?: { name: string } };
-type AccountPayable = { id: string; value: number; payment_date: string; due_date: string | null; created_at: string; supplier?: { name: string } };
+type AccountPayable = { id: string; value: number; payment_date: string | null; due_date: string | null; created_at: string; supplier?: { name: string } };
 
 type ReportsFilter = "weekly" | "monthly" | "bimonthly" | "quarterly" | "semiannually" | "annually" | "custom";
 
@@ -113,10 +113,10 @@ export default function Reports() {
       return entryDate >= startDate && entryDate < endDate;
     });
     const pay = payables.filter(p => {
-      // Filtrar por created_at e incluir apenas se tiver due_date
-      if (!p.due_date) return false;
-      const createdAt = parseISO(p.created_at);
-      return createdAt >= startDate && createdAt < endDate;
+      // Filtrar por payment_date
+      if (!p.payment_date) return false;
+      const paymentDate = parseISO(p.payment_date);
+      return paymentDate >= startDate && paymentDate < endDate;
     });
     return { filteredReceivables: rec, filteredPayables: pay };
   }, [receivables, payables, filter, customDateRange]);
@@ -150,15 +150,15 @@ export default function Reports() {
     });
 
     filteredPayables.forEach(p => {
-      // Usar due_date para agrupamento (já garantimos que não é null no filtro)
-      if (!p.due_date) return;
-      const dueDate = parseISO(p.due_date);
-      const name = format(dueDate, formatType, { locale });
-      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: dueDate };
+      // Usar payment_date para agrupamento (já garantimos que não é null no filtro)
+      if (!p.payment_date) return;
+      const paymentDate = parseISO(p.payment_date);
+      const name = format(paymentDate, formatType, { locale });
+      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: paymentDate };
       entry.Saídas += Number(p.value);
       // Manter a data mais antiga para ordenação
-      if (dueDate < entry.date) {
-        entry.date = dueDate;
+      if (paymentDate < entry.date) {
+        entry.date = paymentDate;
       }
       dataMap.set(name, entry);
     });
