@@ -203,7 +203,7 @@ export const getAccountsReceivable = async (): Promise<DatabaseResult<any[]>> =>
       *,
       client:clients(id, name, cpf_cnpj)
     `)
-    .order('receipt_date', { ascending: false });
+    .order('entry_date', { ascending: false });
   
   return { data, error };
 };
@@ -264,7 +264,7 @@ export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
   const { data: receivables, error: recError } = await supabase
     .from('accounts_receivable')
     .select('net_value')
-    .gte('receipt_date', weekAgo.toISOString())
+    .gte('entry_date', weekAgo.toISOString())
     .eq('status', 'received');
   
   if (recError) return { data: null, error: recError };
@@ -389,8 +389,8 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
 
     const { data: receivables, error: receivablesError } = await supabase
       .from('accounts_receivable')
-      .select('net_value, receipt_date')
-      .gte('receipt_date', sixMonthsAgo.toISOString());
+      .select('net_value, entry_date')
+      .gte('entry_date', sixMonthsAgo.toISOString());
 
     if (receivablesError) throw receivablesError;
 
@@ -405,7 +405,7 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
     const monthlyData = new Map<string, { receivable: number; payable: number }>();
 
     receivables?.forEach((r) => {
-      const month = new Date(r.receipt_date).toISOString().slice(0, 7);
+      const month = new Date(r.entry_date).toISOString().slice(0, 7);
       const current = monthlyData.get(month) || { receivable: 0, payable: 0 };
       current.receivable += Number(r.net_value);
       monthlyData.set(month, current);

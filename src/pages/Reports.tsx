@@ -19,11 +19,13 @@ import { toast } from "sonner";
 import { addDays, format, parseISO, startOfToday, subDays, subMonths, subQuarters, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import type { DateRange } from "react-day-picker";
 
-type AccountReceivable = { id: string; net_value: number; receipt_date: string; client?: { name: string } };
-type AccountPayable = { id: string; value: number; payment_date: string; supplier?: { name: string } };
+type AccountReceivable = { id: string; net_value: number; entry_date: string | null; created_at: string; client?: { name: string } };
+type AccountPayable = { id: string; value: number; payment_date: string; due_date: string | null; created_at: string; supplier?: { name: string } };
 
-type ReportsFilter = "weekly" | "monthly" | "bimonthly" | "quarterly" | "semiannually" | "annually";
+type ReportsFilter = "weekly" | "monthly" | "bimonthly" | "quarterly" | "semiannually" | "annually" | "custom";
 
 const filterOptions: { label: string; value: ReportsFilter }[] = [
   { label: "Últimos 7 dias", value: "weekly" },
@@ -32,6 +34,7 @@ const filterOptions: { label: string; value: ReportsFilter }[] = [
   { label: "Últimos 3 meses", value: "quarterly" },
   { label: "Últimos 6 meses", value: "semiannually" },
   { label: "Último ano", value: "annually" },
+  { label: "Personalizado", value: "custom" },
 ];
 
 export default function Reports() {
@@ -40,6 +43,7 @@ export default function Reports() {
   const [receivables, setReceivables] = useState<AccountReceivable[]>([]);
   const [payables, setPayables] = useState<AccountPayable[]>([]);
   const [filter, setFilter] = useState<ReportsFilter>("monthly");
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -89,19 +93,33 @@ export default function Reports() {
   };
 
   const { filteredReceivables, filteredPayables } = useMemo(() => {
-    const startDate = getStartDateFromFilter(filter);
-    const endDate = addDays(startOfToday(), 1); // Inclui hoje
+    let startDate: Date;
+    let endDate: Date;
+
+    if (filter === "custom" && customDateRange?.from) {
+      // Usar o date range customizado
+      startDate = customDateRange.from;
+      endDate = customDateRange.to ? addDays(customDateRange.to, 1) : addDays(startOfToday(), 1);
+    } else {
+      // Usar o filtro pré-definido
+      startDate = getStartDateFromFilter(filter);
+      endDate = addDays(startOfToday(), 1); // Inclui hoje
+    }
 
     const rec = receivables.filter(r => {
-      const receiptDate = parseISO(r.receipt_date);
-      return receiptDate >= startDate && receiptDate < endDate;
+      // Filtrar por entry_date
+      if (!r.entry_date) return false;
+      const entryDate = parseISO(r.entry_date);
+      return entryDate >= startDate && entryDate < endDate;
     });
     const pay = payables.filter(p => {
-      const paymentDate = parseISO(p.payment_date);
-      return paymentDate >= startDate && paymentDate < endDate;
+      // Filtrar por created_at e incluir apenas se tiver due_date
+      if (!p.due_date) return false;
+      const createdAt = parseISO(p.created_at);
+      return createdAt >= startDate && createdAt < endDate;
     });
     return { filteredReceivables: rec, filteredPayables: pay };
-  }, [receivables, payables, filter]);
+  }, [receivables, payables, filter, customDateRange]);
 
   const kpiData = useMemo(() => {
     const totalReceived = filteredReceivables.reduce((sum, r) => sum + Number(r.net_value), 0);
@@ -114,24 +132,41 @@ export default function Reports() {
     const formatType = (filter === 'weekly' || filter === 'monthly') ? 'dd/MM' : 'MMM/yy';
     const locale = ptBR;
 
-    const dataMap: Map<string, { name: string; Entradas: number; Saídas: number }> = new Map();
+    // Map para armazenar dados agrupados por data formatada
+    const dataMap: Map<string, { name: string; Entradas: number; Saídas: number; date: Date }> = new Map();
 
     filteredReceivables.forEach(r => {
-      const name = format(parseISO(r.receipt_date), formatType, { locale });
-      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0 };
+      // Usar entry_date para agrupamento (já garantimos que não é null no filtro)
+      if (!r.entry_date) return;
+      const entryDate = parseISO(r.entry_date);
+      const name = format(entryDate, formatType, { locale });
+      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: entryDate };
       entry.Entradas += Number(r.net_value);
+      // Manter a data mais antiga para ordenação
+      if (entryDate < entry.date) {
+        entry.date = entryDate;
+      }
       dataMap.set(name, entry);
     });
 
     filteredPayables.forEach(p => {
-      const name = format(parseISO(p.payment_date), formatType, { locale });
-      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0 };
+      // Usar due_date para agrupamento (já garantimos que não é null no filtro)
+      if (!p.due_date) return;
+      const dueDate = parseISO(p.due_date);
+      const name = format(dueDate, formatType, { locale });
+      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: dueDate };
       entry.Saídas += Number(p.value);
+      // Manter a data mais antiga para ordenação
+      if (dueDate < entry.date) {
+        entry.date = dueDate;
+      }
       dataMap.set(name, entry);
     });
 
-    // Idealmente, ordenar por data real antes de agrupar, mas para simplificar:
-    return Array.from(dataMap.values());
+    // Converter para array e ordenar por data cronologicamente
+    return Array.from(dataMap.values())
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .map(({ date, ...rest }) => rest); // Remove a propriedade date antes de retornar
   }, [filteredReceivables, filteredPayables, filter]);
   
   const pieChartData = useMemo(() => [
@@ -221,8 +256,13 @@ export default function Reports() {
               Visão completa do fluxo financeiro.
             </p>
           </div>
-          <div className="flex w-full gap-2 md:w-auto">
-            <Select value={filter} onValueChange={(v) => setFilter(v as ReportsFilter)}>
+          <div className="flex w-full flex-col gap-2 md:flex-row md:w-auto">
+            <Select value={filter} onValueChange={(v) => {
+              setFilter(v as ReportsFilter);
+              if (v !== "custom") {
+                setCustomDateRange(undefined);
+              }
+            }}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filtrar período..." />
               </SelectTrigger>
@@ -232,6 +272,13 @@ export default function Reports() {
                 ))}
               </SelectContent>
             </Select>
+            {filter === "custom" && (
+              <DateRangePicker
+                date={customDateRange}
+                setDate={setCustomDateRange}
+                className="w-full md:w-auto"
+              />
+            )}
             <Button onClick={exportToPDF} variant="outline">
               <Download className="mr-2 h-4 w-4" />
               Exportar

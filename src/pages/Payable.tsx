@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header"; // Importação real
+import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"; // Removido CardTitle não usado
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DatePicker } from "@/components/ui/date-picker"; // Importando o novo componente
+import { DateRangePicker } from "@/components/ui/date-range-picker"; // ADICIONADO
+import type { DateRange } from "react-day-picker"; // ADICIONADO
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -26,8 +29,8 @@ import {
   deleteAccountPayable,
   getSuppliers,
   updateAccountPayableStatus,
-} from "@/services/database"; // Importações reais
-import { getCurrentSession } from "@/services/auth"; // Importação real
+} from "@/services/database";
+import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -39,7 +42,7 @@ const payableSchema = z.object({
   value: z.number().positive("Valor deve ser positivo"),
   payment_method: z.string(),
   notes: z.string().optional(),
-  due_date: z.string().optional(),
+  due_date: z.date().optional(), // Mudado para Date
   status: z.string().optional(),
 });
 
@@ -54,9 +57,19 @@ type AccountPayable = {
   value: number;
   payment_method: string;
   notes?: string;
-  due_date?: string;
+  due_date?: string; // Mantém string do DB
   status: "pending" | "paid";
-  supplier?: Supplier; // Presume que a RLS/join do Supabase traz isso
+  supplier?: Supplier;
+};
+
+// Interface para o estado do formulário
+type FormData = {
+  supplier_id: string;
+  value: string;
+  payment_method: string;
+  notes: string;
+  due_date: Date | undefined; // Mudado para Date
+  status: string;
 };
 
 type StatusFilter = "all" | "pending" | "paid" | "overdue";
@@ -68,23 +81,22 @@ export default function Payable() {
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<AccountPayable[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  
-  // Controles da Tabela
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // ADICIONADO
 
-  // Controles de Modais
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     supplier_id: "",
     value: "",
     payment_method: "cash",
     notes: "",
-    due_date: "",
+    due_date: undefined, // Valor inicial para Date
     status: "pending",
   });
 
@@ -133,7 +145,7 @@ export default function Payable() {
       value: account.value.toString(),
       payment_method: account.payment_method,
       notes: account.notes || "",
-      due_date: account.due_date ? new Date(account.due_date).toISOString().split("T")[0] : "",
+      due_date: account.due_date ? new Date(account.due_date) : undefined, // Converte string para Date
       status: account.status || "pending",
     });
     setDialogOpen(true);
@@ -160,14 +172,24 @@ export default function Payable() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const validated = payableSchema.parse({
+      // Converte o valor para float e a data (se existir)
+      const dataToValidate = {
         ...formData,
         value: parseFloat(formData.value),
-      });
+        due_date: formData.due_date,
+      };
+
+      const validated = payableSchema.parse(dataToValidate);
+
+      // Converte a data para string ISO para o Supabase
+      const dataToSubmit = {
+        ...validated,
+        due_date: validated.due_date ? validated.due_date.toISOString() : undefined,
+      };
 
       const { error } = editingId
-        ? await updateAccountPayable(editingId, validated)
-        : await createAccountPayable(validated);
+        ? await updateAccountPayable(editingId, dataToSubmit)
+        : await createAccountPayable(dataToSubmit);
 
       if (error) {
         toast.error(editingId ? "Erro ao atualizar conta" : "Erro ao criar conta");
@@ -186,8 +208,8 @@ export default function Payable() {
   };
 
   const handleStatusChange = async (id: string, newStatus: "pending" | "paid") => {
-    const account = accounts.find(acc => acc.id === id);
-    if (getAccountStatus(account!) === newStatus) return;
+    const account = accounts.find((acc) => acc.id === id);
+    if (!account || getAccountStatus(account) === newStatus) return;
 
     const { error } = await updateAccountPayableStatus(id, newStatus);
     if (error) {
@@ -201,7 +223,14 @@ export default function Payable() {
   };
 
   const resetFormData = () => {
-    setFormData({ supplier_id: "", value: "", payment_method: "cash", notes: "", due_date: "", status: "pending" });
+    setFormData({
+      supplier_id: "",
+      value: "",
+      payment_method: "cash",
+      notes: "",
+      due_date: undefined, // Reseta para undefined
+      status: "pending",
+    });
   };
 
   // --- Funções Utilitárias e de Formatação ---
@@ -217,7 +246,11 @@ export default function Payable() {
 
   const getAccountStatus = (account: AccountPayable): "paid" | "pending" | "overdue" => {
     if (account.status === "paid") return "paid";
-    if (account.due_date && new Date(account.due_date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0) && account.status !== 'paid') {
+    if (
+      account.due_date &&
+      new Date(account.due_date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0) &&
+      account.status !== "paid"
+    ) {
       return "overdue";
     }
     return "pending";
@@ -230,16 +263,20 @@ export default function Payable() {
 
   const getStatusBadgeClass = (status: "paid" | "pending" | "overdue") => {
     switch (status) {
-      case "paid": return "bg-secondary/20 text-secondary";
-      case "overdue": return "bg-destructive/20 text-destructive";
-      case "pending": default: return "bg-primary/20 text-primary-hover";
+      case "paid":
+        return "bg-secondary/20 text-secondary";
+      case "overdue":
+        return "bg-destructive/20 text-destructive";
+      case "pending":
+      default:
+        return "bg-primary/20 text-primary-hover";
     }
   };
 
   // --- Filtragem da Tabela ---
 
   const filteredAccounts = useMemo(() => {
-    return accounts.filter(account => {
+    return accounts.filter((account) => {
       const status = getAccountStatus(account);
       const searchLower = searchTerm.toLowerCase();
 
@@ -256,9 +293,31 @@ export default function Payable() {
         (account.notes && account.notes.toLowerCase().includes(searchLower)) ||
         account.value.toString().includes(searchLower);
 
-      return statusMatch && searchMatch;
+      // Filtro de Data (ADICIONADO)
+      const dateMatch = (() => {
+        if (!dateRange?.from) return true; // Sem filtro de data
+        if (!account.due_date) return false; // Conta sem data não pode dar match
+
+        const dueDate = new Date(account.due_date);
+        dueDate.setHours(0, 0, 0, 0); // Normalizar
+
+        const fromDate = new Date(dateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+
+        // Se 'to' não estiver definido, é um filtro de dia único
+        if (!dateRange.to) {
+          return dueDate.getTime() === fromDate.getTime();
+        }
+
+        const toDate = new Date(dateRange.to);
+        toDate.setHours(0, 0, 0, 0);
+        
+        return dueDate >= fromDate && dueDate <= toDate;
+      })();
+
+      return statusMatch && searchMatch && dateMatch; // ADICIONADO dateMatch
     });
-  }, [accounts, searchTerm, statusFilter]);
+  }, [accounts, searchTerm, statusFilter, dateRange]); // ADICIONADO dateRange
 
   // --- Renderização ---
 
@@ -281,7 +340,10 @@ export default function Payable() {
             open={dialogOpen}
             onOpenChange={(open) => {
               setDialogOpen(open);
-              if (!open) { setEditingId(null); resetFormData(); }
+              if (!open) {
+                setEditingId(null);
+                resetFormData();
+              }
             }}
           >
             <DialogTrigger asChild>
@@ -299,25 +361,50 @@ export default function Payable() {
               <form onSubmit={handleSubmit} className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Fornecedor</Label>
-                  <Select value={formData.supplier_id} onValueChange={(v) => setFormData({ ...formData, supplier_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <Select
+                    value={formData.supplier_id}
+                    onValueChange={(v) => setFormData({ ...formData, supplier_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
                     <SelectContent>
-                      {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      {suppliers.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Valor (R$)</Label>
-                  <Input type="number" step="0.01" value={formData.value} onChange={(e) => setFormData({ ...formData, value: e.target.value })} required />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.value}
+                    onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Data de Vencimento</Label>
-                  <Input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} />
+                  {/* === COMPONENTE APLICADO === */}
+                  <DatePicker
+                    date={formData.due_date}
+                    setDate={(date) => setFormData({ ...formData, due_date: date })}
+                  />
+                  {/* ============================ */}
                 </div>
                 <div className="space-y-2">
                   <Label>Método de Pagamento</Label>
-                  <Select value={formData.payment_method} onValueChange={(v) => setFormData({ ...formData, payment_method: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={formData.payment_method}
+                    onValueChange={(v) => setFormData({ ...formData, payment_method: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cash">Dinheiro</SelectItem>
                       <SelectItem value="boleto">Boleto</SelectItem>
@@ -328,8 +415,13 @@ export default function Payable() {
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(v) => setFormData({ ...formData, status: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pending">Pendente</SelectItem>
                       <SelectItem value="paid">Pago</SelectItem>
@@ -338,9 +430,15 @@ export default function Payable() {
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Observações</Label>
-                  <Input value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} placeholder="Ex: Compra semanal de material..." />
+                  <Input
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Ex: Compra semanal de material..."
+                  />
                 </div>
-                <Button type="submit" className="w-full sm:col-span-2">{editingId ? "Salvar Alterações" : "Adicionar Conta"}</Button>
+                <Button type="submit" className="w-full sm:col-span-2">
+                  {editingId ? "Salvar Alterações" : "Adicionar Conta"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -352,17 +450,24 @@ export default function Payable() {
             {/* Barra de Busca */}
             <div className="relative w-full md:max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar por fornecedor, notas, valor..." 
+              <Input
+                placeholder="Buscar por fornecedor, notas, valor..."
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             {/* Filtros */}
-            <div className="flex gap-2">
-              <Button variant={statusFilter === 'all' ? 'outline' : 'ghost'} size="sm" onClick={() => setStatusFilter('all')} className={cn(statusFilter === 'all' && 'border-tertiary text-tertiary')}>Todos</Button>
-              <Button variant={statusFilter === 'pending' ? 'outline' : 'ghost'} size="sm" onClick={() => setStatusFilter('pending')} className={cn(statusFilter === 'pending' && 'border-primary text-primary')}>Pendentes</Button>
+            <div className="flex flex-wrap gap-2">
+              {/* FILTRO DE PERÍODO (ADICIONADO) */}
+              <DateRangePicker
+                date={dateRange}
+                setDate={setDateRange}
+                className="[&_button]:h-9 [&_button]:w-full [&_button]:md:w-[260px]" // Estilo p/ se alinhar
+              />
+              
+              <Button variant={statusFilter === 'all' ? 'outline' : 'ghost'} size="sm" onClick={() => setStatusFilter('all')} className={cn(statusFilter === 'all' && 'border-primary text-primary-hover')}>Todos</Button>
+              <Button variant={statusFilter === 'pending' ? 'outline' : 'ghost'} size="sm" onClick={() => setStatusFilter('pending')} className={cn(statusFilter === 'pending' && 'border-primary text-primary-hover')}>Pendentes</Button>
               <Button variant={statusFilter === 'overdue' ? 'outline' : 'ghost'} size="sm" onClick={() => setStatusFilter('overdue')} className={cn(statusFilter === 'overdue' && 'border-destructive text-destructive')}>Vencidos</Button>
               <Button variant={statusFilter === 'paid' ? 'outline' : 'ghost'} size="sm" onClick={() => setStatusFilter('paid')} className={cn(statusFilter === 'paid' && 'border-secondary text-secondary')}>Pagos</Button>
             </div>
@@ -388,7 +493,7 @@ export default function Payable() {
                   ) : filteredAccounts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                        {statusFilter === 'all' && searchTerm === '' 
+                        {statusFilter === 'all' && searchTerm === '' && !dateRange?.from
                           ? "Nenhuma conta registrada."
                           : "Nenhuma conta encontrada com esses filtros."
                         }
