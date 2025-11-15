@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -17,6 +17,15 @@ interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function DateRangePicker({ className, date, setDate }: DateRangePickerProps) {
+  // Get current week start (Monday) and end (Sunday)
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // 1 = Monday
+  const currentWeekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDate(undefined);
+  };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -25,7 +34,7 @@ export function DateRangePicker({ className, date, setDate }: DateRangePickerPro
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal bg-input border-input", // Estilo "filled"
+              "w-[300px] justify-start text-left font-normal bg-input border-input relative pr-8", // Estilo "filled"
               !date && "text-muted-foreground",
             )}
           >
@@ -42,13 +51,19 @@ export function DateRangePicker({ className, date, setDate }: DateRangePickerPro
             ) : (
               <span>Selecione um período</span>
             )}
+            {date && (
+              <X
+                className="absolute right-2 h-4 w-4 text-muted-foreground hover:text-foreground"
+                onClick={handleClear}
+              />
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={date?.from}
+            defaultMonth={date?.from || currentWeekStart}
             selected={date}
             onSelect={setDate}
             numberOfMonths={2}

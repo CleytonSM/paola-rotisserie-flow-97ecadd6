@@ -24,7 +24,7 @@ export function PayableFilters({
   onDateRangeChange,
 }: PayableFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
       {/* Barra de Busca */}
       <div className="relative w-full md:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -36,17 +36,17 @@ export function PayableFilters({
         />
       </div>
       {/* Filtros */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-nowrap gap-4 items-center">
         <DateRangePicker
           date={dateRange}
           setDate={onDateRangeChange}
-          className="[&_button]:h-9 [&_button]:w-full [&_button]:md:w-[260px]"
+          className="[&_button]:h-9 [&_button]:w-auto [&_button]:min-w-[200px] [&_button]:md:w-[260px]"
         />
         <Button
           variant={statusFilter === "all" ? "outline" : "ghost"}
           size="sm"
           onClick={() => onStatusFilterChange("all")}
-          className={cn(statusFilter === "all" && "border-primary text-primary-hover")}
+          className={cn(statusFilter === "all" && "border-tertiary text-tertiary-hover")}
         >
           Todos
         </Button>

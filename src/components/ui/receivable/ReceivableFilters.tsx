@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import type { DateRange } from "react-day-picker";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StatusFilter } from "./types";
@@ -9,6 +11,8 @@ interface ReceivableFiltersProps {
   onSearchChange: (value: string) => void;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
 }
 
 export function ReceivableFilters({
@@ -16,9 +20,11 @@ export function ReceivableFilters({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
+  dateRange,
+  onDateRangeChange,
 }: ReceivableFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
       {/* Barra de Busca */}
       <div className="relative w-full md:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -30,7 +36,12 @@ export function ReceivableFilters({
         />
       </div>
       {/* Filtros */}
-      <div className="flex gap-2">
+      <div className="flex flex-nowrap gap-4 items-center">
+        <DateRangePicker
+          date={dateRange}
+          setDate={onDateRangeChange}
+          className="[&_button]:h-9 [&_button]:w-auto [&_button]:min-w-[200px] [&_button]:md:w-[260px]"
+        />
         <Button
           variant={statusFilter === "all" ? "outline" : "ghost"}
           size="sm"

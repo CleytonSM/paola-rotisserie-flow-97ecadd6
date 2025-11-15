@@ -20,7 +20,7 @@ export const getSuppliers = async (): Promise<DatabaseResult<any[]>> => {
     .from('suppliers')
     .select('*')
     .order('name');
-  
+
   return { data, error };
 };
 
@@ -32,13 +32,13 @@ export const createSupplier = async (supplier: any): Promise<DatabaseResult<any>
     cnpj: supplier.cnpj ? supplier.cnpj.replace(/\D/g, '') : null,
     email: supplier.email?.trim() || null
   };
-  
+
   const { data, error } = await supabase
     .from('suppliers')
     .insert(cleanedSupplier)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -53,14 +53,14 @@ export const updateSupplier = async (
     cnpj: supplier.cnpj ? supplier.cnpj.replace(/\D/g, '') : null,
     email: supplier.email?.trim() || null
   };
-  
+
   const { data, error } = await supabase
     .from('suppliers')
     .update(cleanedSupplier)
     .eq('id', id)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -69,23 +69,23 @@ export const deleteSupplier = async (id: string): Promise<DatabaseResult<any>> =
     .from('suppliers')
     .delete()
     .eq('id', id);
-  
+
   return { data, error };
 };
 
 // ============= CLIENTS =============
 export const getClients = async (searchTerm?: string): Promise<DatabaseResult<any[]>> => {
   let query = supabase.from('clients').select('*');
-  
+
   if (searchTerm) {
     // Sanitize input to prevent SQL injection - escape wildcards and limit length
     const sanitized = searchTerm
       .slice(0, 100) // Max 100 characters
       .replace(/[%_]/g, '\\$&'); // Escape SQL wildcards
-    
+
     query = query.or(`name.ilike.%${sanitized}%,cpf_cnpj.ilike.%${sanitized}%`);
   }
-  
+
   const { data, error } = await query.order('name');
   return { data, error };
 };
@@ -96,13 +96,13 @@ export const createClient = async (client: any): Promise<DatabaseResult<any>> =>
     ...client,
     cpf_cnpj: client.cpf_cnpj ? client.cpf_cnpj.replace(/\D/g, '') : null
   };
-  
+
   const { data, error } = await supabase
     .from('clients')
     .insert(cleanedClient)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -115,14 +115,14 @@ export const updateClient = async (
     ...client,
     cpf_cnpj: client.cpf_cnpj ? client.cpf_cnpj.replace(/\D/g, '') : null
   };
-  
+
   const { data, error } = await supabase
     .from('clients')
     .update(cleanedClient)
     .eq('id', id)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -131,7 +131,7 @@ export const deleteClient = async (id: string): Promise<DatabaseResult<any>> => 
     .from('clients')
     .delete()
     .eq('id', id);
-  
+
   return { data, error };
 };
 
@@ -144,7 +144,38 @@ export const getAccountsPayable = async (): Promise<DatabaseResult<any[]>> => {
       supplier:suppliers(id, name)
     `)
     .order('payment_date', { ascending: false });
-  
+
+  return { data, error };
+};
+
+export const getAccountsPayableByDateRange = async (
+  dateRange: { from: Date; to?: Date }
+): Promise<DatabaseResult<any[]>> => {
+  const fromDate = new Date(dateRange.from);
+  fromDate.setHours(0, 0, 0, 0);
+
+  let query = supabase
+    .from('accounts_payable')
+    .select(`
+      *,
+      supplier:suppliers(id, name)
+    `)
+    .gte('due_date', fromDate.toISOString());
+
+  if (dateRange.to) {
+    // Range filter: from <= due_date <= to
+    const toDate = new Date(dateRange.to);
+    toDate.setHours(23, 59, 59, 999);
+    query = query.lte('due_date', toDate.toISOString());
+  } else {
+    // Single date filter: due_date == from
+    const nextDay = new Date(fromDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    query = query.lt('due_date', nextDay.toISOString());
+  }
+
+  const { data, error } = await query.order('payment_date', { ascending: false });
+
   return { data, error };
 };
 
@@ -154,12 +185,12 @@ export const createAccountPayable = async (account: any): Promise<DatabaseResult
     .insert(account)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
 export const updateAccountPayableStatus = async (
-  id: string, 
+  id: string,
   status: string
 ): Promise<DatabaseResult<any>> => {
   const { data, error } = await supabase
@@ -168,7 +199,7 @@ export const updateAccountPayableStatus = async (
     .eq('id', id)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -182,7 +213,7 @@ export const updateAccountPayable = async (
     .eq('id', id)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -191,7 +222,7 @@ export const deleteAccountPayable = async (id: string): Promise<DatabaseResult<a
     .from('accounts_payable')
     .delete()
     .eq('id', id);
-  
+
   return { data, error };
 };
 
@@ -204,7 +235,38 @@ export const getAccountsReceivable = async (): Promise<DatabaseResult<any[]>> =>
       client:clients(id, name, cpf_cnpj)
     `)
     .order('entry_date', { ascending: false });
-  
+
+  return { data, error };
+};
+
+export const getAccountsReceivableByDateRange = async (
+  dateRange: { from: Date; to?: Date }
+): Promise<DatabaseResult<any[]>> => {
+  const fromDate = new Date(dateRange.from);
+  fromDate.setHours(0, 0, 0, 0);
+
+  let query = supabase
+    .from('accounts_receivable')
+    .select(`
+      *,
+      client:clients(id, name, cpf_cnpj)
+    `)
+    .gte('entry_date', fromDate.toISOString());
+
+  if (dateRange.to) {
+    // Range filter: from <= entry_date <= to
+    const toDate = new Date(dateRange.to);
+    toDate.setHours(23, 59, 59, 999);
+    query = query.lte('entry_date', toDate.toISOString());
+  } else {
+    // Single date filter: entry_date == from
+    const nextDay = new Date(fromDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    query = query.lt('entry_date', nextDay.toISOString());
+  }
+
+  const { data, error } = await query.order('entry_date', { ascending: false });
+
   return { data, error };
 };
 
@@ -214,7 +276,7 @@ export const createAccountReceivable = async (account: any): Promise<DatabaseRes
     .insert(account)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -228,7 +290,7 @@ export const updateAccountReceivable = async (
     .eq('id', id)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -237,12 +299,12 @@ export const deleteAccountReceivable = async (id: string): Promise<DatabaseResul
     .from('accounts_receivable')
     .delete()
     .eq('id', id);
-  
+
   return { data, error };
 };
 
 export const updateAccountReceivableStatus = async (
-  id: string, 
+  id: string,
   status: string
 ): Promise<DatabaseResult<any>> => {
   const { data, error } = await supabase
@@ -251,7 +313,7 @@ export const updateAccountReceivableStatus = async (
     .eq('id', id)
     .select()
     .single();
-  
+
   return { data, error };
 };
 
@@ -259,28 +321,28 @@ export const updateAccountReceivableStatus = async (
 export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
-  
+
   // Buscar entradas
   const { data: receivables, error: recError } = await supabase
     .from('accounts_receivable')
     .select('net_value')
     .gte('entry_date', weekAgo.toISOString())
     .eq('status', 'received');
-  
+
   if (recError) return { data: null, error: recError };
-  
+
   // Buscar saídas
   const { data: payables, error: payError } = await supabase
     .from('accounts_payable')
     .select('value')
     .gte('payment_date', weekAgo.toISOString())
     .eq('status', 'paid');
-  
+
   if (payError) return { data: null, error: payError };
-  
+
   const totalReceivable = receivables?.reduce((sum, r) => sum + Number(r.net_value), 0) || 0;
   const totalPayable = payables?.reduce((sum, p) => sum + Number(p.value), 0) || 0;
-  
+
   return {
     data: {
       balance: totalReceivable - totalPayable,
@@ -465,7 +527,7 @@ export const revokeRefreshTokens = async (userId: string): Promise<DatabaseResul
     .update({ revoked_at: new Date().toISOString() })
     .eq('user_id', userId)
     .is('revoked_at', null);
-  
+
   return { data: null, error };
 };
 
@@ -482,7 +544,7 @@ export const saveRefreshToken = async (
       expires_at: expiresAt.toISOString(),
       device_info: navigator.userAgent,
     });
-  
+
   return { data: null, error };
 };
 
@@ -499,10 +561,10 @@ export const getValidRefreshToken = async (
     .gt('expires_at', new Date().toISOString())
     .limit(1)
     .single();
-  
+
   if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
     return { data: null, error };
   }
-  
+
   return { data: !!data, error: null };
 };

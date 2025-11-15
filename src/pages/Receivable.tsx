@@ -12,6 +12,7 @@ import type {
 } from "@/components/ui/receivable/types";
 import {
   getAccountsReceivable,
+  getAccountsReceivableByDateRange,
   createAccountReceivable,
   updateAccountReceivable,
   deleteAccountReceivable,
@@ -21,6 +22,7 @@ import {
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
+import type { DateRange } from "react-day-picker";
 import { getAccountStatus } from "@/components/ui/receivable/utils";
 
 // --- Schema de Validação ---
@@ -45,6 +47,7 @@ export default function Receivable() {
   // Controles da Tabela
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   // Controles de Modais
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -75,12 +78,26 @@ export default function Receivable() {
     checkAuth();
   }, [navigate]);
 
+  // Reload data when dateRange changes to apply date filter in API
+  useEffect(() => {
+    const checkAndLoad = async () => {
+      const { session } = await getCurrentSession();
+      if (session) {
+        loadData();
+      }
+    };
+    checkAndLoad();
+  }, [dateRange]);
+
   const loadData = async () => {
     setLoading(true);
-    const [accountsResult, clientsResult] = await Promise.all([
-      getAccountsReceivable(),
-      getClients(),
-    ]);
+
+    // Use date range method if dateRange is set, otherwise use regular method
+    const accountsResult = dateRange?.from
+      ? await getAccountsReceivableByDateRange({ from: dateRange.from, to: dateRange.to })
+      : await getAccountsReceivable();
+
+    const clientsResult = await getClients();
 
     if (accountsResult.error) {
       toast.error("Erro ao carregar contas");
@@ -259,6 +276,8 @@ export default function Receivable() {
           onSearchChange={setSearchTerm}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
           onEdit={handleEdit}
           onDelete={handleDeleteClick}
           onStatusChange={handleStatusChange}

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { DateRange } from "react-day-picker";
 import type { AccountReceivable, StatusFilter } from "./types";
 import { ReceivableFilters } from "./ReceivableFilters";
 import { ReceivableTableRow } from "./ReceivableTableRow";
@@ -12,6 +13,8 @@ interface ReceivableTableProps {
   onSearchChange: (value: string) => void;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
   onEdit: (account: AccountReceivable) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: "pending" | "received") => void;
@@ -24,6 +27,8 @@ export function ReceivableTable({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
+  dateRange,
+  onDateRangeChange,
   onEdit,
   onDelete,
   onStatusChange,
@@ -36,6 +41,8 @@ export function ReceivableTable({
           onSearchChange={onSearchChange}
           statusFilter={statusFilter}
           onStatusFilterChange={onStatusFilterChange}
+          dateRange={dateRange}
+          onDateRangeChange={onDateRangeChange}
         />
       </CardHeader>
 

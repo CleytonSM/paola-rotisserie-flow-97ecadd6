@@ -12,6 +12,7 @@ import type {
 } from "@/components/ui/payable/types";
 import {
   getAccountsPayable,
+  getAccountsPayableByDateRange,
   createAccountPayable,
   updateAccountPayable,
   deleteAccountPayable,
@@ -76,12 +77,26 @@ export default function Payable() {
     checkAuth();
   }, [navigate]);
 
+  // Reload data when dateRange changes to apply date filter in API
+  useEffect(() => {
+    const checkAndLoad = async () => {
+      const { session } = await getCurrentSession();
+      if (session) {
+        loadData();
+      }
+    };
+    checkAndLoad();
+  }, [dateRange]);
+
   const loadData = async () => {
     setLoading(true);
-    const [accountsResult, suppliersResult] = await Promise.all([
-      getAccountsPayable(),
-      getSuppliers(),
-    ]);
+
+    // Use date range method if dateRange is set, otherwise use regular method
+    const accountsResult = dateRange?.from
+      ? await getAccountsPayableByDateRange({ from: dateRange.from, to: dateRange.to })
+      : await getAccountsPayable();
+
+    const suppliersResult = await getSuppliers();
 
     if (accountsResult.error) {
       toast.error("Erro ao carregar contas");
@@ -243,31 +258,10 @@ export default function Payable() {
         (account.notes && account.notes.toLowerCase().includes(searchLower)) ||
         account.value.toString().includes(searchLower);
 
-      // Filtro de Data
-      const dateMatch = (() => {
-        if (!dateRange?.from) return true; // Sem filtro de data
-        if (!account.due_date) return false; // Conta sem data não pode dar match
-
-        const dueDate = new Date(account.due_date);
-        dueDate.setHours(0, 0, 0, 0); // Normalizar
-
-        const fromDate = new Date(dateRange.from);
-        fromDate.setHours(0, 0, 0, 0);
-
-        // Se 'to' não estiver definido, é um filtro de dia único
-        if (!dateRange.to) {
-          return dueDate.getTime() === fromDate.getTime();
-        }
-
-        const toDate = new Date(dateRange.to);
-        toDate.setHours(0, 0, 0, 0);
-
-        return dueDate >= fromDate && dueDate <= toDate;
-      })();
-
-      return statusMatch && searchMatch && dateMatch;
+      // Date filtering is now done in the API via getAccountsPayableByDateRange
+      return statusMatch && searchMatch;
     });
-  }, [accounts, searchTerm, statusFilter, dateRange]);
+  }, [accounts, searchTerm, statusFilter]);
 
   // --- Renderização ---
 
