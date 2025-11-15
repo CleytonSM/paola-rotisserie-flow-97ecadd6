@@ -168,7 +168,7 @@ export default function Reports() {
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .map(({ date, ...rest }) => rest); // Remove a propriedade date antes de retornar
   }, [filteredReceivables, filteredPayables, filter]);
-  
+
   const pieChartData = useMemo(() => [
     { name: "Entradas", value: kpiData.totalReceived, fill: "hsl(var(--secondary))" },
     { name: "Saídas", value: kpiData.totalPaid, fill: "hsl(var(--destructive))" },
@@ -211,10 +211,10 @@ export default function Reports() {
         <div className="font-medium">{label}</div>
         <div className="grid gap-1.5">
           {payload.map((item) => {
-            const color = item.dataKey === "Entradas" 
-              ? "hsl(var(--secondary))" 
+            const color = item.dataKey === "Entradas"
+              ? "hsl(var(--secondary))"
               : "hsl(var(--destructive))";
-            
+
             return (
               <div
                 key={item.dataKey}
@@ -334,58 +334,66 @@ export default function Reports() {
               <CardTitle className="font-display text-2xl tracking-wide">Fluxo de Caixa no Período</CardTitle>
             </CardHeader>
             <CardContent className="h-[350px] w-full">
-              <ChartContainer config={{}} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis tickFormatter={(value) => `R$${value / 1000}k`} stroke="hsl(var(--muted-foreground))" />
-                    <ChartTooltip content={<CustomBarTooltip />} />
-                    <ChartLegend content={<ChartLegendContent />} />
-                    <Bar dataKey="Entradas" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Saídas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              {barChartData.length === 0 ? (
+                <div className="flex h-full items-center justify-center px-8">
+                  <p className="text-center text-lg text-muted-foreground">Nenhum registro encontrado no período selecionado.</p>
+                </div>
+              ) : (
+                <ChartContainer config={{}} className="h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={barChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tickFormatter={(value) => `R$${value / 1000}k`} stroke="hsl(var(--muted-foreground))" />
+                      <ChartTooltip content={<CustomBarTooltip />} />
+                      <ChartLegend content={<ChartLegendContent />} />
+                      <Bar dataKey="Entradas" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Saídas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
             </CardContent>
           </Card>
-          
+
           {/* Gráfico de Pizza */}
           <Card>
             <CardHeader>
               <CardTitle className="font-display text-2xl tracking-wide">Entradas e Saídas</CardTitle>
             </CardHeader>
             <CardContent className="relative h-[350px] w-full">
-              {/* Texto Central Posicionado */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-
-              </div>
-              <ChartContainer config={{}} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieChartData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={110}
-                      innerRadius={80}
-                      paddingAngle={5}
-                      cornerRadius={5}
-                    >
-                      {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip 
-                      formatter={(value: number) => formatCurrency(value)}
-                      content={<ChartTooltipContent />} 
-                    />
-                    <ChartLegend content={<ChartLegendContent />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              {kpiData.totalReceived === 0 && kpiData.totalPaid === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center px-8">
+                  <p className="text-center text-lg text-muted-foreground">Nenhum registro encontrado no período selecionado.</p>
+                </div>
+              ) : (
+                <ChartContainer config={{}} className="h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={110}
+                        innerRadius={80}
+                        paddingAngle={5}
+                        cornerRadius={5}
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip
+                        formatter={(value: number) => formatCurrency(value)}
+                        content={<ChartTooltipContent />}
+                      />
+                      <ChartLegend content={<ChartLegendContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -399,8 +407,8 @@ export default function Reports() {
             <CardContent className="space-y-4">
               <AnimatePresence mode="popLayout">
                 {topClients.length > 0 ? topClients.map((client) => (
-                  <motion.div 
-                    key={client.name} 
+                  <motion.div
+                    key={client.name}
                     layout
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -412,8 +420,8 @@ export default function Reports() {
                       <span className="font-sans font-medium tabular-nums text-secondary">{formatCurrency(client.value)}</span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-accent">
-                      <motion.div 
-                        className="h-2 rounded-full bg-secondary" 
+                      <motion.div
+                        className="h-2 rounded-full bg-secondary"
                         initial={{ width: 0 }}
                         animate={{ width: `${client.percentage}%` }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -434,8 +442,8 @@ export default function Reports() {
             <CardContent className="space-y-4">
               <AnimatePresence mode="popLayout">
                 {topSuppliers.length > 0 ? topSuppliers.map((supplier) => (
-                  <motion.div 
-                    key={supplier.name} 
+                  <motion.div
+                    key={supplier.name}
                     layout
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -447,8 +455,8 @@ export default function Reports() {
                       <span className="font-sans font-medium tabular-nums text-destructive">{formatCurrency(supplier.value)}</span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-accent">
-                      <motion.div 
-                        className="h-2 rounded-full bg-destructive" 
+                      <motion.div
+                        className="h-2 rounded-full bg-destructive"
                         initial={{ width: 0 }}
                         animate={{ width: `${supplier.percentage}%` }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
