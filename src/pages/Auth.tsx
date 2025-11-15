@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Logo } from "@/components/Logo";
 import { signIn, signUp, getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -39,7 +38,7 @@ export default function Auth() {
       // Validar dados
       authSchema.parse(formData);
 
-      const { error, session } = isLogin 
+      const { error, session } = isLogin
         ? await signIn(formData.email, formData.password)
         : await signUp(formData.email, formData.password);
 
@@ -80,15 +79,19 @@ export default function Auth() {
               transition={{ delay: 0.2, type: "spring" }}
               className="flex justify-center"
             >
-              <Logo className="h-20" />
+              <img
+                src="/pg-rotisserie-banner.png"
+                alt="Paola Gonçalves Rotisserie"
+                className="h-28 w-auto object-contain rounded-xl"
+              />
             </motion.div>
             <div className="space-y-2">
               <CardTitle className="text-4xl font-display font-bold text-foreground">
                 {isLogin ? "Bem-vindo!" : "Criar Conta"}
               </CardTitle>
               <CardDescription className="text-base text-muted-foreground">
-                {isLogin 
-                  ? "Entre com suas credenciais para acessar o sistema" 
+                {isLogin
+                  ? "Entre com suas credenciais para acessar o sistema"
                   : "Crie uma conta para começar a usar o sistema"}
               </CardDescription>
             </div>
@@ -140,8 +143,8 @@ export default function Auth() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full h-12 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
                   disabled={loading}
                 >
@@ -178,16 +181,9 @@ export default function Auth() {
               transition={{ delay: 0.6 }}
               className="mt-6 text-center"
             >
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setFormData({ email: "", password: "" });
-                }}
-                className="text-sm font-medium text-secondary hover:text-secondary-hover transition-colors duration-200 underline decoration-2 underline-offset-4 decoration-secondary/30 hover:decoration-secondary"
-              >
-                {isLogin ? "Não tem conta? Cadastre-se" : "Já tem conta? Entre"}
-              </button>
+              <p className="text-xs text-muted-foreground">
+                Ao continuar, você concorda com nossos Termos de Serviço
+              </p>
             </motion.div>
           </CardContent>
         </Card>

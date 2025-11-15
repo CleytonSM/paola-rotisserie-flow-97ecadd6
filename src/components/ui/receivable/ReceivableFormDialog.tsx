@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Combobox } from "@/components/ui/combobox";
 import { Plus } from "lucide-react";
 import type { Client, FormData } from "./types";
 import { maskCpfCnpj } from "./utils";
@@ -54,21 +55,17 @@ export function ReceivableFormDialog({
         <form onSubmit={onSubmit} className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
             <Label>Cliente (Opcional)</Label>
-            <Select
+            <Combobox
+              options={clients.map((c) => ({
+                value: c.id,
+                label: c.cpf_cnpj ? `${c.name} - ${maskCpfCnpj(c.cpf_cnpj)}` : c.name,
+              }))}
               value={formData.client_id}
               onValueChange={(v) => setFormData({ ...formData, client_id: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Venda avulsa (sem cliente)" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name} {c.cpf_cnpj && `- ${maskCpfCnpj(c.cpf_cnpj)}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Venda avulsa (sem cliente)"
+              searchPlaceholder="Buscar cliente..."
+              emptyText="Nenhum cliente encontrado."
+            />
           </div>
           <div className="space-y-2">
             <Label>Valor Bruto (R$)</Label>

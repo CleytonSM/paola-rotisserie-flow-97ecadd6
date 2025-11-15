@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Combobox } from "@/components/ui/combobox";
 import { Plus } from "lucide-react";
 import type { Supplier, FormData } from "./types";
 
@@ -53,21 +54,14 @@ export function PayableFormDialog({
         <form onSubmit={onSubmit} className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
             <Label>Fornecedor</Label>
-            <Select
+            <Combobox
+              options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
               value={formData.supplier_id}
               onValueChange={(v) => setFormData({ ...formData, supplier_id: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Selecione um fornecedor..."
+              searchPlaceholder="Buscar fornecedor..."
+              emptyText="Nenhum fornecedor encontrado."
+            />
           </div>
           <div className="space-y-2">
             <Label>Valor (R$)</Label>
@@ -77,20 +71,6 @@ export function PayableFormDialog({
               value={formData.value}
               onChange={(e) => setFormData({ ...formData, value: e.target.value })}
               required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Data de Vencimento</Label>
-            <DatePicker
-              date={formData.due_date}
-              setDate={(date) => setFormData({ ...formData, due_date: date })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Data de Pagamento</Label>
-            <DatePicker
-              date={formData.payment_date}
-              setDate={(date) => setFormData({ ...formData, payment_date: date })}
             />
           </div>
           <div className="space-y-2">
@@ -111,10 +91,32 @@ export function PayableFormDialog({
             </Select>
           </div>
           <div className="space-y-2">
+            <Label>Data de Vencimento</Label>
+            <DatePicker
+              date={formData.due_date}
+              setDate={(date) => setFormData({ ...formData, due_date: date })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Data de Pagamento</Label>
+            <DatePicker
+              date={formData.payment_date}
+              setDate={(date) => setFormData({ ...formData, payment_date: date })}
+              disabled={formData.status !== "paid"}
+            />
+          </div>
+          <div className="space-y-2">
             <Label>Status</Label>
             <Select
               value={formData.status}
-              onValueChange={(v) => setFormData({ ...formData, status: v })}
+              onValueChange={(v) => {
+                const newStatus = v;
+                // Se mudou para "paid" e não tem payment_date, define como hoje
+                const newPaymentDate = newStatus === "paid" && !formData.payment_date ? new Date() : formData.payment_date;
+                // Se mudou para "pending", limpa payment_date
+                const finalPaymentDate = newStatus === "pending" ? undefined : newPaymentDate;
+                setFormData({ ...formData, status: newStatus, payment_date: finalPaymentDate });
+              }}
             >
               <SelectTrigger>
                 <SelectValue />

@@ -321,12 +321,19 @@ export const updateAccountReceivableStatus = async (
 export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
+  weekAgo.setHours(0, 0, 0, 0);
+
+  // Data de fim: amanhã (para incluir hoje mas excluir datas futuras)
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + 1);
+  endDate.setHours(0, 0, 0, 0);
 
   // Buscar entradas
   const { data: receivables, error: recError } = await supabase
     .from('accounts_receivable')
     .select('net_value')
     .gte('entry_date', weekAgo.toISOString())
+    .lt('entry_date', endDate.toISOString())
     .eq('status', 'received');
 
   if (recError) return { data: null, error: recError };
@@ -336,6 +343,7 @@ export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
     .from('accounts_payable')
     .select('value')
     .gte('payment_date', weekAgo.toISOString())
+    .lt('payment_date', endDate.toISOString())
     .eq('status', 'paid');
 
   if (payError) return { data: null, error: payError };

@@ -20,12 +20,12 @@
     --popover: 48 100% 99%;
     --popover-foreground: 0 0% 18%;
 
-    /* Primária (CTAs): #FFB300 (amarelo-dourado quente) */
-    --primary: 42 100% 50%;
+    /* Primária (CTAs): #e5b35e (amarelo-dourado quente) */
+    --primary: 38 72% 63%;
     /* Texto do botão primário: #1F2937 (alto contraste) */
     --primary-foreground: 215 28% 17%;
-    /* Hover da primária: #E6A100 */
-    --primary-hover: 42 100% 45%;
+    /* Hover da primária: versão mais escura */
+    --primary-hover: 38 72% 55%;
 
     /* Secundária (Apoio): #5DAB57 (verde-oliva acolhedor) */
     --secondary: 115 30% 51%;
@@ -57,9 +57,9 @@
     --border: 40 48% 88%;
     /* Input (fundo, igual ao muted) */
     --input: 38 33% 95%;
-    
-    /* Ring (Foco): #FFB300 */
-    --ring: 42 100% 50%;
+
+    /* Ring (Foco): #e5b35e */
+    --ring: 38 72% 63%;
 
     /* Cantos mais arredondados */
     --radius: 1rem;
