@@ -10,6 +10,7 @@ import {
   getClientsCount,
   getSuppliersCount,
   getUpcomingPayablesCount,
+  getOverduePayablesCount,
 } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
@@ -26,7 +27,7 @@ export default function Dashboard() {
   const [suppliersCount, setSuppliersCount] = useState(0);
   const [upcomingPayablesCount, setUpcomingPayablesCount] = useState(0);
   const [profitData, setProfitData] = useState<any[]>([]);
-
+  const [overduePayablesCount, setOverduePayablesCount] = useState(0);
   useEffect(() => {
     const checkAuth = async () => {
       const { session } = await getCurrentSession();
@@ -51,6 +52,7 @@ export default function Dashboard() {
       suppliersResult,
       upcomingPayablesResult,
       profitResult,
+      overduePayablesResult,
     ] = await Promise.all([
       getWeeklyBalance(),
       getUnpaidPayablesCount(),
@@ -58,6 +60,7 @@ export default function Dashboard() {
       getSuppliersCount(),
       getUpcomingPayablesCount(),
       getProfitHistory(),
+      getOverduePayablesCount(),
     ]);
 
     if (balanceResult.error) {
@@ -94,6 +97,12 @@ export default function Dashboard() {
       toast.error("Erro ao carregar histórico de lucros");
     } else if (profitResult.data) {
       setProfitData(profitResult.data);
+    }
+
+    if (overduePayablesResult.error) {
+      toast.error("Erro ao carregar contas vencidas");
+    } else if (overduePayablesResult.data !== null) {
+      setOverduePayablesCount(overduePayablesResult.data);
     }
 
     setLoading(false);
@@ -138,39 +147,57 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
-          // ATUALIZADO: Grid responsiva
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <StatsCard
-              title="Saldo Semanal"
-              value={formatCurrency(balance.balance)}
-              icon={DollarSign}
-              variant={balance.balance >= 0 ? "success" : "warning"}
-              trend="Últimos 7 dias"
-            />
+          <>
+            {/* Alert row above the main cards */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 -mt-6 mb-4">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Contas Vencidas</span>
+                  <span className="flex items-center gap-1.5 font-sans text-lg font-semibold text-red-600">
+                    <AlertCircle className="h-4 w-4" />
+                    {overduePayablesCount}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-            <StatsCard
-              title="Total Recebido"
-              value={formatCurrency(balance.totalReceivable)}
-              icon={TrendingUp}
-              variant="success"
-              trend="Últimos 7 dias"
-            />
+            {/* ATUALIZADO: Grid responsiva */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <StatsCard
+                title="Saldo Semanal"
+                value={formatCurrency(balance.balance)}
+                icon={DollarSign}
+                variant={balance.balance >= 0 ? "success" : "warning"}
+                trend="Últimos 7 dias"
+              />
 
-            <StatsCard
-              title="Total Pago"
-              value={formatCurrency(balance.totalPayable)}
-              icon={TrendingDown}
-              trend="Últimos 7 dias"
-            />
+              <StatsCard
+                title="Total Recebido"
+                value={formatCurrency(balance.totalReceivable)}
+                icon={TrendingUp}
+                variant="success"
+                trend="Últimos 7 dias"
+              />
 
-            <StatsCard
-              title="Contas a Pagar"
-              value={`${unpaidPayablesCount}`}
-              icon={AlertCircle}
-              variant="warning"
-              trend="Não pagas"
-            />
-          </div>
+              <StatsCard
+                title="Total Pago"
+                value={formatCurrency(balance.totalPayable)}
+                icon={TrendingDown}
+                trend="Últimos 7 dias"
+              />
+
+              <StatsCard
+                title="Contas a Pagar"
+                value={`${unpaidPayablesCount}`}
+                icon={AlertCircle}
+                variant="warning"
+                trend="Não pagas"
+              />
+            </div>
+          </>
         )}
 
         {/* ATUALIZADO: Grid responsiva (1 col mobile, 2 desktop) */}
@@ -254,7 +281,7 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="text-sm text-muted-foreground">Contas a Vencer em 7 dias</span>
+                    <span className="text-sm text-muted-foreground">Contas a Vencer em 7 dias</span>
                     <span className="font-sans font-semibold tabular-nums text-foreground">
                       {upcomingPayablesCount}
                     </span>

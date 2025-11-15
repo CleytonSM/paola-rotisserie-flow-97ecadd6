@@ -22,7 +22,6 @@ import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
 import type { DateRange } from "react-day-picker";
-import { getAccountStatus } from "@/components/ui/payable/utils";
 
 // --- Schema de Validação ---
 
@@ -168,11 +167,18 @@ export default function Payable() {
 
       const validated = payableSchema.parse(dataToValidate);
 
-      // Converte as datas para string ISO para o Supabase
+      // Converte as datas para formato YYYY-MM-DD (sem hora) para o Supabase
+      const formatDateToYYYYMMDD = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       const dataToSubmit = {
         ...validated,
-        due_date: validated.due_date ? validated.due_date.toISOString() : undefined,
-        payment_date: validated.payment_date ? validated.payment_date.toISOString() : null,
+        due_date: validated.due_date ? formatDateToYYYYMMDD(validated.due_date) : undefined,
+        payment_date: validated.payment_date ? formatDateToYYYYMMDD(validated.payment_date) : null,
       };
 
       const { error } = editingId
@@ -199,12 +205,22 @@ export default function Payable() {
 
   const handleStatusChange = async (id: string, newStatus: "pending" | "paid") => {
     const account = accounts.find((acc) => acc.id === id);
-    if (!account || getAccountStatus(account) === newStatus) return;
+    if (!account || account.status === newStatus) return;
 
     // Se mudando para "paid" e não tem payment_date, define como hoje
-    const updateData: { status: string; payment_date?: string } = { status: newStatus };
+    // Se mudando para "pending", remove payment_date
+    const formatDateToYYYYMMDD = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const updateData: { status: string; payment_date?: string | null } = { status: newStatus };
     if (newStatus === "paid" && !account.payment_date) {
-      updateData.payment_date = new Date().toISOString();
+      updateData.payment_date = formatDateToYYYYMMDD(new Date());
+    } else if (newStatus === "pending") {
+      updateData.payment_date = null;
     }
 
     const { error } = await updateAccountPayable(id, updateData);
@@ -215,7 +231,11 @@ export default function Payable() {
       setAccounts(
         accounts.map((acc) =>
           acc.id === id
-            ? { ...acc, status: newStatus, payment_date: updateData.payment_date || acc.payment_date }
+            ? { 
+                ...acc, 
+                status: newStatus, 
+                payment_date: newStatus === "pending" ? undefined : (updateData.payment_date || acc.payment_date)
+              }
             : acc
         )
       );
@@ -246,7 +266,7 @@ export default function Payable() {
 
   const filteredAccounts = useMemo(() => {
     return accounts.filter((account) => {
-      const status = getAccountStatus(account);
+      const status = account.status;
       const searchLower = searchTerm.toLowerCase();
 
       // Filtro de Status

@@ -152,13 +152,21 @@ export default function Receivable() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Helper function to format date as YYYY-MM-DD (sem hora)
+      const formatDateToYYYYMMDD = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       const validated = receivableSchema.parse({
         client_id: formData.client_id || undefined,
         gross_value: parseFloat(formData.gross_value),
         payment_method: formData.payment_method,
         card_brand: formData.card_brand || undefined,
         tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) : undefined,
-        entry_date: formData.entry_date ? formData.entry_date.toISOString().split("T")[0] : "",
+        entry_date: formData.entry_date ? formatDateToYYYYMMDD(formData.entry_date) : "",
       });
 
       const { error } = editingId

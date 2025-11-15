@@ -9,18 +9,6 @@ export const formatDate = (date: string | undefined) => {
   return new Date(date).toLocaleDateString("pt-BR", { timeZone: "UTC" });
 };
 
-export const getAccountStatus = (account: AccountPayable): AccountStatus => {
-  if (account.status === "paid") return "paid";
-  if (
-    account.due_date &&
-    new Date(account.due_date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0) &&
-    account.status === "pending"
-  ) {
-    return "overdue";
-  }
-  return "pending";
-};
-
 export const translateStatus = (status: AccountStatus) => {
   const translations = { paid: "Pago", pending: "Pendente", overdue: "Vencido" };
   return translations[status] || status;

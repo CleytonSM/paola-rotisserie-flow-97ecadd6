@@ -4,7 +4,6 @@ import type { DateRange } from "react-day-picker";
 import type { AccountPayable, StatusFilter } from "./types";
 import { PayableFilters } from "./PayableFilters";
 import { PayableTableRow } from "./PayableTableRow";
-import { getAccountStatus } from "./utils";
 
 interface PayableTableProps {
   accounts: AccountPayable[];

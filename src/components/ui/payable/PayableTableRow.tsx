@@ -3,8 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AccountPayable } from "./types";
-import { formatCurrency, formatDate, getAccountStatus, translateStatus, getStatusBadgeClass } from "./utils";
+import type { AccountPayable, AccountStatus } from "./types";
+import { formatCurrency, formatDate, translateStatus, getStatusBadgeClass } from "./utils";
 
 interface PayableTableRowProps {
   account: AccountPayable;
@@ -19,7 +19,7 @@ export function PayableTableRow({
   onDelete,
   onStatusChange,
 }: PayableTableRowProps) {
-  const status = getAccountStatus(account);
+  const status = account.status as AccountStatus;
 
   return (
     <TableRow key={account.id} className="hover:bg-accent/30">

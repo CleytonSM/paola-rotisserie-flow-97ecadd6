@@ -11,7 +11,7 @@ export type AccountPayable = {
   notes?: string;
   due_date?: string;
   payment_date?: string;
-  status: "pending" | "paid";
+  status: "pending" | "paid" | "overdue";
   supplier?: Supplier;
 };
 
