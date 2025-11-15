@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Combobox } from "@/components/ui/combobox";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import type { Supplier, FormData } from "./types";
 
 interface PayableFormDialogProps {
@@ -17,6 +17,7 @@ interface PayableFormDialogProps {
   editingId: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onReset: () => void;
+  loading?: boolean;
 }
 
 export function PayableFormDialog({
@@ -28,6 +29,7 @@ export function PayableFormDialog({
   editingId,
   onSubmit,
   onReset,
+  loading = false,
 }: PayableFormDialogProps) {
   return (
     <Dialog
@@ -135,8 +137,15 @@ export function PayableFormDialog({
               placeholder="Ex: Compra semanal de material..."
             />
           </div>
-          <Button type="submit" className="w-full sm:col-span-2">
-            {editingId ? "Salvar Alterações" : "Adicionar Conta"}
+          <Button type="submit" className="w-full sm:col-span-2" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {editingId ? "Salvando..." : "Adicionando..."}
+              </>
+            ) : (
+              editingId ? "Salvar Alterações" : "Adicionar Conta"
+            )}
           </Button>
         </form>
       </DialogContent>

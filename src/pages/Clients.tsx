@@ -39,6 +39,7 @@ export default function Clients() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -105,6 +106,7 @@ export default function Clients() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       const dataToValidate = {
         ...formData,
@@ -140,6 +142,8 @@ export default function Clients() {
       } else {
         toast.error("Erro inesperado ao processar formulário");
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -247,6 +251,7 @@ export default function Clients() {
             editingId={editingId}
             onSubmit={handleSubmit}
             onReset={resetFormData}
+            loading={submitting}
           />
         </div>
 

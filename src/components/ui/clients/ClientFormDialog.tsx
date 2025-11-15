@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import type { FormData } from "./types";
 import { applyCpfCnpjMask, applyPhoneMask, maskCpfCnpj, maskPhone } from "./utils";
 
@@ -14,6 +14,7 @@ interface ClientFormDialogProps {
   editingId: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onReset: () => void;
+  loading?: boolean;
 }
 
 export function ClientFormDialog({
@@ -24,6 +25,7 @@ export function ClientFormDialog({
   editingId,
   onSubmit,
   onReset,
+  loading = false,
 }: ClientFormDialogProps) {
   const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
@@ -98,8 +100,15 @@ export function ClientFormDialog({
               placeholder="contato@cliente.com"
             />
           </div>
-          <Button type="submit" className="w-full sm:col-span-2">
-            {editingId ? "Salvar Alterações" : "Adicionar Cliente"}
+          <Button type="submit" className="w-full sm:col-span-2" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {editingId ? "Salvando..." : "Adicionando..."}
+              </>
+            ) : (
+              editingId ? "Salvar Alterações" : "Adicionar Cliente"
+            )}
           </Button>
         </form>
       </DialogContent>

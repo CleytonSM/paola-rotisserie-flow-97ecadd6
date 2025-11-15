@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Combobox } from "@/components/ui/combobox";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import type { Client, FormData } from "./types";
 import { maskCpfCnpj } from "./utils";
 
@@ -18,6 +18,7 @@ interface ReceivableFormDialogProps {
   editingId: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onReset: () => void;
+  loading?: boolean;
 }
 
 export function ReceivableFormDialog({
@@ -29,6 +30,7 @@ export function ReceivableFormDialog({
   editingId,
   onSubmit,
   onReset,
+  loading = false,
 }: ReceivableFormDialogProps) {
   return (
     <Dialog
@@ -127,8 +129,16 @@ export function ReceivableFormDialog({
           <Button
             type="submit"
             className="w-full sm:col-span-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+            disabled={loading}
           >
-            {editingId ? "Salvar Alterações" : "Adicionar Entrada"}
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {editingId ? "Salvando..." : "Adicionando..."}
+              </>
+            ) : (
+              editingId ? "Salvar Alterações" : "Adicionar Entrada"
+            )}
           </Button>
         </form>
       </DialogContent>

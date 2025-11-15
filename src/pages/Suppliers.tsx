@@ -37,6 +37,7 @@ export default function Suppliers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -105,6 +106,7 @@ export default function Suppliers() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       const dataToValidate = {
         ...formData,
@@ -137,6 +139,8 @@ export default function Suppliers() {
       if (err instanceof z.ZodError) {
         toast.error(err.issues[0].message);
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -192,6 +196,7 @@ export default function Suppliers() {
             editingId={editingId}
             onSubmit={handleSubmit}
             onReset={resetFormData}
+            loading={submitting}
           />
         </div>
 

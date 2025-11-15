@@ -52,6 +52,7 @@ export default function Payable() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     supplier_id: "",
@@ -149,6 +150,7 @@ export default function Payable() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       // Se status for "paid" e payment_date não estiver definido, define como hoje
       let paymentDate = formData.payment_date;
@@ -190,6 +192,8 @@ export default function Payable() {
       if (err instanceof z.ZodError) {
         toast.error(err.issues[0].message);
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -289,6 +293,7 @@ export default function Payable() {
             editingId={editingId}
             onSubmit={handleSubmit}
             onReset={resetFormData}
+            loading={submitting}
           />
         </div>
 

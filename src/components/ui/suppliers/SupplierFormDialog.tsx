@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import type { FormData } from "./types";
 import { maskCnpj, maskPhone } from "./utils";
 
@@ -14,6 +14,7 @@ interface SupplierFormDialogProps {
   editingId: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onReset: () => void;
+  loading?: boolean;
 }
 
 export function SupplierFormDialog({
@@ -24,6 +25,7 @@ export function SupplierFormDialog({
   editingId,
   onSubmit,
   onReset,
+  loading = false,
 }: SupplierFormDialogProps) {
   const handleMaskedInputChange = (e: React.ChangeEvent<HTMLInputElement>, mask: (value: string) => string) => {
     const { name, value } = e.target;
@@ -94,8 +96,15 @@ export function SupplierFormDialog({
               placeholder="contato@fornecedor.com"
             />
           </div>
-          <Button type="submit" className="w-full sm:col-span-2">
-            {editingId ? "Salvar Alterações" : "Adicionar Fornecedor"}
+          <Button type="submit" className="w-full sm:col-span-2" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {editingId ? "Salvando..." : "Adicionando..."}
+              </>
+            ) : (
+              editingId ? "Salvar Alterações" : "Adicionar Fornecedor"
+            )}
           </Button>
         </form>
       </DialogContent>
