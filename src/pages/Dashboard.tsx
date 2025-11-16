@@ -148,21 +148,6 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Alert row above the main cards */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 -mt-6 mb-4">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Contas Vencidas</span>
-                  <span className="flex items-center gap-1.5 font-sans text-lg font-semibold text-red-600">
-                    <AlertCircle className="h-4 w-4" />
-                    {overduePayablesCount}
-                  </span>
-                </div>
-              </div>
-            </div>
 
             {/* ATUALIZADO: Grid responsiva */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -189,13 +174,31 @@ export default function Dashboard() {
                 trend="Últimos 7 dias"
               />
 
-              <StatsCard
-                title="Contas a Pagar"
-                value={`${unpaidPayablesCount}`}
-                icon={AlertCircle}
-                variant="warning"
-                trend="Não pagas"
-              />
+              {/* Combined card for Contas a Pagar and Contas Vencidas */}
+              <div className="rounded-2xl border bg-card p-6 shadow-sm">
+                <div className="flex flex-col gap-4">
+                  {/* Contas a Pagar */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Contas a Pagar</span>
+                    <span className="flex items-center gap-1.5 font-sans text-lg font-semibold text-amber-600">
+                      <AlertCircle className="h-4 w-4" />
+                      {unpaidPayablesCount}
+                    </span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-border" />
+
+                  {/* Contas Vencidas */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Contas Vencidas</span>
+                    <span className="flex items-center gap-1.5 font-sans text-lg font-semibold text-red-600">
+                      <AlertCircle className="h-4 w-4" />
+                      {overduePayablesCount}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </>
         )}
