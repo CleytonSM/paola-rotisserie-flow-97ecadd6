@@ -7,15 +7,14 @@ export default function Layout() {
         <SidebarProvider>
             <div className="flex min-h-screen w-full bg-background">
                 <AppSidebar />
-                <main className="flex-1 flex flex-col overflow-hidden">
-                    {/* Mobile Trigger */}
-                    <div className="p-4 md:hidden border-b flex items-center gap-2">
-                        <SidebarTrigger />
-                        <span className="font-display font-bold text-lg">Paola Gonçalves</span>
+                <main className="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out">
+                    {/* Mobile Header */}
+                    <div className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-6 backdrop-blur-sm md:hidden">
+                        <span className="font-display text-xl font-bold text-primary">Paola Gonçalves</span>
                     </div>
 
                     {/* Page Content */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto p-0">
                         <Outlet />
                     </div>
                 </main>

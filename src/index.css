@@ -67,19 +67,19 @@
     /* Transições suaves */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Sidebar Specific Variables - Matches your Warm Theme */
+    /* --- SIDEBAR VARIABLES (Mapped to Theme) --- */
     --sidebar-background: 39 100% 98%;
-    /* Same as --background */
+    /* Matches --background */
     --sidebar-foreground: 0 0% 18%;
-    /* Same as --foreground */
+    /* Matches --foreground */
     --sidebar-primary: 38 72% 63%;
-    /* Same as --primary */
+    /* Matches --primary */
     --sidebar-primary-foreground: 215 28% 17%;
     --sidebar-accent: 38 33% 95%;
-    /* Same as --accent */
+    /* Matches --accent */
     --sidebar-accent-foreground: 0 0% 18%;
     --sidebar-border: 40 48% 88%;
-    /* Same as --border */
+    /* Matches --border */
     --sidebar-ring: 38 72% 63%;
   }
 }
