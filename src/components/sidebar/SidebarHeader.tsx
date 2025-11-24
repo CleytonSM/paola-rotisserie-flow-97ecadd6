@@ -1,4 +1,4 @@
-import { SidebarHeader as SidebarHeaderUI } from "@/components/ui/sidebar";
+import { SidebarHeader as SidebarHeaderUI, useSidebar } from "@/components/ui/sidebar";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface SidebarHeaderProps {
@@ -6,11 +6,13 @@ interface SidebarHeaderProps {
 }
 
 export function SidebarHeader({ isExpanded }: SidebarHeaderProps) {
+    const { isMobile } = useSidebar();
+
     return (
-        <SidebarHeaderUI className="bg-sidebar/50 backdrop-blur-sm pb-0">
+        <SidebarHeaderUI className="backdrop-blur-sm pb-0">
             <div className="flex w-full items-center justify-center overflow-hidden pt-4 pb-2">
                 <AnimatePresence mode="wait">
-                    {isExpanded ? (
+                    {(isExpanded || isMobile) ? (
                         <motion.div
                             key="expanded-logo"
                             initial={{ opacity: 0 }}

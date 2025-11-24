@@ -5,6 +5,7 @@ import {
     SidebarMenuItem,
     SidebarMenuButton,
     SidebarSeparator,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import { navigationGroups } from "@/navigationConfig";
 import { Link } from "react-router-dom";
@@ -15,6 +16,14 @@ interface NavigationSectionsProps {
 }
 
 export function NavigationSections({ isActive }: NavigationSectionsProps) {
+    const { isMobile, setOpenMobile } = useSidebar();
+
+    const handleClick = () => {
+        if (isMobile) {
+            setOpenMobile(false);
+        }
+    };
+
     return (
         <>
             {/* Overview Section */}
@@ -30,7 +39,7 @@ export function NavigationSections({ isActive }: NavigationSectionsProps) {
                                 size="lg"
                                 className="rounded-xl transition-all duration-200 hover:bg-sidebar-accent/50 hover:shadow-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
                             >
-                                <Link to={item.url}>
+                                <Link to={item.url} onClick={handleClick}>
                                     {item.icon && <item.icon className="text-primary size-5" />}
                                     <span className="font-medium group-data-[collapsible=icon]:hidden">
                                         {item.title}
@@ -56,7 +65,7 @@ export function NavigationSections({ isActive }: NavigationSectionsProps) {
                                 tooltip={item.title}
                                 className="group-data-[collapsible=icon]:justify-center"
                             >
-                                <Link to={item.url}>
+                                <Link to={item.url} onClick={handleClick}>
                                     {item.icon && (
                                         <item.icon
                                             className={

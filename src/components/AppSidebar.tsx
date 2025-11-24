@@ -1,8 +1,9 @@
-import { Sidebar, SidebarContent, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { useLocation } from "react-router-dom";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { ToggleButton } from "./sidebar/ToggleButton";
 import { NavigationSections } from "./sidebar/NavigationSections";
+import { SidebarFooter } from "./sidebar/SidebarFooter";
 
 export function AppSidebar() {
     const location = useLocation();

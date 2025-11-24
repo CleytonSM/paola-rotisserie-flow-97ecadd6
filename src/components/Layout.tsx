@@ -9,8 +9,13 @@ export default function Layout() {
                 <AppSidebar />
                 <main className="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out">
                     {/* Mobile Header */}
-                    <div className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-6 backdrop-blur-sm md:hidden">
-                        <span className="font-display text-xl font-bold text-primary">Paola Gonçalves</span>
+                    <div className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-6 backdrop-blur-sm md:hidden rounded-xl">
+                        <SidebarTrigger />
+                        <img
+                            src="/pg-rotisserie-banner.png"
+                            alt="Paola Gonçalves"
+                            className="h-10 w-auto object-contain"
+                        />
                     </div>
 
                     {/* Page Content */}
