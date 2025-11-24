@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { ReceivableFormDialog } from "@/components/ui/receivable/ReceivableFormDialog";
 import { ReceivableTable } from "@/components/ui/receivable/ReceivableTable";
 import { DeleteReceivableDialog } from "@/components/ui/receivable/DeleteReceivableDialog";
@@ -255,7 +254,6 @@ export default function Receivable() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
 
       <main className="container flex-1 py-8 md:py-12">
         {/* Cabeçalho da Página */}

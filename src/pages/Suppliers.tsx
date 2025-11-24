@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { SupplierFormDialog } from "@/components/ui/suppliers/SupplierFormDialog";
 import { SupplierTable } from "@/components/ui/suppliers/SupplierTable";
 import { DeleteSupplierDialog } from "@/components/ui/suppliers/DeleteSupplierDialog";
@@ -175,7 +174,6 @@ export default function Suppliers() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
 
       <main className="container flex-1 py-8 md:py-12">
         {/* Cabeçalho da Página */}

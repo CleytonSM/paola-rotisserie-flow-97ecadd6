@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { StatsCard } from "@/components/StatsCard";
 import { TrendingUp, TrendingDown, AlertCircle, DollarSign, Plus } from "lucide-react";
 import {
@@ -125,8 +124,6 @@ export default function Dashboard() {
   return (
     // Fundo #FFFBF5 aplicado globalmente
     <div className="flex min-h-screen flex-col">
-      <Header />
-
       <main className="container flex-1 py-8 md:py-12">
         <div className="mb-8 md:mb-12">
           {/* ATUALIZADO: Título com Cormorant, responsivo e mais espaçado */}

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { PayableFormDialog } from "@/components/ui/payable/PayableFormDialog";
 import { PayableTable } from "@/components/ui/payable/PayableTable";
 import { DeletePayableDialog } from "@/components/ui/payable/DeletePayableDialog";
@@ -231,11 +230,11 @@ export default function Payable() {
       setAccounts(
         accounts.map((acc) =>
           acc.id === id
-            ? { 
-                ...acc, 
-                status: newStatus, 
-                payment_date: newStatus === "pending" ? undefined : (updateData.payment_date || acc.payment_date)
-              }
+            ? {
+              ...acc,
+              status: newStatus,
+              payment_date: newStatus === "pending" ? undefined : (updateData.payment_date || acc.payment_date)
+            }
             : acc
         )
       );
@@ -291,7 +290,6 @@ export default function Payable() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
 
       <main className="container flex-1 py-8 md:py-12">
         {/* Cabeçalho da Página */}

@@ -11,6 +11,7 @@ import Reports from "./pages/Reports";
 import Suppliers from "./pages/Suppliers";
 import Clients from "./pages/Clients";
 import NotFound from "./pages/NotFound";
+import Layout from "@/components/Layout";
 
 const queryClient = new QueryClient();
 
@@ -21,13 +22,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/payable" element={<Payable />} />
-          <Route path="/receivable" element={<Receivable />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/suppliers" element={<Suppliers />} />
-          <Route path="/clients" element={<Clients />} />
+
+          <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/payable" element={<Payable />} />
+            <Route path="/receivable" element={<Receivable />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/clients" element={<Clients />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { ClientFormDialog } from "@/components/ui/clients/ClientFormDialog";
 import { DeleteClientDialog } from "@/components/ui/clients/DeleteClientDialog";
 import type { Client, FormData } from "@/components/ui/clients/types";
@@ -232,7 +231,6 @@ export default function Clients() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
 
       <main className="container flex-1 py-8 md:py-12">
         {/* Cabeçalho da Página */}

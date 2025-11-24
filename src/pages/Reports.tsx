@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { ReportsFilters } from "@/components/ui/reports/ReportsFilters";
 import { ReportsKPIs } from "@/components/ui/reports/ReportsKPIs";
 import { ReportsBarChart } from "@/components/ui/reports/ReportsBarChart";
@@ -247,7 +246,6 @@ export default function Reports() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
 
       <main className="container flex-1 py-8 md:py-12">
         <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
