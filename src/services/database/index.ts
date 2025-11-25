@@ -5,6 +5,7 @@
 
 // Types
 export type { DatabaseResult, DatabaseQuery, DatabaseMutation } from "./types";
+export type { CardMachine, CardFlag } from "./machines";
 
 // Suppliers
 export {
@@ -62,4 +63,14 @@ export {
   saveRefreshToken,
   getValidRefreshToken,
 } from "./tokens";
+
+// Machines
+export {
+  getMachines,
+  createMachine,
+  updateMachine,
+  deleteMachine,
+  addFlag,
+  deleteFlag,
+} from "./machines";
 

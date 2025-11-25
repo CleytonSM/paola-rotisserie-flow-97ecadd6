@@ -8,6 +8,9 @@ import { Combobox } from "@/components/ui/combobox";
 import { Plus, Loader2 } from "lucide-react";
 import type { Client, FormData } from "./types";
 import { maskCpfCnpj } from "./utils";
+import { useQuery } from "@tanstack/react-query";
+import { getMachines, CardMachine } from "@/services/database";
+import { useState, useEffect } from "react";
 
 interface ReceivableFormDialogProps {
   open: boolean;
@@ -32,6 +35,38 @@ export function ReceivableFormDialog({
   onReset,
   loading = false,
 }: ReceivableFormDialogProps) {
+  const [selectedMachineId, setSelectedMachineId] = useState<string>("");
+
+  const { data: machines } = useQuery({
+    queryKey: ["machines"],
+    queryFn: async () => {
+      const { data, error } = await getMachines();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Reset selected machine when dialog closes or resets
+  useEffect(() => {
+    if (!open) {
+      setSelectedMachineId("");
+    }
+  }, [open]);
+
+  const handleFlagSelect = (flagId: string) => {
+    if (!machines) return;
+    const machine = machines.find(m => m.id === selectedMachineId);
+    const flag = machine?.flags?.find(f => f.id === flagId);
+
+    if (flag) {
+      setFormData(prev => ({
+        ...prev,
+        card_brand: `${flag.brand} (${flag.type === 'credit' ? 'Crédito' : 'Débito'})`,
+        tax_rate: flag.tax_rate.toString()
+      }));
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -107,11 +142,52 @@ export function ReceivableFormDialog({
           {formData.payment_method === "card" && (
             <>
               <div className="space-y-2">
-                <Label>Bandeira do Cartão</Label>
+                <Label>Maquininha</Label>
+                <Select
+                  value={selectedMachineId}
+                  onValueChange={setSelectedMachineId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a maquininha" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {machines?.map((machine) => (
+                      <SelectItem key={machine.id} value={machine.id}>
+                        {machine.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedMachineId && (
+                <div className="space-y-2">
+                  <Label>Bandeira / Tipo</Label>
+                  <Select onValueChange={handleFlagSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a bandeira" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {machines
+                        ?.find((m) => m.id === selectedMachineId)
+                        ?.flags?.map((flag) => (
+                          <SelectItem key={flag.id} value={flag.id}>
+                            {flag.brand} - {flag.type === 'credit' ? 'Crédito' : 'Débito'} ({flag.tax_rate}%)
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Bandeira (Texto)</Label>
                 <Input
                   value={formData.card_brand}
                   onChange={(e) => setFormData({ ...formData, card_brand: e.target.value })}
                   placeholder="Ex: Visa, Master"
+                  readOnly={!!selectedMachineId}
+                  className={selectedMachineId ? "bg-muted" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -122,6 +198,8 @@ export function ReceivableFormDialog({
                   value={formData.tax_rate}
                   onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
                   placeholder="Ex: 2.5"
+                  readOnly={!!selectedMachineId}
+                  className={selectedMachineId ? "bg-muted" : ""}
                 />
               </div>
             </>

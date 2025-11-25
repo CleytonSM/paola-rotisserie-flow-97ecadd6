@@ -60,7 +60,7 @@ export const navigationGroups = {
                 title: "Configurações",
                 icon: Settings,
                 items: [
-                    { title: "Maquininhas (Em breve)", url: "#", icon: CreditCard, disabled: true },
+                    { title: "Maquininhas", url: "/machines", icon: CreditCard },
                     { title: "Geral (Em breve)", url: "#", icon: Settings, disabled: true },
                 ] as NavItem[],
             },
