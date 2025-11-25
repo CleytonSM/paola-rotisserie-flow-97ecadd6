@@ -1,5 +1,5 @@
 /**
- * Product utility functions
+ * Product Catalog utility functions
  */
 
 /**
@@ -14,11 +14,18 @@ export const formatPrice = (price: number | string): string => {
 };
 
 /**
+ * Format base price with unit suffix
+ */
+export const formatBasePrice = (price: number | string): string => {
+    return `${formatPrice(price)}/kg`;
+};
+
+/**
  * Format discount percentage for display
  */
 export const formatDiscount = (discount: number | null | undefined): string => {
     if (!discount) return "0%";
-    return `${(discount * 100).toFixed(0)}%`;
+    return `${(discount * 100).toFixed(1)}%`;
 };
 
 /**
@@ -52,11 +59,17 @@ export const maskPrice = (value: string): string => {
  * Mask discount input (0-100%)
  */
 export const maskDiscount = (value: string): string => {
-    // Remove non-numeric characters
-    let cleaned = value.replace(/[^\d]/g, "");
+    // Remove non-numeric characters except decimal point
+    let cleaned = value.replace(/[^\d.]/g, "");
+
+    // Ensure only one decimal point
+    const parts = cleaned.split(".");
+    if (parts.length > 2) {
+        cleaned = parts[0] + "." + parts[1];
+    }
 
     // Limit to 100
-    let num = parseInt(cleaned || "0");
+    let num = parseFloat(cleaned || "0");
     if (num > 100) num = 100;
 
     return num.toString();
@@ -75,5 +88,5 @@ export const percentToDecimal = (percent: string | number): number => {
  */
 export const decimalToPercent = (decimal: number | null | undefined): string => {
     if (!decimal) return "0";
-    return (decimal * 100).toString();
+    return (decimal * 100).toFixed(1);
 };

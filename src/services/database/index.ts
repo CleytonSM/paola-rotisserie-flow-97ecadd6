@@ -9,77 +9,98 @@ export type { CardMachine, CardFlag } from "./machines";
 
 // Suppliers
 export {
-  getSuppliers,
-  createSupplier,
-  updateSupplier,
-  deleteSupplier,
+    getSuppliers,
+    createSupplier,
+    updateSupplier,
+    deleteSupplier,
 } from "./suppliers";
 
 // Clients
 export {
-  getClients,
-  createClient,
-  updateClient,
-  deleteClient,
+    getClients,
+    createClient,
+    updateClient,
+    deleteClient,
 } from "./clients";
 
 // Accounts Payable
 export {
-  getAccountsPayable,
-  getAccountsPayableByDateRange,
-  getPayablesForReports,
-  createAccountPayable,
-  updateAccountPayable,
-  updateAccountPayableStatus,
-  deleteAccountPayable,
+    getAccountsPayable,
+    getAccountsPayableByDateRange,
+    getPayablesForReports,
+    createAccountPayable,
+    updateAccountPayable,
+    updateAccountPayableStatus,
+    deleteAccountPayable,
 } from "./payable";
 
 // Accounts Receivable
 export {
-  getAccountsReceivable,
-  getAccountsReceivableByDateRange,
-  getReceivablesForReports,
-  createAccountReceivable,
-  updateAccountReceivable,
-  updateAccountReceivableStatus,
-  deleteAccountReceivable,
+    getAccountsReceivable,
+    getAccountsReceivableByDateRange,
+    getReceivablesForReports,
+    createAccountReceivable,
+    updateAccountReceivable,
+    updateAccountReceivableStatus,
+    deleteAccountReceivable,
 } from "./receivable";
 
 // Analytics
 export {
-  getWeeklyBalance,
-  getPendingCounts,
-  getUnpaidPayablesCount,
-  getClientsCount,
-  getSuppliersCount,
-  getUpcomingPayablesCount,
-  getOverduePayablesCount,
-  getProfitHistory,
+    getWeeklyBalance,
+    getPendingCounts,
+    getUnpaidPayablesCount,
+    getClientsCount,
+    getSuppliersCount,
+    getUpcomingPayablesCount,
+    getOverduePayablesCount,
+    getProfitHistory,
 } from "./analytics";
 
 // Refresh Tokens
 export {
-  revokeRefreshTokens,
-  saveRefreshToken,
-  getValidRefreshToken,
+    revokeRefreshTokens,
+    saveRefreshToken,
+    getValidRefreshToken,
 } from "./tokens";
 
 // Machines
 export {
-  getMachines,
-  createMachine,
-  updateMachine,
-  deleteMachine,
-  addFlag,
-  deleteFlag,
+    getMachines,
+    createMachine,
+    updateMachine,
+    deleteMachine,
+    addFlag,
+    deleteFlag,
 } from "./machines";
 
-// Products
+// Product Catalog (Master Products)
 export {
-  getProducts,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-} from "./products";
-export type { Product, ProductInput } from "./products";
+    getProductCatalog,
+    createCatalogProduct,
+    updateCatalogProduct,
+    deleteCatalogProduct,
+    hardDeleteCatalogProduct,
+} from "./product-catalog";
+export type { ProductCatalog, ProductCatalogInput } from "./product-catalog";
 
+// Product Items (Individual Weighed Items)
+export {
+    getProductItems,
+    createProductItem,
+    updateProductItem,
+    deleteProductItem,
+    markItemAsSold,
+    getExpiringItems,
+    markExpiredItems,
+} from "./product-items";
+export type {
+    ProductItem,
+    ProductItemInput,
+    ProductItemStatus,
+    ProductItemFilters
+} from "./product-items";
+
+// Product Stock
+export { getProductCatalogStock, getAllCatalogStocks } from "./product-stock";
+export type { StockSummary } from "./product-stock";

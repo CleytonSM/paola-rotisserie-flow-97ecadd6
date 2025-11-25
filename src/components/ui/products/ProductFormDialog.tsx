@@ -10,17 +10,27 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
-import type { FormData } from "./types";
+import { UseFormReturn } from "react-hook-form";
 import { maskPrice, maskDiscount } from "./utils";
+
+interface FormValues {
+    name: string;
+    base_price: string;
+    internal_code?: string;
+    catalog_barcode?: string;
+    shelf_life_days?: string;
+    default_discount?: string;
+    is_active: boolean;
+}
 
 interface ProductFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    formData: FormData;
-    setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+    form: UseFormReturn<FormValues>;
     editingId: string | null;
-    onSubmit: (e: React.FormEvent) => void;
+    onSubmit: () => void;
     onReset: () => void;
     loading: boolean;
 }
@@ -28,21 +38,22 @@ interface ProductFormDialogProps {
 export function ProductFormDialog({
     open,
     onOpenChange,
-    formData,
-    setFormData,
+    form,
     editingId,
     onSubmit,
     onReset,
     loading,
 }: ProductFormDialogProps) {
+    const { register, watch, setValue } = form;
+
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const masked = maskPrice(e.target.value);
-        setFormData({ ...formData, price: masked });
+        setValue("base_price", masked);
     };
 
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const masked = maskDiscount(e.target.value);
-        setFormData({ ...formData, discount: masked });
+        setValue("default_discount", masked);
     };
 
     return (
@@ -61,7 +72,7 @@ export function ProductFormDialog({
                         </DialogTitle>
                         <DialogDescription>
                             {editingId
-                                ? "Atualize as informações do produto."
+                                ? "Atualize as informações do produto no catálogo."
                                 : "Adicione um novo produto ao catálogo."}
                         </DialogDescription>
                     </DialogHeader>
@@ -75,69 +86,59 @@ export function ProductFormDialog({
                             <Input
                                 id="name"
                                 placeholder="Ex: Frango Assado"
-                                value={formData.name}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, name: e.target.value })
-                                }
-                                maxLength={35}
+                                {...register("name")}
+                                maxLength={100}
                                 required
                             />
                         </div>
 
-                        {/* Code and Barcode */}
+                        {/* Internal Code and Catalog Barcode */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="code">Código</Label>
+                                <Label htmlFor="internal_code">Código Interno</Label>
                                 <Input
-                                    id="code"
+                                    id="internal_code"
                                     placeholder="Ex: FRANG-001"
-                                    value={formData.code}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, code: e.target.value })
-                                    }
+                                    {...register("internal_code")}
                                     maxLength={50}
                                 />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="barcode">Código de Barras</Label>
+                                <Label htmlFor="catalog_barcode">Código de Barras</Label>
                                 <Input
-                                    id="barcode"
+                                    id="catalog_barcode"
                                     type="number"
                                     placeholder="Ex: 7891234567890"
-                                    value={formData.barcode}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, barcode: e.target.value })
-                                    }
+                                    {...register("catalog_barcode")}
                                 />
                             </div>
                         </div>
 
-                        {/* Price and Discount */}
+                        {/* Base Price and Default Discount */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="price">
-                                    Preço (R$) <span className="text-destructive">*</span>
+                                <Label htmlFor="base_price">
+                                    Preço Base (R$/kg) <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
-                                    id="price"
+                                    id="base_price"
                                     type="text"
                                     placeholder="Ex: 45.90"
-                                    value={formData.price}
+                                    value={watch("base_price")}
                                     onChange={handlePriceChange}
                                     required
                                 />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="discount">Desconto (%)</Label>
+                                <Label htmlFor="default_discount">Desconto Padrão (%)</Label>
                                 <Input
-                                    id="discount"
+                                    id="default_discount"
                                     type="text"
-                                    placeholder="Ex: 10"
-                                    value={formData.discount}
+                                    placeholder="Ex: 10.5"
+                                    value={watch("default_discount")}
                                     onChange={handleDiscountChange}
-                                    max={100}
                                 />
                             </div>
                         </div>
@@ -148,12 +149,26 @@ export function ProductFormDialog({
                             <Input
                                 id="shelf_life_days"
                                 type="number"
-                                placeholder="Ex: 30"
-                                value={formData.shelf_life_days}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, shelf_life_days: e.target.value })
-                                }
+                                placeholder="Ex: 3"
+                                {...register("shelf_life_days")}
                                 min={1}
+                            />
+                        </div>
+
+                        {/* Is Active */}
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="is_active" className="text-base">
+                                    Produto Ativo
+                                </Label>
+                                <div className="text-sm text-muted-foreground">
+                                    Produtos inativos não aparecem na listagem padrão
+                                </div>
+                            </div>
+                            <Switch
+                                id="is_active"
+                                checked={watch("is_active")}
+                                onCheckedChange={(checked) => setValue("is_active", checked)}
                             />
                         </div>
                     </div>

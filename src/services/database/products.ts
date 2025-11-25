@@ -1,7 +1,8 @@
 /**
  * Products database operations
- * Handles CRUD operations for the produtos table
+ * Handles CRUD operations for the products table
  */
+
 
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
@@ -10,13 +11,14 @@ export interface Product {
     id: string;
     name: string;
     shelf_life_days?: number | null;
-    barcode?: number | null;
-    price: number;
-    code?: string | null;
-    discount?: number | null;
+    catalog_barcode?: number | null;
+    base_price: number;
+    internal_code?: string | null;
+    default_discount?: number | null;
+    is_active?: boolean | null;
     created_at?: string;
     updated_at?: string;
-}
+}   
 
 export interface ProductInput {
     name: string;
@@ -27,13 +29,15 @@ export interface ProductInput {
     discount?: number | null;
 }
 
+
+
 /**
  * Get all products
  */
 export const getProducts = async (): Promise<DatabaseResult<Product[]>> => {
     try {
         const { data, error } = await supabase
-            .from("produtos")
+            .from("products")
             .select("*")
             .order("name", { ascending: true });
 
@@ -52,7 +56,7 @@ export const createProduct = async (
 ): Promise<DatabaseResult<Product>> => {
     try {
         const { data, error } = await supabase
-            .from("produtos")
+            .from("products")
             .insert([product])
             .select()
             .single();
@@ -73,7 +77,7 @@ export const updateProduct = async (
 ): Promise<DatabaseResult<Product>> => {
     try {
         const { data, error } = await supabase
-            .from("produtos")
+            .from("products")
             .update(product)
             .eq("id", id)
             .select()
@@ -93,7 +97,7 @@ export const deleteProduct = async (
     id: string
 ): Promise<DatabaseResult<void>> => {
     try {
-        const { error } = await supabase.from("produtos").delete().eq("id", id);
+        const { error } = await supabase.from("products").delete().eq("id", id);
 
         if (error) throw error;
         return { data: null, error: null };

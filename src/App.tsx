@@ -14,6 +14,7 @@ import Machines from "./pages/Machines";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 import { Products } from "./pages/Products";
+import ItemProducts from "./pages/ItemProducts";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/clients" element={<Clients />} />
             <Route path="/machines" element={<Machines />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/product-items" element={<ItemProducts />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
