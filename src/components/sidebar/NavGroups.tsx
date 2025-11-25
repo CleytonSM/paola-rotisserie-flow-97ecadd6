@@ -23,14 +23,16 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavGroupProps } from "@/types";
 
-/**
- * A smart navigation group that behaves as a Collapsible in expanded mode
- * and a DropdownMenu in collapsed mode.
- */
 export function NavGroup({ title, icon: Icon, items, isActive }: NavGroupProps) {
-    const { state } = useSidebar();
+    const { state, isMobile, setOpenMobile } = useSidebar();
     const isCollapsed = state === "collapsed";
     const hasActiveChild = items.some((item) => isActive(item.url));
+
+    const handleLinkClick = () => {
+        if (isMobile) {
+            setOpenMobile(false);
+        }
+    };
 
     if (isCollapsed) {
         return (
@@ -71,7 +73,12 @@ export function NavGroup({ title, icon: Icon, items, isActive }: NavGroupProps) 
                                         <span>{item.title}</span>
                                     </span>
                                 ) : (
-                                    <Link to={item.url} className="flex items-center gap-2 w-full">
+                                    // ATUALIZADO: Adicionado handleLinkClick aqui também, embora Dropdown geralmente feche sozinho
+                                    <Link
+                                        to={item.url}
+                                        onClick={handleLinkClick}
+                                        className="flex items-center gap-2 w-full"
+                                    >
                                         {item.icon && <item.icon className="size-4" />}
                                         <span>{item.title}</span>
                                     </Link>
@@ -109,7 +116,8 @@ export function NavGroup({ title, icon: Icon, items, isActive }: NavGroupProps) 
                                             <span>{item.title}</span>
                                         </span>
                                     ) : (
-                                        <Link to={item.url}>
+                                        // ATUALIZADO: O clique aqui agora fecha o sidebar mobile
+                                        <Link to={item.url} onClick={handleLinkClick}>
                                             {item.icon && <item.icon className="size-4" />}
                                             <span>{item.title}</span>
                                         </Link>

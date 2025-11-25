@@ -9,8 +9,8 @@ export function SidebarHeader({ isExpanded }: SidebarHeaderProps) {
     const { isMobile } = useSidebar();
 
     return (
-        <SidebarHeaderUI className="backdrop-blur-sm pb-0">
-            <div className="flex w-full items-center justify-center overflow-hidden pt-4 pb-2">
+        <SidebarHeaderUI className="pt-4 pb-2 bg-background">
+            <div className="flex w-full items-center justify-center overflow-hidden">
                 <AnimatePresence mode="wait">
                     {(isExpanded || isMobile) ? (
                         <motion.div

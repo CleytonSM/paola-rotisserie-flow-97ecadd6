@@ -35,7 +35,11 @@ export const Sidebar = React.forwardRef<
                 <SheetContent
                     data-sidebar="sidebar"
                     data-mobile="true"
-                    className="w-[--sidebar-width] bg-white/80 backdrop-blur-md p-0 text-sidebar-foreground [&>button]:hidden"
+                    // ATUALIZADO: 
+                    // - Alterado de bg-white/80 para bg-sidebar/95 para consistência total de cor
+                    // - Aumentado backdrop-blur para melhor legibilidade
+                    // - Removida qualquer borda interna conflitante
+                    className="w-[--sidebar-width] bg-background p-0 text-sidebar-foreground [&>button]:hidden border-r border-border/50 shadow-2xl"
                     style={{ "--sidebar-width": SIDEBAR_WIDTH_MOBILE } as React.CSSProperties}
                     side={side}
                 >
