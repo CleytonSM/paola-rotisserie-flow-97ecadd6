@@ -21,6 +21,7 @@ import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
 import type { DateRange } from "react-day-picker";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 // --- Schema de Validação ---
 
@@ -301,6 +302,7 @@ export default function Payable() {
             <p className="mt-2 text-lg text-muted-foreground">
               Gerencie seus pagamentos e despesas.
             </p>
+            <AppBreadcrumb />
           </div>
           <PayableFormDialog
             open={dialogOpen}

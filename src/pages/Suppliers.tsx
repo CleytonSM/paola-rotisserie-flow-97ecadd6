@@ -9,6 +9,7 @@ import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
 import { validateCnpj, maskCnpj, maskPhone } from "@/components/ui/suppliers/utils";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 // --- Schema de Validação ---
 
@@ -185,6 +186,7 @@ export default function Suppliers() {
             <p className="mt-2 text-lg text-muted-foreground">
               Gerencie seus fornecedores.
             </p>
+            <AppBreadcrumb />
           </div>
           <SupplierFormDialog
             open={dialogOpen}

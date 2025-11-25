@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import type { DateRange } from "react-day-picker";
 import { getAccountStatus } from "@/components/ui/receivable/utils";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 // --- Schema de Validação ---
 
@@ -265,6 +266,7 @@ export default function Receivable() {
             <p className="mt-2 text-lg text-muted-foreground">
               Gerencie suas entradas e recebimentos.
             </p>
+            <AppBreadcrumb />
           </div>
           <ReceivableFormDialog
             open={dialogOpen}

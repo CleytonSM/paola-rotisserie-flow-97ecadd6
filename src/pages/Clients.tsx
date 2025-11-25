@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { validateCpfCnpj, maskCpfCnpj, maskPhone } from "@/components/ui/clients/utils";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 // --- Schema de Validação ---
 
@@ -240,6 +241,7 @@ export default function Clients() {
               Clientes
             </h1>
             <p className="mt-2 text-lg text-muted-foreground">Gerencie seus clientes.</p>
+            <AppBreadcrumb />
           </div>
           <ClientFormDialog
             open={dialogOpen}

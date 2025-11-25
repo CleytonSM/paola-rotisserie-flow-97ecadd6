@@ -21,6 +21,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { getStartDateFromFilter } from "@/components/ui/reports/utils";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -256,6 +257,7 @@ export default function Reports() {
             <p className="mt-2 text-lg text-muted-foreground">
               Visão completa do fluxo financeiro.
             </p>
+            <AppBreadcrumb />
           </div>
           <ReportsFilters
             filter={filter}

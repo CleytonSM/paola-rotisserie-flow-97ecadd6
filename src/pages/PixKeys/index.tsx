@@ -18,6 +18,7 @@ import {
 import { getPixKeys, deletePixKey, PixKey } from "@/services/database";
 import { PixKeyCard } from "./components/PixKeyCard";
 import { PixKeyFormDialog } from "./components/PixKeyFormDialog";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export default function PixKeys() {
     const queryClient = useQueryClient();
@@ -84,6 +85,7 @@ export default function PixKeys() {
                         <p className="mt-2 text-lg text-muted-foreground">
                             Gerencie suas chaves Pix para recebimentos.
                         </p>
+                        <AppBreadcrumb />
                     </div>
                     <Button onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                         <Plus className="w-4 h-4 mr-2" />

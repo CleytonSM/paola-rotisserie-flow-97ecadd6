@@ -18,6 +18,7 @@ import {
 import { getMachines, deleteMachine, CardMachine } from "@/services/database";
 import { MachineCard } from "./components/MachineCard";
 import { MachineFormDialog } from "./components/MachineFormDialog";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export default function Machines() {
     const queryClient = useQueryClient();
@@ -84,6 +85,7 @@ export default function Machines() {
                         <p className="mt-2 text-lg text-muted-foreground">
                             Gerencie suas maquininhas de cartão.
                         </p>
+                        <AppBreadcrumb />
                     </div>
                     <Button onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                         <Plus className="w-4 h-4 mr-2" />
