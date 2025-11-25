@@ -17,7 +17,7 @@ import type {
 import { getReceivablesForReports, getPayablesForReports } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
-import { format, parseISO, startOfToday } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { getStartDateFromFilter } from "@/components/ui/reports/utils";
@@ -271,17 +271,18 @@ export default function Reports() {
 
         {/* Gráficos Principais */}
         <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <ReportsBarChart data={barChartData} />
+          <ReportsBarChart data={barChartData} loading={loading} />
           <ReportsPieChart
             data={pieChartData}
             isEmpty={kpiData.totalReceived === 0 && kpiData.totalPaid === 0}
+            loading={loading}
           />
         </div>
 
         {/* Listas Top 5 com Animação */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <TopClientsList clients={topClients} />
-          <TopSuppliersList suppliers={topSuppliers} />
+          <TopClientsList clients={topClients} loading={loading} />
+          <TopSuppliersList suppliers={topSuppliers} loading={loading} />
         </div>
       </main>
     </div>

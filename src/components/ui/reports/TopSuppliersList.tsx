@@ -2,12 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import type { TopItem } from "./types";
 import { formatCurrency } from "./utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TopSuppliersListProps {
   suppliers: TopItem[];
+  loading?: boolean;
 }
 
-export function TopSuppliersList({ suppliers }: TopSuppliersListProps) {
+export function TopSuppliersList({ suppliers, loading }: TopSuppliersListProps) {
   return (
     <Card>
       <CardHeader>
@@ -15,7 +17,25 @@ export function TopSuppliersList({ suppliers }: TopSuppliersListProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <AnimatePresence mode="popLayout">
-          {suppliers.length > 0 ? (
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4"
+            >
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+              ))}
+            </motion.div>
+          ) : suppliers.length > 0 ? (
             suppliers.map((supplier) => (
               <motion.div
                 key={supplier.name}
@@ -42,7 +62,15 @@ export function TopSuppliersList({ suppliers }: TopSuppliersListProps) {
               </motion.div>
             ))
           ) : (
-            <p className="py-8 text-center text-muted-foreground">Nenhuma saída no período.</p>
+            <motion.p
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-8 text-center text-muted-foreground"
+            >
+              Nenhuma saída no período.
+            </motion.p>
           )}
         </AnimatePresence>
       </CardContent>
