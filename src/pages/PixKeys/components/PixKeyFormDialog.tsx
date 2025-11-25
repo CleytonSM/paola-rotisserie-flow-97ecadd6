@@ -1,0 +1,222 @@
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { IMaskInput } from "react-imask";
+
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
+import {
+    PixKey,
+    createPixKey,
+    updatePixKey,
+    PixKeyType,
+} from "@/services/database";
+
+const formSchema = z.object({
+    type: z.enum(['aleatoria', 'telefone', 'cpf', 'cnpj', 'email']),
+    key_value: z.string().min(1, "Chave é obrigatória"),
+});
+
+interface PixKeyFormDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    pixKey?: PixKey | null;
+    onSuccess: () => void;
+}
+
+export function PixKeyFormDialog({
+    open,
+    onOpenChange,
+    pixKey,
+    onSuccess,
+}: PixKeyFormDialogProps) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            type: 'cpf',
+            key_value: "",
+        },
+    });
+
+    const selectedType = form.watch("type");
+
+    useEffect(() => {
+        if (open) {
+            if (pixKey) {
+                form.reset({
+                    type: pixKey.type,
+                    key_value: pixKey.key_value,
+                });
+            } else {
+                form.reset({
+                    type: 'cpf',
+                    key_value: "",
+                });
+            }
+        }
+    }, [pixKey, open]);
+
+    const onSubmit = async (values: z.infer<typeof formSchema>) => {
+        setIsLoading(true);
+        try {
+            // Clean mask characters for specific types if needed, 
+            // but usually for Pix keys we want to keep the format or clean it depending on the bank requirements.
+            // Standard is usually clean numbers for CPF/CNPJ/Phone.
+            let cleanValue = values.key_value;
+            if (['cpf', 'cnpj', 'telefone'].includes(values.type)) {
+                cleanValue = values.key_value.replace(/[^0-9+]/g, '');
+            }
+
+            if (pixKey) {
+                await updatePixKey(pixKey.id, {
+                    type: values.type,
+                    key_value: cleanValue,
+                });
+                toast.success("Chave Pix atualizada!");
+            } else {
+                await createPixKey({
+                    type: values.type,
+                    key_value: cleanValue,
+                    active: true,
+                });
+                toast.success("Chave Pix criada!");
+            }
+            onSuccess();
+            onOpenChange(false);
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao salvar chave Pix");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const getMask = (type: PixKeyType) => {
+        switch (type) {
+            case 'cpf': return '000.000.000-00';
+            case 'cnpj': return '00.000.000/0000-00';
+            case 'telefone': return '+{55} (00) 00000-0000';
+            default: return undefined;
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>
+                        {pixKey ? "Editar Chave Pix" : "Nova Chave Pix"}
+                    </DialogTitle>
+                </DialogHeader>
+
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="type"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Tipo de Chave</FormLabel>
+                                    <Select
+                                        onValueChange={(val) => {
+                                            field.onChange(val);
+                                            form.setValue('key_value', ''); // Reset value on type change
+                                        }}
+                                        defaultValue={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="cpf">CPF</SelectItem>
+                                            <SelectItem value="cnpj">CNPJ</SelectItem>
+                                            <SelectItem value="telefone">Telefone</SelectItem>
+                                            <SelectItem value="email">E-mail</SelectItem>
+                                            <SelectItem value="aleatoria">Chave Aleatória</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="key_value"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Chave</FormLabel>
+                                    <FormControl>
+                                        {['cpf', 'cnpj', 'telefone'].includes(selectedType) ? (
+                                            <IMaskInput
+                                                mask={getMask(selectedType as PixKeyType)}
+                                                value={field.value}
+                                                unmask={false} // Keep mask for display, clean on submit
+                                                onAccept={(value: any) => field.onChange(value)}
+                                                placeholder={
+                                                    selectedType === 'cpf' ? '000.000.000-00' :
+                                                        selectedType === 'cnpj' ? '00.000.000/0000-00' :
+                                                            '+55 (00) 00000-0000'
+                                                }
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            />
+                                        ) : (
+                                            <Input
+                                                {...field}
+                                                placeholder={selectedType === 'email' ? 'exemplo@email.com' : 'Chave aleatória'}
+                                            />
+                                        )}
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onOpenChange(false)}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                Salvar
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}

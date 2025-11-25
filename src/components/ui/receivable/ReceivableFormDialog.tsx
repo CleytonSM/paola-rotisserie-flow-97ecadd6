@@ -5,12 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Combobox } from "@/components/ui/combobox";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, QrCode } from "lucide-react";
 import type { Client, FormData } from "./types";
 import { maskCpfCnpj } from "./utils";
 import { useQuery } from "@tanstack/react-query";
-import { getMachines, CardMachine } from "@/services/database";
+import { getMachines, getPixKeys } from "@/services/database";
 import { useState, useEffect } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface ReceivableFormDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export function ReceivableFormDialog({
   loading = false,
 }: ReceivableFormDialogProps) {
   const [selectedMachineId, setSelectedMachineId] = useState<string>("");
+  const [selectedPixKeyId, setSelectedPixKeyId] = useState<string>("");
 
   const { data: machines } = useQuery({
     queryKey: ["machines"],
@@ -46,10 +48,21 @@ export function ReceivableFormDialog({
     },
   });
 
-  // Reset selected machine when dialog closes or resets
+  const { data: pixKeys } = useQuery({
+    queryKey: ["pixKeys", "active"],
+    queryFn: async () => {
+      const { data, error } = await getPixKeys({ activeOnly: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: formData.payment_method === "pix",
+  });
+
+  // Reset selected machine/pix key when dialog closes or resets
   useEffect(() => {
     if (!open) {
       setSelectedMachineId("");
+      setSelectedPixKeyId("");
     }
   }, [open]);
 
@@ -65,6 +78,30 @@ export function ReceivableFormDialog({
         tax_rate: flag.tax_rate.toString()
       }));
     }
+  };
+
+  const handlePixKeySelect = (keyId: string) => {
+    setSelectedPixKeyId(keyId);
+    // Pix usually has no tax, so we set it to 0
+    setFormData(prev => ({
+      ...prev,
+      tax_rate: "0",
+      card_brand: "PIX" // Optional: use card_brand field to store "PIX" for consistency
+    }));
+  };
+
+  const getQrCodeValue = () => {
+    if (!pixKeys || !selectedPixKeyId || !formData.gross_value) return "";
+    const key = pixKeys.find(k => k.id === selectedPixKeyId);
+    if (!key) return "";
+
+    // Simple Pix Copy and Paste format (simplified)
+    // In a real app, you would generate a full BR Code payload here.
+    // For now, we'll use a link format that some apps understand or just the key if no amount.
+    // But better to just encode the key and amount in a text format for now as a placeholder for full BR Code generation.
+    // Ideally, use a library like 'pix-payload-generator' for real BR Code.
+    // For this MVP, we will just encode the key value.
+    return key.key_value;
   };
 
   return (
@@ -139,6 +176,43 @@ export function ReceivableFormDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {formData.payment_method === "pix" && (
+            <div className="sm:col-span-2 space-y-4 border rounded-lg p-4 bg-muted/20">
+              <div className="space-y-2">
+                <Label>Selecione a Chave Pix</Label>
+                <Select
+                  value={selectedPixKeyId}
+                  onValueChange={handlePixKeySelect}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma chave para receber" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pixKeys?.map((key) => (
+                      <SelectItem key={key.id} value={key.id}>
+                        {key.type.toUpperCase()}: {key.key_value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedPixKeyId && formData.gross_value && (
+                <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg border shadow-sm">
+                  <Label className="mb-2 text-muted-foreground">QR Code para Pagamento</Label>
+                  <QRCodeSVG value={getQrCodeValue()} size={150} />
+                  <p className="mt-2 text-xs text-muted-foreground text-center max-w-[200px] break-all">
+                    {getQrCodeValue()}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-primary">
+                    Valor: R$ {formData.gross_value}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {formData.payment_method === "card" && (
             <>
               <div className="space-y-2">
