@@ -116,6 +116,7 @@ export default function Machines() {
                 </div>
 
                 <MachineFormDialog
+                    key={editingMachine?.id ?? "new"}
                     open={isFormOpen}
                     onOpenChange={setIsFormOpen}
                     machine={editingMachine}
