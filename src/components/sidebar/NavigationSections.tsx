@@ -36,8 +36,7 @@ export function NavigationSections({ isActive }: NavigationSectionsProps) {
                                 asChild
                                 isActive={isActive(item.url)}
                                 tooltip={item.title}
-                                size="lg"
-                                className="rounded-xl transition-all duration-200 hover:bg-sidebar-accent/50 hover:shadow-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
+                                className="rounded-xl transition-all duration-200 hover:bg-sidebar-accent hover:shadow-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
                             >
                                 <Link to={item.url} onClick={handleClick}>
                                     {item.icon && <item.icon className="text-primary size-5" />}
@@ -63,7 +62,7 @@ export function NavigationSections({ isActive }: NavigationSectionsProps) {
                                 asChild
                                 isActive={isActive(item.url)}
                                 tooltip={item.title}
-                                className="group-data-[collapsible=icon]:justify-center"
+                                className="rounded-xl transition-all duration-200 hover:bg-sidebar-accent hover:shadow-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
                             >
                                 <Link to={item.url} onClick={handleClick}>
                                     {item.icon && (

@@ -42,7 +42,7 @@ export function NavGroup({ title, icon: Icon, items, isActive }: NavGroupProps) 
                         <SidebarMenuButton
                             tooltip={title}
                             isActive={hasActiveChild}
-                            className="justify-center w-full"
+                            className="justify-center w-full rounded-xl transition-all duration-200 hover:bg-sidebar-accent hover:shadow-sm"
                         >
                             <Icon className="size-5" />
                             <span className="sr-only">{title}</span>
@@ -95,7 +95,11 @@ export function NavGroup({ title, icon: Icon, items, isActive }: NavGroupProps) 
         <Collapsible asChild defaultOpen={hasActiveChild} className="group/collapsible">
             <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={title} isActive={hasActiveChild}>
+                    <SidebarMenuButton
+                        tooltip={title}
+                        isActive={hasActiveChild}
+                        className="rounded-xl transition-all duration-200 hover:bg-sidebar-accent hover:shadow-sm"
+                    >
                         <Icon />
                         <span>{title}</span>
                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -108,7 +112,7 @@ export function NavGroup({ title, icon: Icon, items, isActive }: NavGroupProps) 
                                 <SidebarMenuSubButton
                                     asChild={!item.disabled}
                                     isActive={isActive(item.url)}
-                                    className={item.disabled ? "opacity-50 cursor-not-allowed" : ""}
+                                    className={`rounded-xl transition-all duration-200 hover:bg-sidebar-accent hover:shadow-sm ${item.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
                                     {item.disabled ? (
                                         <span className="flex items-center gap-2">
