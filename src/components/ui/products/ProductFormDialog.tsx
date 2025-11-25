@@ -20,7 +20,7 @@ interface FormValues {
     base_price: string;
     internal_code?: string;
     catalog_barcode?: string;
-    shelf_life_days?: string;
+    shelf_life_days: string;
     default_discount?: string;
     is_active: boolean;
 }
@@ -145,13 +145,16 @@ export function ProductFormDialog({
 
                         {/* Shelf Life Days */}
                         <div className="grid gap-2">
-                            <Label htmlFor="shelf_life_days">Tempo de Validade (dias)</Label>
+                            <Label htmlFor="shelf_life_days">
+                                Tempo de Validade (dias) <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                                 id="shelf_life_days"
                                 type="number"
                                 placeholder="Ex: 3"
                                 {...register("shelf_life_days")}
                                 min={1}
+                                required
                             />
                         </div>
 

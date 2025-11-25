@@ -8,7 +8,7 @@ export interface ProductCatalog {
     base_price: number;
     internal_code?: string | null;
     catalog_barcode?: number | null;
-    shelf_life_days?: number | null;
+    shelf_life_days: number;
     default_discount?: number | null;
     is_active: boolean;
     created_at?: string;

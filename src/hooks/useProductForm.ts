@@ -16,7 +16,7 @@ const formSchema = z.object({
     base_price: z.string().min(1, "Preço base é obrigatório"),
     internal_code: z.string().optional(),
     catalog_barcode: z.string().optional(),
-    shelf_life_days: z.string().optional(),
+    shelf_life_days: z.string().min(1, "Tempo de validade é obrigatório"),
     default_discount: z.string().optional(),
     is_active: z.boolean().default(true),
 });
@@ -58,7 +58,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             base_price: parseFloat(data.base_price),
             internal_code: data.internal_code || undefined,
             catalog_barcode: data.catalog_barcode ? parseInt(data.catalog_barcode) : undefined,
-            shelf_life_days: data.shelf_life_days ? parseInt(data.shelf_life_days) : undefined,
+            shelf_life_days: parseInt(data.shelf_life_days),
             default_discount: data.default_discount ? percentToDecimal(data.default_discount) : undefined,
             is_active: data.is_active,
         };
@@ -99,7 +99,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             base_price: product.base_price.toString(),
             internal_code: product.internal_code || "",
             catalog_barcode: product.catalog_barcode?.toString() || "",
-            shelf_life_days: product.shelf_life_days?.toString() || "",
+            shelf_life_days: product.shelf_life_days.toString(),
             default_discount: decimalToPercent(product.default_discount),
             is_active: product.is_active,
         });
