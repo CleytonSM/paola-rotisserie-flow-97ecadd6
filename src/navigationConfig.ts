@@ -53,7 +53,7 @@ export const navigationGroups = {
                 items: [
                     { title: "Clientes", url: "/clients", icon: Users },
                     { title: "Fornecedores", url: "/suppliers", icon: Truck },
-                    { title: "Produtos (Em breve)", url: "#", icon: Package, disabled: true },
+                    { title: "Produtos", url: "/products", icon: Package },
                 ] as NavItem[],
             },
             {

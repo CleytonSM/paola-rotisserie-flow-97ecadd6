@@ -74,3 +74,12 @@ export {
   deleteFlag,
 } from "./machines";
 
+// Products
+export {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "./products";
+export type { Product, ProductInput } from "./products";
+
