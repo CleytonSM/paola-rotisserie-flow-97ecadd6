@@ -12,6 +12,8 @@ import {
     Database,
     Scale,
     BookOpen,
+    Box,
+    Tag,
 } from "lucide-react";
 import { NavItem } from "./types";
 
@@ -55,8 +57,8 @@ export const navigationGroups = {
                 items: [
                     { title: "Clientes", url: "/clients", icon: Users },
                     { title: "Fornecedores", url: "/suppliers", icon: Truck },
-                    { title: "Catálogo", url: "/products", icon: BookOpen },
-                    { title: "Itens", url: "/product-items", icon: Scale },
+                    { title: "Produtos", url: "/products", icon: Package },
+                    { title: "Itens", url: "/product-items", icon: Tag },
                 ] as NavItem[],
             },
             {

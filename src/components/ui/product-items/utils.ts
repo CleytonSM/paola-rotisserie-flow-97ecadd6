@@ -81,24 +81,6 @@ export const getExpirationVariant = (expiresAt: string): "default" | "secondary"
     return "outline";
 };
 
-/**
- * Get status badge variant
- */
-export const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-        case "available":
-            return "default";
-        case "sold":
-            return "secondary";
-        case "reserved":
-            return "outline";
-        case "expired":
-        case "discarded":
-            return "destructive";
-        default:
-            return "outline";
-    }
-};
 
 /**
  * Get status label in Portuguese

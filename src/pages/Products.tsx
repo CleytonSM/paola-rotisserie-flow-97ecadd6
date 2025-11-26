@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useProductForm } from "@/hooks/useProductForm";
 import { useProductStock } from "@/hooks/useProductStock";
+import { getStatusVariant } from "@/utils/status";
 
 // --- Main Component ---
 
@@ -126,7 +127,7 @@ export const Products = () => {
         {
             header: "Status",
             cell: (product) => (
-                <Badge variant={product.is_active ? "default" : "secondary"}>
+                <Badge variant={getStatusVariant(product.is_active)}>
                     {product.is_active ? "Ativo" : "Inativo"}
                 </Badge>
             ),

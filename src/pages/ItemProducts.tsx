@@ -24,12 +24,12 @@ import {
     formatDateTime,
     formatExpiration,
     getExpirationVariant,
-    getStatusVariant,
     getStatusLabel,
     percentToDecimal,
     decimalToPercent,
     getDaysUntilExpiration
 } from "@/components/ui/product-items/utils";
+import { getStatusVariant } from "@/utils/status";
 
 // --- Validation Schema ---
 
