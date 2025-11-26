@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { maskPrice, maskDiscount } from "./utils";
@@ -22,6 +23,7 @@ interface FormValues {
     catalog_barcode?: string;
     shelf_life_days: string;
     default_discount?: string;
+    unit_type: "kg" | "un";
     is_active: boolean;
 }
 
@@ -115,11 +117,30 @@ export function ProductFormDialog({
                             </div>
                         </div>
 
+                        {/* Unit Type */}
+                        <div className="grid gap-2">
+                            <Label>Tipo de Unidade</Label>
+                            <RadioGroup
+                                defaultValue={watch("unit_type")}
+                                onValueChange={(value) => setValue("unit_type", value as "kg" | "un")}
+                                className="flex gap-4"
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="kg" id="kg" />
+                                    <Label htmlFor="kg">Quilograma (kg)</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="un" id="un" />
+                                    <Label htmlFor="un">Unidade (un)</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+
                         {/* Base Price and Default Discount */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="base_price">
-                                    Preço Base (R$/kg) <span className="text-destructive">*</span>
+                                    Preço Base (R$/{watch("unit_type") === "un" ? "un" : "kg"}) <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="base_price"

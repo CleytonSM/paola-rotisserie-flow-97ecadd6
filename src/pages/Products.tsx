@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
     formatBasePrice,
     formatDiscount,
+    formatPrice,
     formatShelfLife,
 } from "@/components/ui/products/utils";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -102,7 +103,7 @@ export const Products = () => {
             header: "Preço Base",
             cell: (product) => (
                 <span className="font-medium text-foreground">
-                    {formatBasePrice(product.base_price)}
+                    {formatPrice(product.base_price)} / {product.unit_type}
                 </span>
             ),
         },
