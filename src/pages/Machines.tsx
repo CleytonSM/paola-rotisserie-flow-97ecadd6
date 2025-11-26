@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { getMachines, deleteMachine, CardMachine } from "@/services/database";
-import { MachineCard } from "./components/MachineCard";
-import { MachineFormDialog } from "./components/MachineFormDialog";
+import { MachineCard } from "../components/ui/machines/MachineCard";
+import { MachineFormDialog } from "../components/ui/machines/MachineFormDialog";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 
 export default function Machines() {
@@ -113,13 +113,6 @@ export default function Machines() {
                         </div>
                     )}
                 </div>
-
-                <MachineFormDialog
-                    open={isFormOpen}
-                    onOpenChange={setIsFormOpen}
-                    machine={editingMachine}
-                    onSuccess={handleFormSuccess}
-                />
 
                 <AlertDialog open={!!deletingMachine} onOpenChange={(open) => !open && setDeletingMachine(null)}>
                     <AlertDialogContent>
