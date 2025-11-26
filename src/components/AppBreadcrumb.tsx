@@ -16,6 +16,8 @@ const routeNameMap: Record<string, string> = {
     "receivable": "Contas a Receber",
     "reports": "Relatórios",
     "suppliers": "Fornecedores",
+    "products": "Produtos",
+    "product-items": "Itens",
     "clients": "Clientes",
     "machines": "Maquininhas",
     "pix-keys": "Chaves Pix",
@@ -25,11 +27,6 @@ const routeNameMap: Record<string, string> = {
 export function AppBreadcrumb() {
     const location = useLocation();
     const pathnames = location.pathname.split("/").filter((x) => x);
-
-    // Se estiver na home (dashboard), não precisa mostrar breadcrumb ou mostra apenas Home?
-    // O pedido é "below each subtitle", então vamos mostrar mesmo na home se fizer sentido,
-    // mas geralmente na home não se usa breadcrumb ou é só "Home".
-    // Vamos assumir que sempre mostra.
 
     return (
         <Breadcrumb className="mt-4">

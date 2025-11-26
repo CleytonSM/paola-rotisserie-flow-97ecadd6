@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"; // Removido ChartTooltipContent
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { PageHeader } from "@/components/ui/common/PageHeader";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -126,17 +127,11 @@ export default function Dashboard() {
     // Fundo #FFFBF5 aplicado globalmente
     <div className="flex min-h-screen flex-col">
       <main className="container flex-1 py-8 md:py-12">
-        <div className="mb-8 md:mb-12">
-          {/* ATUALIZADO: Título com Cormorant, responsivo e mais espaçado */}
-          <h1 className="font-display text-4xl font-bold tracking-wide text-foreground md:text-5xl">
-            Dashboard
-          </h1>
-          {/* ATUALIZADO: Subtítulo com Satoshi e um pouco maior */}
-          <p className="mt-2 text-lg text-muted-foreground">
-            Visão geral financeira dos últimos 7 dias.
-          </p>
-          <AppBreadcrumb />
-        </div>
+        <PageHeader
+          title="Dashboard"
+          subtitle="Visão geral financeira dos últimos 7 dias."
+          children={<AppBreadcrumb />}
+        />
 
         {loading ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">

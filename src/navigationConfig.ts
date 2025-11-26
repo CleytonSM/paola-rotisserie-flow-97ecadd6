@@ -10,6 +10,10 @@ import {
     Settings,
     CreditCard,
     Database,
+    Scale,
+    BookOpen,
+    Box,
+    Tag,
 } from "lucide-react";
 import { NavItem } from "./types";
 import { PixIcon } from "./components/icons/PixIcon";
@@ -54,7 +58,8 @@ export const navigationGroups = {
                 items: [
                     { title: "Clientes", url: "/clients", icon: Users },
                     { title: "Fornecedores", url: "/suppliers", icon: Truck },
-                    { title: "Produtos (Em breve)", url: "#", icon: Package, disabled: true },
+                    { title: "Produtos", url: "/products", icon: Package },
+                    { title: "Itens", url: "/product-items", icon: Tag },
                 ] as NavItem[],
             },
             {

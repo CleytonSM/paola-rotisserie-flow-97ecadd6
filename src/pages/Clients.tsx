@@ -10,8 +10,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTableAction } from "@/components/ui/data-table-action";
 import { validateCpfCnpj, maskCpfCnpj, maskPhone } from "@/components/ui/clients/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { PageHeader } from "@/components/ui/common/PageHeader";
 
 // --- Schema de Validação ---
 
@@ -207,22 +209,18 @@ export default function Clients() {
       cellClassName: "text-right",
       cell: (client) => (
         <>
-          <Button
-            size="icon"
-            variant="ghost"
+          <DataTableAction
+            tooltip="Editar cliente"
             onClick={() => handleEdit(client)}
-            className="h-8 w-8 text-muted-foreground hover:text-primary"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
+            className="hover:text-primary"
+            icon={Pencil}
+          />
+          <DataTableAction
+            tooltip="Excluir cliente"
             onClick={() => handleDeleteClick(client.id)}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            className="hover:text-destructive"
+            icon={Trash2}
+          />
         </>
       ),
     },
@@ -234,26 +232,23 @@ export default function Clients() {
     <div className="flex min-h-screen flex-col">
 
       <main className="container flex-1 py-8 md:py-12">
-        {/* Cabeçalho da Página */}
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h1 className="font-display text-4xl font-bold tracking-wide text-foreground md:text-5xl">
-              Clientes
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground">Gerencie seus clientes.</p>
-            <AppBreadcrumb />
-          </div>
-          <ClientFormDialog
-            open={dialogOpen}
-            onOpenChange={handleDialogClose}
-            formData={formData}
-            setFormData={setFormData}
-            editingId={editingId}
-            onSubmit={handleSubmit}
-            onReset={resetFormData}
-            loading={submitting}
-          />
-        </div>
+        <PageHeader
+          title="Clientes"
+          subtitle="Gerencie seus clientes."
+          action={
+            <ClientFormDialog
+              open={dialogOpen}
+              onOpenChange={handleDialogClose}
+              formData={formData}
+              setFormData={setFormData}
+              editingId={editingId}
+              onSubmit={handleSubmit}
+              onReset={resetFormData}
+              loading={submitting}
+            />
+          }
+          children={<AppBreadcrumb />}
+        />
 
         {/* Card da Tabela */}
         <DataTable

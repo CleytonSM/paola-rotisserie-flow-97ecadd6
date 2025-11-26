@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { validateCnpj, maskCnpj, maskPhone } from "@/components/ui/suppliers/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { PageHeader } from "@/components/ui/common/PageHeader";
 
 // --- Schema de Validação ---
 
@@ -177,28 +178,23 @@ export default function Suppliers() {
     <div className="flex min-h-screen flex-col">
 
       <main className="container flex-1 py-8 md:py-12">
-        {/* Cabeçalho da Página */}
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h1 className="font-display text-4xl font-bold tracking-wide text-foreground md:text-5xl">
-              Fornecedores
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground">
-              Gerencie seus fornecedores.
-            </p>
-            <AppBreadcrumb />
-          </div>
-          <SupplierFormDialog
-            open={dialogOpen}
-            onOpenChange={handleDialogClose}
-            formData={formData}
-            setFormData={setFormData}
-            editingId={editingId}
-            onSubmit={handleSubmit}
-            onReset={resetFormData}
-            loading={submitting}
-          />
-        </div>
+        <PageHeader
+          title="Fornecedores"
+          subtitle="Gerencie seus fornecedores."
+          action={
+            <SupplierFormDialog
+              open={dialogOpen}
+              onOpenChange={handleDialogClose}
+              formData={formData}
+              setFormData={setFormData}
+              editingId={editingId}
+              onSubmit={handleSubmit}
+              onReset={resetFormData}
+              loading={submitting}
+            />
+          }
+          children={<AppBreadcrumb />}
+        />
 
         {/* Tabela de Fornecedores */}
         <SupplierTable

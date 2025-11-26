@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import type { DateRange } from "react-day-picker";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { PageHeader } from "@/components/ui/common/PageHeader";
 
 // --- Schema de Validação ---
 
@@ -293,29 +294,24 @@ export default function Payable() {
     <div className="flex min-h-screen flex-col">
 
       <main className="container flex-1 py-8 md:py-12">
-        {/* Cabeçalho da Página */}
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h1 className="font-display text-4xl font-bold tracking-wide text-foreground md:text-5xl">
-              Contas a Pagar
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground">
-              Gerencie seus pagamentos e despesas.
-            </p>
-            <AppBreadcrumb />
-          </div>
-          <PayableFormDialog
-            open={dialogOpen}
-            onOpenChange={handleDialogClose}
-            formData={formData}
-            setFormData={setFormData}
-            suppliers={suppliers}
-            editingId={editingId}
-            onSubmit={handleSubmit}
-            onReset={resetFormData}
-            loading={submitting}
-          />
-        </div>
+        <PageHeader
+          title="Contas a Pagar"
+          subtitle="Gerencie seus pagamentos e despesas."
+          action={
+            <PayableFormDialog
+              open={dialogOpen}
+              onOpenChange={handleDialogClose}
+              formData={formData}
+              setFormData={setFormData}
+              suppliers={suppliers}
+              editingId={editingId}
+              onSubmit={handleSubmit}
+              onReset={resetFormData}
+              loading={submitting}
+            />
+          }
+          children={<AppBreadcrumb />}
+        />
 
         {/* Tabela de Contas */}
         <PayableTable

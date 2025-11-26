@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { DataTableAction } from "@/components/ui/data-table-action";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2 } from "lucide-react";
@@ -58,22 +58,18 @@ export function PayableTableRow({
         {formatCurrency(account.value)}
       </TableCell>
       <TableCell className="text-right">
-        <Button
-          size="icon"
-          variant="ghost"
+        <DataTableAction
+          tooltip="Editar conta"
           onClick={() => onEdit(account)}
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
+          className="hover:text-primary"
+          icon={Pencil}
+        />
+        <DataTableAction
+          tooltip="Excluir conta"
           onClick={() => onDelete(account.id)}
-          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+          className="hover:text-destructive"
+          icon={Trash2}
+        />
       </TableCell>
     </TableRow>
   );

@@ -14,34 +14,38 @@ import Machines from "./pages/Machines";
 import PixKeys from "./pages/PixKeys";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
+import { Products } from "./pages/Products";
+import ItemProducts from "./pages/ItemProducts";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-    <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/auth" element={<Auth />} />
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
 
-                    <Route element={<Layout />}>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/payable" element={<Payable />} />
-                        <Route path="/receivable" element={<Receivable />} />
-                        <Route path="/reports" element={<Reports />} />
-                        <Route path="/suppliers" element={<Suppliers />} />
-                        <Route path="/clients" element={<Clients />} />
-                        <Route path="/machines" element={<Machines />} />
-                        <Route path="/pix-keys" element={<PixKeys />} />
-                    </Route>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/payable" element={<Payable />} />
+            <Route path="/receivable" element={<Receivable />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/machines" element={<Machines />} />
+            <Route path="/pix-keys" element={<PixKeys />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/product-items" element={<ItemProducts />} />
+          </Route>
 
-                    <Route path="*" element={<NotFound />} />
-                </Routes>
-            </BrowserRouter>
-        </TooltipProvider>
-    </QueryClientProvider>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;
