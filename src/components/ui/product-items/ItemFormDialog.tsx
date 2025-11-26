@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { FormData, ProductItemStatus } from "./types";
 import type { ProductCatalog } from "../products/types";
 import { maskPrice, maskWeight, maskDiscount, getStatusLabel } from "./utils";
@@ -49,6 +50,22 @@ export function ItemFormDialog({
 }: ItemFormDialogProps) {
     const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const masked = maskWeight(e.target.value);
+
+        // Calculate price if product is by weight
+        const product = catalogProducts.find(p => p.id === formData.catalog_id);
+        if (product && product.unit_type === 'kg') {
+            const weight = parseFloat(masked);
+            if (!isNaN(weight)) {
+                const price = weight * product.base_price;
+                setFormData(prev => ({
+                    ...prev,
+                    weight_kg: masked,
+                    sale_price: price.toFixed(2).replace('.', ',')
+                }));
+                return;
+            }
+        }
+
         setFormData({ ...formData, weight_kg: masked });
     };
 
@@ -91,9 +108,28 @@ export function ItemFormDialog({
                             </Label>
                             <Select
                                 value={formData.catalog_id}
-                                onValueChange={(value) =>
-                                    setFormData({ ...formData, catalog_id: value })
-                                }
+                                onValueChange={(value) => {
+                                    const product = catalogProducts.find(p => p.id === value);
+                                    if (product) {
+                                        if (product.unit_type === 'un') {
+                                            setFormData({
+                                                ...formData,
+                                                catalog_id: value,
+                                                weight_kg: '1',
+                                                sale_price: product.base_price.toFixed(2).replace('.', ',')
+                                            });
+                                        } else {
+                                            setFormData({
+                                                ...formData,
+                                                catalog_id: value,
+                                                weight_kg: '',
+                                                sale_price: ''
+                                            });
+                                        }
+                                    } else {
+                                        setFormData({ ...formData, catalog_id: value });
+                                    }
+                                }}
                                 disabled={!!editingId}
                             >
                                 <SelectTrigger id="catalog_id">
@@ -134,7 +170,7 @@ export function ItemFormDialog({
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="weight_kg">
-                                    Peso (kg) <span className="text-destructive">*</span>
+                                    {catalogProducts.find(p => p.id === formData.catalog_id)?.unit_type === 'un' ? 'Unidade' : 'Peso (kg)'} <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="weight_kg"
@@ -143,6 +179,7 @@ export function ItemFormDialog({
                                     value={formData.weight_kg}
                                     onChange={handleWeightChange}
                                     required
+                                    disabled={!!editingId || catalogProducts.find(p => p.id === formData.catalog_id)?.unit_type === 'un'}
                                 />
                             </div>
 
@@ -179,13 +216,12 @@ export function ItemFormDialog({
                         {/* Produced At */}
                         <div className="grid gap-2">
                             <Label htmlFor="produced_at">Data de Produção</Label>
-                            <Input
-                                id="produced_at"
-                                type="datetime-local"
-                                value={formData.produced_at}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, produced_at: e.target.value })
+                            <DatePicker
+                                date={formData.produced_at ? new Date(formData.produced_at) : undefined}
+                                setDate={(date) =>
+                                    setFormData({ ...formData, produced_at: date ? date.toISOString() : '' })
                                 }
+                                showTime={true}
                             />
                             <p className="text-xs text-muted-foreground">
                                 A data de validade será calculada automaticamente

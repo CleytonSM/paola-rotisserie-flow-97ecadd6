@@ -3,7 +3,14 @@ import { ColumnDef, DataTable } from "@/components/ui/data-table";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, CheckCircle } from "lucide-react";
-import type { ProductItem } from "@/components/ui/product-items/types";
+import type { ProductItem, ProductItemStatus } from "@/components/ui/product-items/types";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     formatWeight,
     formatPrice,
@@ -23,6 +30,7 @@ interface ItemsTableProps {
     onEdit: (item: ProductItem) => void;
     onDelete: (id: string) => void;
     onMarkAsSold: (id: string) => void;
+    onStatusChange: (id: string, status: ProductItemStatus) => void;
 }
 
 export function ItemsTable({
@@ -33,6 +41,7 @@ export function ItemsTable({
     onEdit,
     onDelete,
     onMarkAsSold,
+    onStatusChange,
 }: ItemsTableProps) {
     const filteredItems = useMemo(() => {
         return items.filter((item) => {
@@ -69,11 +78,25 @@ export function ItemsTable({
         },
         {
             header: "Preço",
-            cell: (item) => (
-                <span className="font-medium text-foreground">
-                    {formatPrice(item.sale_price)}
-                </span>
-            ),
+            cell: (item) => {
+                const hasDiscount = item.item_discount && item.item_discount > 0;
+                const finalPrice = hasDiscount
+                    ? item.sale_price * (1 - item.item_discount!)
+                    : item.sale_price;
+
+                return (
+                    <div className="flex flex-col">
+                        {hasDiscount && (
+                            <span className="text-xs text-muted-foreground line-through">
+                                {formatPrice(item.sale_price)}
+                            </span>
+                        )}
+                        <span className="font-medium text-foreground">
+                            {formatPrice(finalPrice)}
+                        </span>
+                    </div>
+                );
+            },
         },
         {
             header: "Produzido",
@@ -97,9 +120,25 @@ export function ItemsTable({
         {
             header: "Status",
             cell: (item) => (
-                <Badge variant={getStatusVariant(item.status)}>
-                    {getStatusLabel(item.status)}
-                </Badge>
+                <Select
+                    value={item.status}
+                    onValueChange={(value) => onStatusChange(item.id, value as ProductItemStatus)}
+                >
+                    <SelectTrigger className="h-auto w-auto min-w-[100px] border-0 bg-transparent p-0 focus:ring-0">
+                        <SelectValue asChild>
+                            <Badge variant={getStatusVariant(item.status)} className="cursor-pointer hover:opacity-80">
+                                {getStatusLabel(item.status)}
+                            </Badge>
+                        </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="available">Disponível</SelectItem>
+                        <SelectItem value="sold">Vendido</SelectItem>
+                        <SelectItem value="reserved">Reservado</SelectItem>
+                        <SelectItem value="expired">Vencido</SelectItem>
+                        <SelectItem value="discarded">Descartado</SelectItem>
+                    </SelectContent>
+                </Select>
             ),
         },
         {

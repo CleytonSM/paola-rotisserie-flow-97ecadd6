@@ -136,6 +136,19 @@ export function useProductItems() {
         return true;
     };
 
+    const updateItemStatus = async (id: string, status: ProductItemStatus): Promise<boolean> => {
+        const { error } = await updateProductItem(id, { status });
+
+        if (error) {
+            toast.error("Erro ao atualizar status do item");
+            return false;
+        }
+
+        toast.success("Status atualizado com sucesso!");
+        loadItems();
+        return true;
+    };
+
     return {
         items,
         loading,
@@ -145,6 +158,7 @@ export function useProductItems() {
         updateItem,
         deleteItem,
         markAsSold,
+        updateItemStatus,
         refreshItems: loadItems,
     };
 }

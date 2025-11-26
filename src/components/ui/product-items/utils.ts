@@ -6,7 +6,10 @@
  * Format weight for display
  */
 export const formatWeight = (weight: number): string => {
-    return `${weight.toFixed(3)} kg`;
+    return new Intl.NumberFormat("pt-BR", {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+    }).format(weight) + " kg";
 };
 
 /**

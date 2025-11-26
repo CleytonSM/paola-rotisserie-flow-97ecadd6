@@ -27,6 +27,7 @@ export default function ItemProducts() {
         updateItem,
         deleteItem,
         markAsSold,
+        updateItemStatus,
         refreshItems
     } = useProductItems();
 
@@ -144,6 +145,7 @@ export default function ItemProducts() {
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
                     onMarkAsSold={markAsSold}
+                    onStatusChange={updateItemStatus}
                 />
             </main>
 
