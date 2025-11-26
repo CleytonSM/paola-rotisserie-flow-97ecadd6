@@ -4,6 +4,8 @@ import { DataTableAction } from "@/components/ui/data-table-action";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, CheckCircle } from "lucide-react";
 import type { ProductItem, ProductItemStatus } from "@/components/ui/product-items/types";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 import {
     Select,
     SelectContent,
@@ -27,10 +29,16 @@ interface ItemsTableProps {
     loading: boolean;
     searchTerm: string;
     onSearchChange: (term: string) => void;
+    onStatusChange: (id: string, status: ProductItemStatus) => void;
+    onMarkAsSold: (id: string) => void;
     onEdit: (item: ProductItem) => void;
     onDelete: (id: string) => void;
-    onMarkAsSold: (id: string) => void;
-    onStatusChange: (id: string, status: ProductItemStatus) => void;
+    statusFilter: ProductItemStatus | "all";
+    onStatusFilterChange: (status: ProductItemStatus | "all") => void;
+    productionDate: DateRange | undefined;
+    onProductionDateChange: (date: DateRange | undefined) => void;
+    expirationPreset: string;
+    onExpirationPresetChange: (value: string) => void;
 }
 
 export function ItemsTable({
@@ -38,21 +46,77 @@ export function ItemsTable({
     loading,
     searchTerm,
     onSearchChange,
+    onStatusChange,
+    onMarkAsSold,
     onEdit,
     onDelete,
-    onMarkAsSold,
-    onStatusChange,
+    statusFilter,
+    onStatusFilterChange,
+    productionDate,
+    onProductionDateChange,
+    expirationPreset,
+    onExpirationPresetChange,
 }: ItemsTableProps) {
     const filteredItems = useMemo(() => {
-        return items.filter((item) => {
-            const searchLower = searchTerm.toLowerCase();
-            return (
-                item.product_catalog?.name.toLowerCase().includes(searchLower) ||
-                item.scale_barcode.toString().includes(searchLower) ||
-                item.product_catalog?.internal_code?.toLowerCase().includes(searchLower)
-            );
-        });
-    }, [items, searchTerm]);
+        let filtered = items;
+
+        // Status Filter
+        if (statusFilter && statusFilter !== "all") {
+            filtered = filtered.filter(item => item.status === statusFilter);
+        }
+
+        // Production Date Filter
+        if (productionDate?.from) {
+            filtered = filtered.filter(item => {
+                const itemDate = new Date(item.produced_at);
+                itemDate.setHours(0, 0, 0, 0);
+                const fromDate = new Date(productionDate.from!);
+                fromDate.setHours(0, 0, 0, 0);
+
+                if (productionDate.to) {
+                    const toDate = new Date(productionDate.to);
+                    toDate.setHours(23, 59, 59, 999);
+                    return itemDate >= fromDate && itemDate <= toDate;
+                } else {
+                    return itemDate >= fromDate;
+                }
+            });
+        }
+
+        // Smart Expiration Filter
+        if (expirationPreset && expirationPreset !== "all") {
+            filtered = filtered.filter(item => {
+                const days = getDaysUntilExpiration(item.expires_at);
+
+                switch (expirationPreset) {
+                    case "today":
+                        return days === 0;
+                    case "tomorrow":
+                        return days === 1;
+                    case "3days":
+                        return days >= 0 && days <= 3;
+                    case "7days":
+                        return days >= 0 && days <= 7;
+                    case "expired":
+                        return days < 0;
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        // Search Filter
+        if (!searchTerm) {
+            return filtered;
+        }
+
+        const searchLower = searchTerm.toLowerCase();
+        return filtered.filter(item =>
+            item.product_catalog?.name?.toLowerCase().includes(searchLower) ||
+            item.scale_barcode.toString().includes(searchLower) ||
+            item.product_catalog?.internal_code?.toLowerCase().includes(searchLower)
+        );
+    }, [items, searchTerm, statusFilter, productionDate, expirationPreset]);
 
     const columns: ColumnDef<ProductItem>[] = [
         {
@@ -181,6 +245,49 @@ export function ItemsTable({
             onSearchChange={onSearchChange}
             searchPlaceholder="Buscar por produto, código de barras..."
             emptyStateMessage="Nenhum item encontrado."
+            filterControls={
+                <div className="flex flex-col gap-2 sm:flex-row">
+                    <Select
+                        value={expirationPreset}
+                        onValueChange={onExpirationPresetChange}
+                    >
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder="Validade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Qualquer validade</SelectItem>
+                            <SelectItem value="today">Vence hoje</SelectItem>
+                            <SelectItem value="tomorrow">Vence amanhã</SelectItem>
+                            <SelectItem value="3days">Vence em até 3 dias</SelectItem>
+                            <SelectItem value="7days">Vence em até 7 dias</SelectItem>
+                            <SelectItem value="expired">Vencidos</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <DateRangePicker
+                        date={productionDate}
+                        setDate={onProductionDateChange}
+                        className="w-full sm:w-[240px]"
+                    />
+
+                    <Select
+                        value={statusFilter}
+                        onValueChange={(value) => onStatusFilterChange(value as ProductItemStatus | "all")}
+                    >
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder="Filtrar por status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="available">Disponível</SelectItem>
+                            <SelectItem value="sold">Vendido</SelectItem>
+                            <SelectItem value="reserved">Reservado</SelectItem>
+                            <SelectItem value="expired">Vencido</SelectItem>
+                            <SelectItem value="discarded">Descartado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            }
         />
     );
 }

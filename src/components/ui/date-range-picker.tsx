@@ -34,7 +34,7 @@ export function DateRangePicker({ className, date, setDate }: DateRangePickerPro
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal bg-input border-input relative pr-8", // Estilo "filled"
+              "w-full justify-start text-left font-normal bg-input border-input relative pr-8", // Estilo "filled"
               !date && "text-muted-foreground",
             )}
           >

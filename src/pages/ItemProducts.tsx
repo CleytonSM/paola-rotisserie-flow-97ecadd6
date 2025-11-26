@@ -1,6 +1,8 @@
 // pages/ItemProducts.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ItemFormDialog } from "@/components/ui/product-items/ItemFormDialog";
 import { DeleteItemDialog } from "@/components/ui/product-items/DeleteItemDialog";
 import { ItemsTable } from "@/components/ui/product-items/ItemsTable";
@@ -10,6 +12,7 @@ import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useAuth } from "@/hooks/useAuth";
 import type { ProductItem, FormData } from "@/components/ui/product-items/types";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { DateRange } from "react-day-picker";
 
 export default function ItemProducts() {
     const navigate = useNavigate();
@@ -28,13 +31,14 @@ export default function ItemProducts() {
         deleteItem,
         markAsSold,
         updateItemStatus,
-        refreshItems
     } = useProductItems();
 
     const catalogProducts = useProductCatalog();
 
     // Table state
     const [searchTerm, setSearchTerm] = useState("");
+    const [productionDate, setProductionDate] = useState<DateRange | undefined>();
+    const [expirationPreset, setExpirationPreset] = useState<string>("all");
 
     // Modal state
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,6 +58,18 @@ export default function ItemProducts() {
     });
 
     // Handlers
+    const resetFormData = () => {
+        setFormData({
+            catalog_id: "",
+            scale_barcode: "",
+            weight_kg: "",
+            sale_price: "",
+            item_discount: "0",
+            produced_at: new Date().toISOString().slice(0, 16),
+            status: "available",
+        });
+    };
+
     const handleEdit = (item: ProductItem) => {
         setEditingId(item.id);
         setFormData({
@@ -96,18 +112,6 @@ export default function ItemProducts() {
         setSubmitting(false);
     };
 
-    const resetFormData = () => {
-        setFormData({
-            catalog_id: "",
-            scale_barcode: "",
-            weight_kg: "",
-            sale_price: "",
-            item_discount: "0",
-            produced_at: new Date().toISOString().slice(0, 16),
-            status: "available",
-        });
-    };
-
     const handleDialogClose = (open: boolean) => {
         setDialogOpen(open);
         if (!open) {
@@ -136,7 +140,8 @@ export default function ItemProducts() {
                         />
                     }
                     children={<AppBreadcrumb />}
-                />
+                >
+                </PageHeader>
 
                 <ItemsTable
                     items={items}
@@ -147,6 +152,12 @@ export default function ItemProducts() {
                     onDelete={handleDeleteClick}
                     onMarkAsSold={markAsSold}
                     onStatusChange={updateItemStatus}
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
+                    productionDate={productionDate}
+                    onProductionDateChange={setProductionDate}
+                    expirationPreset={expirationPreset}
+                    onExpirationPresetChange={setExpirationPreset}
                 />
             </main>
 
