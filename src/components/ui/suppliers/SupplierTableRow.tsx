@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { DataTableAction } from "@/components/ui/data-table-action";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2 } from "lucide-react";
 import type { Supplier } from "./types";
@@ -24,22 +24,18 @@ export function SupplierTableRow({ supplier, onEdit, onDelete }: SupplierTableRo
         {supplier.phone ? maskPhone(supplier.phone) : "N/A"}
       </TableCell>
       <TableCell className="text-right">
-        <Button
-          size="icon"
-          variant="ghost"
+        <DataTableAction
+          tooltip="Editar fornecedor"
           onClick={() => onEdit(supplier)}
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
+          className="hover:text-primary"
+          icon={Pencil}
+        />
+        <DataTableAction
+          tooltip="Excluir fornecedor"
           onClick={() => onDelete(supplier.id)}
-          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+          className="hover:text-destructive"
+          icon={Trash2}
+        />
       </TableCell>
     </TableRow>
   );

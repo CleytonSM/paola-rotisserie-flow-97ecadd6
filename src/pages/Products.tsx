@@ -6,6 +6,7 @@ import { ColumnDef, DataTable } from "@/components/ui/data-table";
 import { ChevronDown, Loader2, Package, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DataTableAction } from "@/components/ui/data-table-action";
 import {
     formatBasePrice,
     formatDiscount,
@@ -198,23 +199,19 @@ export const Products = () => {
             cellClassName: "text-right",
             cell: (product) => (
                 <>
-                    <Button
-                        size="icon"
-                        variant="ghost"
+                    <DataTableAction
+                        tooltip="Editar produto"
                         onClick={() => handleEdit(product)}
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                    >
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        size="icon"
-                        variant="ghost"
+                        className="hover:text-primary"
+                        icon={Pencil}
+                    />
+                    <DataTableAction
+                        tooltip="Excluir produto"
                         onClick={() => handleDeleteClick(product.id)}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="hover:text-destructive"
                         disabled={!product.is_active}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                        icon={Trash2}
+                    />
                 </>
             ),
         },

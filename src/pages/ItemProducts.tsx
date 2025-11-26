@@ -16,8 +16,8 @@ import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Pencil, Trash2, CheckCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DataTableAction } from "@/components/ui/data-table-action";
 import {
     formatWeight,
     formatPrice,
@@ -297,33 +297,28 @@ export default function ItemProducts() {
             cellClassName: "text-right",
             cell: (item) => (
                 <>
-                    {item.status === "available" && (
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleMarkAsSold(item.id)}
-                            className="h-8 w-8 text-muted-foreground hover:text-green-600"
-                            title="Marcar como vendido"
-                        >
-                            <CheckCircle className="h-4 w-4" />
-                        </Button>
-                    )}
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleEdit(item)}
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                    >
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDeleteClick(item.id)}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <>
+                        {item.status === "available" && (
+                            <DataTableAction
+                                tooltip="Marcar como vendido"
+                                onClick={() => handleMarkAsSold(item.id)}
+                                className="hover:text-green-600"
+                                icon={CheckCircle}
+                            />
+                        )}
+                        <DataTableAction
+                            tooltip="Editar item"
+                            onClick={() => handleEdit(item)}
+                            className="hover:text-primary"
+                            icon={Pencil}
+                        />
+                        <DataTableAction
+                            tooltip="Excluir item"
+                            onClick={() => handleDeleteClick(item.id)}
+                            className="hover:text-destructive"
+                            icon={Trash2}
+                        />
+                    </>
                 </>
             ),
         },

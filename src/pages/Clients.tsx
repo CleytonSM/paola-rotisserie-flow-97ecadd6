@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTableAction } from "@/components/ui/data-table-action";
 import { validateCpfCnpj, maskCpfCnpj, maskPhone } from "@/components/ui/clients/utils";
 
 // --- Schema de Validação ---
@@ -206,22 +207,18 @@ export default function Clients() {
       cellClassName: "text-right",
       cell: (client) => (
         <>
-          <Button
-            size="icon"
-            variant="ghost"
+          <DataTableAction
+            tooltip="Editar cliente"
             onClick={() => handleEdit(client)}
-            className="h-8 w-8 text-muted-foreground hover:text-primary"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
+            className="hover:text-primary"
+            icon={Pencil}
+          />
+          <DataTableAction
+            tooltip="Excluir cliente"
             onClick={() => handleDeleteClick(client.id)}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            className="hover:text-destructive"
+            icon={Trash2}
+          />
         </>
       ),
     },
