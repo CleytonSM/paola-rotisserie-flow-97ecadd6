@@ -5,7 +5,6 @@ import { ItemFormDialog } from "@/components/ui/product-items/ItemFormDialog";
 import { DeleteItemDialog } from "@/components/ui/product-items/DeleteItemDialog";
 import { ItemsTable } from "@/components/ui/product-items/ItemsTable";
 import { PageHeader } from "@/components/ui/common/PageHeader";
-import { useProductStock } from "@/hooks/useProductStock";
 import { useProductItems } from "@/hooks/useProductItems";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useAuth } from "@/hooks/useAuth";
