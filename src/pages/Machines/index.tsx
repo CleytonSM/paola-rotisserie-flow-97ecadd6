@@ -18,6 +18,7 @@ import {
 import { getMachines, deleteMachine, CardMachine } from "@/services/database";
 import { MachineCard } from "./components/MachineCard";
 import { MachineFormDialog } from "./components/MachineFormDialog";
+import { PageHeader } from "@/components/ui/common/PageHeader";
 
 export default function Machines() {
     const queryClient = useQueryClient();
@@ -76,20 +77,18 @@ export default function Machines() {
     return (
         <div className="flex min-h-screen flex-col">
             <main className="container flex-1 py-8 md:py-12">
-                <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-                    <div>
-                        <h1 className="font-display text-4xl font-bold tracking-wide text-foreground md:text-5xl">
-                            Maquininhas
-                        </h1>
-                        <p className="mt-2 text-lg text-muted-foreground">
-                            Gerencie suas maquininhas de cartão.
-                        </p>
-                    </div>
-                    <Button onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Nova Maquininha
-                    </Button>
-                </div>
+                <PageHeader
+                    title="Maquininhas"
+                    subtitle="Gerencie suas maquininhas de cartão."
+                    action={
+                        <MachineFormDialog
+                            open={isFormOpen}
+                            onOpenChange={setIsFormOpen}
+                            machine={editingMachine}
+                            onSuccess={handleFormSuccess}
+                        />
+                    }
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {machines?.map((machine) => (

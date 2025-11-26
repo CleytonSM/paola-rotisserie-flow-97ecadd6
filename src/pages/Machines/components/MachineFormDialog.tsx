@@ -45,6 +45,7 @@ import {
     addFlag,
     deleteFlag,
 } from "@/services/database";
+import { DialogTrigger } from "@radix-ui/react-dialog";
 
 const flagSchema = z.object({
     id: z.string().optional(),
@@ -188,10 +189,16 @@ export function MachineFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>
+                <Button className="shadow-md transition-transform duration-300 ease-out hover:scale-105">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nova Maquininha
+                </Button>
+            </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
-                        {machine ? "Editar Maquininha" : "Nova Maquininha"}
+                        {machine ? "Editar Maquininha" : "Adicionar Maquininha"}
                     </DialogTitle>
                 </DialogHeader>
 

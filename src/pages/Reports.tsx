@@ -21,6 +21,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { getStartDateFromFilter } from "@/components/ui/reports/utils";
+import { PageHeader } from "@/components/ui/common/PageHeader";
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -248,23 +249,19 @@ export default function Reports() {
     <div className="flex min-h-screen flex-col">
 
       <main className="container flex-1 py-8 md:py-12">
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h1 className="font-display text-4xl font-bold tracking-wide text-foreground md:text-5xl">
-              Relatórios
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground">
-              Visão completa do fluxo financeiro.
-            </p>
-          </div>
-          <ReportsFilters
-            filter={filter}
-            onFilterChange={setFilter}
-            customDateRange={customDateRange}
-            onCustomDateRangeChange={setCustomDateRange}
-            onExport={exportToPDF}
-          />
-        </div>
+        <PageHeader
+          title="Relatórios"
+          subtitle="Visão completa do fluxo financeiro."
+          action={
+            <ReportsFilters
+              filter={filter}
+              onFilterChange={setFilter}
+              customDateRange={customDateRange}
+              onCustomDateRangeChange={setCustomDateRange}
+              onExport={exportToPDF}
+            />
+          }
+        />
 
         {/* KPIs */}
         <ReportsKPIs kpiData={kpiData} />
