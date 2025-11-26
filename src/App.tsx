@@ -11,6 +11,7 @@ import Reports from "./pages/Reports";
 import Suppliers from "./pages/Suppliers";
 import Clients from "./pages/Clients";
 import Machines from "./pages/Machines";
+import PixKeys from "./pages/PixKeys";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 import { Products } from "./pages/Products";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/machines" element={<Machines />} />
+            <Route path="/pix-keys" element={<PixKeys />} />
             <Route path="/products" element={<Products />} />
             <Route path="/product-items" element={<ItemProducts />} />
           </Route>

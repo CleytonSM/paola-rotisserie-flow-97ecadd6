@@ -21,6 +21,7 @@ import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
 import type { DateRange } from "react-day-picker";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 
 // --- Schema de Validação ---
@@ -309,6 +310,7 @@ export default function Payable() {
               loading={submitting}
             />
           }
+          children={<AppBreadcrumb />}
         />
 
         {/* Tabela de Contas */}

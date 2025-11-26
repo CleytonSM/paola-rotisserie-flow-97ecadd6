@@ -9,6 +9,7 @@ import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { z } from "zod";
 import { validateCnpj, maskCnpj, maskPhone } from "@/components/ui/suppliers/utils";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 
 // --- Schema de Validação ---
@@ -192,6 +193,7 @@ export default function Suppliers() {
               loading={submitting}
             />
           }
+          children={<AppBreadcrumb />}
         />
 
         {/* Tabela de Fornecedores */}

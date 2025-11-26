@@ -9,6 +9,7 @@ import { useProductItems } from "@/hooks/useProductItems";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useAuth } from "@/hooks/useAuth";
 import type { ProductItem, FormData } from "@/components/ui/product-items/types";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export default function ItemProducts() {
     const navigate = useNavigate();
@@ -134,6 +135,7 @@ export default function ItemProducts() {
                             catalogProducts={catalogProducts.products}
                         />
                     }
+                    children={<AppBreadcrumb />}
                 />
 
                 <ItemsTable

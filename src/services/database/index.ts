@@ -6,6 +6,7 @@
 // Types
 export type { DatabaseResult, DatabaseQuery, DatabaseMutation } from "./types";
 export type { CardMachine, CardFlag } from "./machines";
+export type { PixKey, PixKeyType } from "./pix_keys";
 
 // Suppliers
 export {
@@ -73,6 +74,15 @@ export {
     addFlag,
     deleteFlag,
 } from "./machines";
+
+// Pix Keys
+export {
+  getPixKeys,
+  createPixKey,
+  updatePixKey,
+  deletePixKey,
+  togglePixKeyStatus,
+} from "./pix_keys";
 
 // Product Catalog (Master Products)
 export {

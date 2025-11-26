@@ -16,6 +16,7 @@ import {
     Tag,
 } from "lucide-react";
 import { NavItem } from "./types";
+import { PixIcon } from "./components/icons/PixIcon";
 
 export const navigationGroups = {
     overview: {
@@ -66,7 +67,7 @@ export const navigationGroups = {
                 icon: Settings,
                 items: [
                     { title: "Maquininhas", url: "/machines", icon: CreditCard },
-                    { title: "Geral (Em breve)", url: "#", icon: Settings, disabled: true },
+                    { title: "Chaves Pix", url: "/pix-keys", icon: PixIcon },
                 ] as NavItem[],
             },
         ],

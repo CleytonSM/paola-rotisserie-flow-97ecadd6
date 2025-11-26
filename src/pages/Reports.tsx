@@ -21,6 +21,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { getStartDateFromFilter } from "@/components/ui/reports/utils";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 
 export default function Reports() {
@@ -261,6 +262,7 @@ export default function Reports() {
               onExport={exportToPDF}
             />
           }
+          children={<AppBreadcrumb />}
         />
 
         {/* KPIs */}

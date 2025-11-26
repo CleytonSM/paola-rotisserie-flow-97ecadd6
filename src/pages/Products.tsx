@@ -7,6 +7,7 @@ import { ProductsTable } from "@/components/ui/products/ProductsTable";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useProductForm } from "@/hooks/useProductForm";
 import { useProductStock } from "@/hooks/useProductStock";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export const Products = () => {
     // Custom Hooks
@@ -78,6 +79,7 @@ export const Products = () => {
                             loading={submitting}
                         />
                     }
+                    children={<AppBreadcrumb />}
                 />
 
                 <ProductsTable

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"; // Removido ChartTooltipContent
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 
 export default function Dashboard() {
@@ -129,6 +130,7 @@ export default function Dashboard() {
         <PageHeader
           title="Dashboard"
           subtitle="Visão geral financeira dos últimos 7 dias."
+          children={<AppBreadcrumb />}
         />
 
         {loading ? (

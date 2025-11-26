@@ -12,6 +12,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { validateCpfCnpj, maskCpfCnpj, maskPhone } from "@/components/ui/clients/utils";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 
 // --- Schema de Validação ---
@@ -246,6 +247,7 @@ export default function Clients() {
               loading={submitting}
             />
           }
+          children={<AppBreadcrumb />}
         />
 
         {/* Card da Tabela */}
