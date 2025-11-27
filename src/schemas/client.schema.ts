@@ -6,7 +6,7 @@ export const clientSchema = z.object({
     cpf_cnpj: z.string().optional().refine(validateCpfCnpj, {
         message: "CPF/CNPJ inválido",
     }),
-    email: z.email("Email inválido").optional().or(z.literal("")),
+    email: z.string().email("Email inválido").optional().or(z.literal("")),
     phone: z.string().optional(),
 });
 
