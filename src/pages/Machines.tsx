@@ -1,8 +1,4 @@
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     AlertDialog,
@@ -15,57 +11,27 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { getMachines, deleteMachine, CardMachine } from "@/services/database";
 import { MachineCard } from "../components/ui/machines/MachineCard";
 import { MachineFormDialog } from "../components/ui/machines/MachineFormDialog";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
+import { useMachines } from "@/hooks/useMachines";
 
 export default function Machines() {
-    const queryClient = useQueryClient();
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingMachine, setEditingMachine] = useState<CardMachine | null>(null);
-    const [deletingMachine, setDeletingMachine] = useState<CardMachine | null>(null);
-
-    const { data: machines, isLoading } = useQuery({
-        queryKey: ["machines"],
-        queryFn: async () => {
-            const { data, error } = await getMachines();
-            if (error) throw error;
-            return data;
-        },
-    });
-
-    const handleCreate = () => {
-        setEditingMachine(null);
-        setIsFormOpen(true);
-    };
-
-    const handleEdit = (machine: CardMachine) => {
-        setEditingMachine(machine);
-        setIsFormOpen(true);
-    };
-
-    const handleDelete = async () => {
-        if (!deletingMachine) return;
-
-        try {
-            const { error } = await deleteMachine(deletingMachine.id);
-            if (error) throw error;
-
-            toast.success("Maquininha excluída com sucesso!");
-            queryClient.invalidateQueries({ queryKey: ["machines"] });
-        } catch (error) {
-            console.error(error);
-            toast.error("Erro ao excluir maquininha");
-        } finally {
-            setDeletingMachine(null);
-        }
-    };
-
-    const handleFormSuccess = () => {
-        queryClient.invalidateQueries({ queryKey: ["machines"] });
-    };
+    const {
+        machines,
+        isLoading,
+        isFormOpen,
+        setIsFormOpen,
+        editingMachine,
+        deletingMachine,
+        setDeletingMachine,
+        handleCreate,
+        handleEdit,
+        handleDelete,
+        handleFormSuccess,
+        handleDeleteDialogClose,
+    } = useMachines();
 
     if (isLoading) {
         return (
@@ -116,7 +82,7 @@ export default function Machines() {
                     )}
                 </div>
 
-                <AlertDialog open={!!deletingMachine} onOpenChange={(open) => !open && setDeletingMachine(null)}>
+                <AlertDialog open={!!deletingMachine} onOpenChange={handleDeleteDialogClose}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Excluir Maquininha?</AlertDialogTitle>

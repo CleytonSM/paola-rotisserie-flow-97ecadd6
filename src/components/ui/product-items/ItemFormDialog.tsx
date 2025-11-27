@@ -19,19 +19,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
-import type { FormData, ProductItemStatus } from "./types";
+import { Controller, UseFormReturn } from "react-hook-form";
+import type { ProductItemStatus } from "./types";
 import type { ProductCatalog } from "../products/types";
-import { maskPrice, maskWeight, maskDiscount, getStatusLabel } from "./utils";
+import { getStatusLabel } from "./utils";
+import type { ItemSchema } from "@/schemas/item.schema";
 
 interface ItemFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    formData: FormData;
-    setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+    form: UseFormReturn<ItemSchema>;
     editingId: string | null;
-    onSubmit: (e: React.FormEvent) => void;
-    onReset: () => void;
-    loading: boolean;
+    onSubmit: (e?: React.BaseSyntheticEvent) => void;
     catalogProducts: ProductCatalog[];
 }
 
@@ -40,44 +39,12 @@ const statusOptions: ProductItemStatus[] = ['available', 'sold', 'reserved', 'ex
 export function ItemFormDialog({
     open,
     onOpenChange,
-    formData,
-    setFormData,
+    form,
     editingId,
     onSubmit,
-    onReset,
-    loading,
     catalogProducts,
 }: ItemFormDialogProps) {
-    const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const masked = maskWeight(e.target.value);
-
-        // Calculate price if product is by weight
-        const product = catalogProducts.find(p => p.id === formData.catalog_id);
-        if (product && product.unit_type === 'kg') {
-            const weight = parseFloat(masked);
-            if (!isNaN(weight)) {
-                const price = weight * product.base_price;
-                setFormData(prev => ({
-                    ...prev,
-                    weight_kg: masked,
-                    sale_price: price.toFixed(2).replace('.', ',')
-                }));
-                return;
-            }
-        }
-
-        setFormData({ ...formData, weight_kg: masked });
-    };
-
-    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const masked = maskPrice(e.target.value);
-        setFormData({ ...formData, sale_price: masked });
-    };
-
-    const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const masked = maskDiscount(e.target.value);
-        setFormData({ ...formData, item_discount: masked });
-    };
+    const { control, watch, setValue, formState: { isSubmitting } } = form;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,43 +73,40 @@ export function ItemFormDialog({
                             <Label htmlFor="catalog_id">
                                 Produto do Catálogo <span className="text-destructive">*</span>
                             </Label>
-                            <Select
-                                value={formData.catalog_id}
-                                onValueChange={(value) => {
-                                    const product = catalogProducts.find(p => p.id === value);
-                                    if (product) {
-                                        if (product.unit_type === 'un') {
-                                            setFormData({
-                                                ...formData,
-                                                catalog_id: value,
-                                                weight_kg: '1',
-                                                sale_price: product.base_price.toFixed(2).replace('.', ',')
-                                            });
-                                        } else {
-                                            setFormData({
-                                                ...formData,
-                                                catalog_id: value,
-                                                weight_kg: '',
-                                                sale_price: ''
-                                            });
-                                        }
-                                    } else {
-                                        setFormData({ ...formData, catalog_id: value });
-                                    }
-                                }}
-                                disabled={!!editingId}
-                            >
-                                <SelectTrigger id="catalog_id">
-                                    <SelectValue placeholder="Selecione um produto" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {catalogProducts.map((product) => (
-                                        <SelectItem key={product.id} value={product.id}>
-                                            {product.name} - {product.internal_code || 'Sem código'}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="catalog_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={(value) => {
+                                            field.onChange(value);
+                                            const product = catalogProducts.find(p => p.id === value);
+                                            if (product) {
+                                                if (product.unit_type === 'un') {
+                                                    setValue('weight_kg', 1);
+                                                    setValue('sale_price', product.base_price);
+                                                } else {
+                                                    setValue('weight_kg', 0);
+                                                    setValue('sale_price', 0);
+                                                }
+                                            }
+                                        }}
+                                        disabled={!!editingId}
+                                    >
+                                        <SelectTrigger id="catalog_id">
+                                            <SelectValue placeholder="Selecione um produto" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {catalogProducts.map((product) => (
+                                                <SelectItem key={product.id} value={product.id}>
+                                                    {product.name} - {product.internal_code || 'Sem código'}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                         </div>
 
                         {/* Scale Barcode */}
@@ -150,16 +114,19 @@ export function ItemFormDialog({
                             <Label htmlFor="scale_barcode">
                                 Código de Barras da Balança <span className="text-destructive">*</span>
                             </Label>
-                            <Input
-                                id="scale_barcode"
-                                type="number"
-                                placeholder="Ex: 1234567890123"
-                                value={formData.scale_barcode}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, scale_barcode: e.target.value })
-                                }
-                                required
-                                disabled={!!editingId}
+                            <Controller
+                                name="scale_barcode"
+                                control={control}
+                                render={({ field }) => (
+                                    <Input
+                                        id="scale_barcode"
+                                        type="number"
+                                        placeholder="Ex: 1234567890123"
+                                        value={field.value || ''}
+                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                        disabled={!!editingId}
+                                    />
+                                )}
                             />
                             <p className="text-xs text-muted-foreground">
                                 Código único gerado pela balança
@@ -170,16 +137,32 @@ export function ItemFormDialog({
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="weight_kg">
-                                    {catalogProducts.find(p => p.id === formData.catalog_id)?.unit_type === 'un' ? 'Unidade' : 'Peso (kg)'} <span className="text-destructive">*</span>
+                                    {catalogProducts.find(p => p.id === watch('catalog_id'))?.unit_type === 'un' ? 'Unidade' : 'Peso (kg)'} <span className="text-destructive">*</span>
                                 </Label>
-                                <Input
-                                    id="weight_kg"
-                                    type="text"
-                                    placeholder="Ex: 1.250"
-                                    value={formData.weight_kg}
-                                    onChange={handleWeightChange}
-                                    required
-                                    disabled={!!editingId || catalogProducts.find(p => p.id === formData.catalog_id)?.unit_type === 'un'}
+                                <Controller
+                                    name="weight_kg"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            id="weight_kg"
+                                            type="number"
+                                            step="0.001"
+                                            placeholder="Ex: 1.250"
+                                            value={field.value || ''}
+                                            onChange={(e) => {
+                                                const weight = Number(e.target.value);
+                                                field.onChange(weight);
+
+                                                // Calculate price if product is by weight
+                                                const product = catalogProducts.find(p => p.id === watch('catalog_id'));
+                                                if (product && product.unit_type === 'kg' && weight > 0) {
+                                                    const price = weight * product.base_price;
+                                                    setValue('sale_price', Number(price.toFixed(2)));
+                                                }
+                                            }}
+                                            disabled={!!editingId || catalogProducts.find(p => p.id === watch('catalog_id'))?.unit_type === 'un'}
+                                        />
+                                    )}
                                 />
                             </div>
 
@@ -187,13 +170,19 @@ export function ItemFormDialog({
                                 <Label htmlFor="sale_price">
                                     Preço de Venda (R$) <span className="text-destructive">*</span>
                                 </Label>
-                                <Input
-                                    id="sale_price"
-                                    type="text"
-                                    placeholder="Ex: 57.38"
-                                    value={formData.sale_price}
-                                    onChange={handlePriceChange}
-                                    required
+                                <Controller
+                                    name="sale_price"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            id="sale_price"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="Ex: 57.38"
+                                            value={field.value || ''}
+                                            onChange={(e) => field.onChange(Number(e.target.value))}
+                                        />
+                                    )}
                                 />
                             </div>
                         </div>
@@ -201,12 +190,21 @@ export function ItemFormDialog({
                         {/* Item Discount */}
                         <div className="grid gap-2">
                             <Label htmlFor="item_discount">Desconto do Item (%)</Label>
-                            <Input
-                                id="item_discount"
-                                type="text"
-                                placeholder="Ex: 5.0"
-                                value={formData.item_discount}
-                                onChange={handleDiscountChange}
+                            <Controller
+                                name="item_discount"
+                                control={control}
+                                render={({ field }) => (
+                                    <Input
+                                        id="item_discount"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        max="1"
+                                        placeholder="Ex: 0.05 (5%)"
+                                        value={field.value || ''}
+                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                    />
+                                )}
                             />
                             <p className="text-xs text-muted-foreground">
                                 Desconto específico para este item (ex: promoção por vencimento próximo)
@@ -216,12 +214,16 @@ export function ItemFormDialog({
                         {/* Produced At */}
                         <div className="grid gap-2">
                             <Label htmlFor="produced_at">Data de Produção</Label>
-                            <DatePicker
-                                date={formData.produced_at ? new Date(formData.produced_at) : undefined}
-                                setDate={(date) =>
-                                    setFormData({ ...formData, produced_at: date ? date.toISOString() : '' })
-                                }
-                                showTime={true}
+                            <Controller
+                                name="produced_at"
+                                control={control}
+                                render={({ field }) => (
+                                    <DatePicker
+                                        date={field.value ? new Date(field.value) : undefined}
+                                        setDate={(date) => field.onChange(date ? date.toISOString() : '')}
+                                        showTime={true}
+                                    />
+                                )}
                             />
                             <p className="text-xs text-muted-foreground">
                                 A data de validade será calculada automaticamente
@@ -232,23 +234,27 @@ export function ItemFormDialog({
                         {editingId && (
                             <div className="grid gap-2">
                                 <Label htmlFor="status">Status</Label>
-                                <Select
-                                    value={formData.status}
-                                    onValueChange={(value) =>
-                                        setFormData({ ...formData, status: value as ProductItemStatus })
-                                    }
-                                >
-                                    <SelectTrigger id="status">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {statusOptions.map((status) => (
-                                            <SelectItem key={status} value={status}>
-                                                {getStatusLabel(status)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Controller
+                                    name="status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <SelectTrigger id="status">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {statusOptions.map((status) => (
+                                                    <SelectItem key={status} value={status}>
+                                                        {getStatusLabel(status)}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                             </div>
                         )}
                     </div>
@@ -258,15 +264,15 @@ export function ItemFormDialog({
                             type="button"
                             variant="outline"
                             onClick={() => {
-                                onReset();
+                                form.reset();
                                 onOpenChange(false);
                             }}
-                            disabled={loading}
+                            disabled={isSubmitting}
                         >
                             Cancelar
                         </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? "Salvando..." : editingId ? "Atualizar" : "Criar"}
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "Salvando..." : editingId ? "Atualizar" : "Criar"}
                         </Button>
                     </DialogFooter>
                 </form>

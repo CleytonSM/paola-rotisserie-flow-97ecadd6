@@ -1,8 +1,9 @@
 // hooks/useProductItems.ts
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { z } from "zod";
-import type { ProductItem, ProductItemStatus, FormData } from "@/components/ui/product-items/types";
+import type { ProductItem, ProductItemStatus } from "@/components/ui/product-items/types";
 import {
     getProductItems,
     createProductItem,
@@ -10,28 +11,32 @@ import {
     deleteProductItem,
     markItemAsSold
 } from "@/services/database";
-import { percentToDecimal } from "@/components/ui/product-items/utils";
-
-const itemSchema = z.object({
-    catalog_id: z.string().min(1, "Produto do catálogo é obrigatório"),
-    scale_barcode: z.number().positive("Código de barras deve ser um número positivo"),
-    weight_kg: z.number().positive("Peso deve ser maior que zero"),
-    sale_price: z.number().positive("Preço de venda deve ser maior que zero"),
-    item_discount: z.number().min(0).max(1).optional(),
-    produced_at: z.string().optional(),
-    status: z.enum(['available', 'sold', 'reserved', 'expired', 'discarded']).optional(),
-});
+import { itemSchema, type ItemSchema } from "@/schemas/item.schema";
 
 export function useProductItems() {
     const [items, setItems] = useState<ProductItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<ProductItemStatus | "all">("available");
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    const form = useForm<ItemSchema>({
+        resolver: zodResolver(itemSchema),
+        defaultValues: {
+            catalog_id: "",
+            scale_barcode: 0,
+            weight_kg: 0,
+            sale_price: 0,
+            item_discount: 0,
+            produced_at: new Date().toISOString().slice(0, 16),
+            status: "available",
+        },
+    });
 
     const loadItems = async () => {
         setLoading(true);
         const filters = statusFilter !== "all" ? { status: statusFilter } : undefined;
         const result = await getProductItems(filters);
-        
+
         if (result.error) {
             toast.error("Erro ao carregar itens");
         } else if (result.data) {
@@ -44,80 +49,55 @@ export function useProductItems() {
         loadItems();
     }, [statusFilter]);
 
-    const createItem = async (formData: FormData): Promise<boolean> => {
+    const onSubmit = async (data: ItemSchema) => {
         try {
-            const dataToValidate = {
-                catalog_id: formData.catalog_id,
-                scale_barcode: parseInt(formData.scale_barcode),
-                weight_kg: parseFloat(formData.weight_kg),
-                sale_price: parseFloat(formData.sale_price),
-                item_discount: formData.item_discount ? percentToDecimal(formData.item_discount) : undefined,
-                produced_at: formData.produced_at || undefined,
-                status: formData.status,
+            const apiData = {
+                ...data,
+                item_discount: data.item_discount || undefined,
+                produced_at: data.produced_at || undefined,
             };
 
-            const validated = itemSchema.parse(dataToValidate);
-            const { error } = await createProductItem(validated);
+            const { error } = editingId
+                ? await updateProductItem(editingId, apiData)
+                : await createProductItem(apiData);
 
             if (error) {
-                toast.error("Erro ao criar item");
+                toast.error(editingId ? "Erro ao atualizar item" : "Erro ao criar item");
                 return false;
             }
-            
-            toast.success("Item criado com sucesso!");
+
+            toast.success(editingId ? "Item atualizado com sucesso!" : "Item criado com sucesso!");
             loadItems();
+            form.reset();
+            setEditingId(null);
             return true;
         } catch (err) {
-            if (err instanceof z.ZodError) {
-                toast.error(err.issues[0].message);
-            } else {
-                toast.error("Erro inesperado ao processar formulário");
-            }
+            toast.error("Erro inesperado ao processar formulário");
             return false;
         }
     };
 
-    const updateItem = async (id: string, formData: FormData): Promise<boolean> => {
-        try {
-            const dataToValidate = {
-                catalog_id: formData.catalog_id,
-                scale_barcode: parseInt(formData.scale_barcode),
-                weight_kg: parseFloat(formData.weight_kg),
-                sale_price: parseFloat(formData.sale_price),
-                item_discount: formData.item_discount ? percentToDecimal(formData.item_discount) : undefined,
-                produced_at: formData.produced_at || undefined,
-                status: formData.status,
-            };
-
-            const validated = itemSchema.parse(dataToValidate);
-            const { error } = await updateProductItem(id, validated);
-
-            if (error) {
-                toast.error("Erro ao atualizar item");
-                return false;
-            }
-            
-            toast.success("Item atualizado com sucesso!");
-            loadItems();
-            return true;
-        } catch (err) {
-            if (err instanceof z.ZodError) {
-                toast.error(err.issues[0].message);
-            } else {
-                toast.error("Erro inesperado ao processar formulário");
-            }
-            return false;
-        }
+    const handleEdit = (item: ProductItem) => {
+        setEditingId(item.id);
+        form.reset({
+            catalog_id: item.catalog_id,
+            scale_barcode: item.scale_barcode,
+            weight_kg: item.weight_kg,
+            sale_price: item.sale_price,
+            item_discount: item.item_discount || 0,
+            produced_at: new Date(item.produced_at).toISOString().slice(0, 16),
+            status: item.status,
+        });
     };
 
     const deleteItem = async (id: string): Promise<boolean> => {
         const { error } = await deleteProductItem(id);
-        
+
         if (error) {
             toast.error("Erro ao excluir item");
             return false;
         }
-        
+
         toast.success("Item excluído com sucesso!");
         loadItems();
         return true;
@@ -125,12 +105,12 @@ export function useProductItems() {
 
     const markAsSold = async (id: string): Promise<boolean> => {
         const { error } = await markItemAsSold(id);
-        
+
         if (error) {
             toast.error("Erro ao marcar item como vendido");
             return false;
         }
-        
+
         toast.success("Item marcado como vendido!");
         loadItems();
         return true;
@@ -149,16 +129,79 @@ export function useProductItems() {
         return true;
     };
 
+    const resetForm = () => {
+        form.reset({
+            catalog_id: "",
+            scale_barcode: 0,
+            weight_kg: 0,
+            sale_price: 0,
+            item_discount: 0,
+            produced_at: new Date().toISOString().slice(0, 16),
+            status: "available",
+        });
+        setEditingId(null);
+    };
+
+    // Modal states
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    // Handlers
+    const handleEditClick = (item: ProductItem) => {
+        handleEdit(item);
+        setDialogOpen(true);
+    };
+
+    const handleDeleteClick = (id: string) => {
+        setDeletingId(id);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deletingId) return;
+        await deleteItem(deletingId);
+        setDeleteDialogOpen(false);
+        setDeletingId(null);
+    };
+
+    const handleDialogClose = (open: boolean) => {
+        setDialogOpen(open);
+        if (!open) {
+            resetForm();
+        }
+    };
+
+    const handleFormSubmit = async (e?: React.BaseSyntheticEvent) => {
+        if (e) {
+            await form.handleSubmit(onSubmit)(e);
+            setDialogOpen(false);
+        }
+    };
+
     return {
         items,
         loading,
         statusFilter,
         setStatusFilter,
-        createItem,
-        updateItem,
+        form,
+        editingId,
+        onSubmit: form.handleSubmit(onSubmit),
+        handleEdit,
         deleteItem,
         markAsSold,
         updateItemStatus,
+        resetForm,
         refreshItems: loadItems,
+        // Modal states
+        dialogOpen,
+        setDialogOpen: handleDialogClose,
+        deleteDialogOpen,
+        setDeleteDialogOpen,
+        // Handlers
+        handleEditClick,
+        handleDeleteClick,
+        handleDeleteConfirm,
+        handleFormSubmit,
     };
 }

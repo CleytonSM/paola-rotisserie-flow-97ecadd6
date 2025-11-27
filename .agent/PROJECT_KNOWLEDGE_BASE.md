@@ -33,7 +33,8 @@
 - ✅ **Reports**: Comprehensive financial flow analysis
 - ✅ **Suppliers & Clients**: Full CRUD for business relationships
 - ✅ **Machines**: Payment terminal/card machine management
-- ✅ **Products**: Complete CRUD interface with shelf life tracking
+- ✅ **Product Catalog**: Master product management with base pricing and shelf life configuration
+- ✅ **Product Items**: Individual item tracking (weighed/unit) with barcode generation and expiration monitoring
 
 ---
 
@@ -297,16 +298,32 @@ Payment terminal management
 - updated_at: TIMESTAMP
 ```
 
-#### `produtos` (Products)
-Product catalog with shelf life tracking
+#### `product_catalog`
+Master product catalog (templates)
 ```sql
 - id: UUID (PK)
-- name: VARCHAR(35)
-- shelf_life_days: INTEGER (nullable) - Number of days product remains valid
-- barcode: BIGINT (nullable)
-- price: DECIMAL(6,2)
-- code: VARCHAR(50)
-- discount: REAL (0-1 range, representing 0-100%)
+- name: VARCHAR(100)
+- base_price: DECIMAL(10,2)
+- internal_code: VARCHAR(50) (nullable)
+- catalog_barcode: BIGINT (nullable)
+- shelf_life_days: INTEGER - Number of days product remains valid
+- default_discount: DECIMAL(5,2) (nullable)
+- is_active: BOOLEAN DEFAULT true
+- created_at: TIMESTAMP
+- updated_at: TIMESTAMP
+```
+
+#### `product_item`
+Individual weighed items/stock
+```sql
+- id: UUID (PK)
+- catalog_id: UUID (FK to product_catalog)
+- weight_kg: DECIMAL(10,3)
+- price: DECIMAL(10,2)
+- scale_barcode: VARCHAR(100) (nullable)
+- manufactured_at: TIMESTAMP
+- expires_at: TIMESTAMP
+- status: ENUM ('available', 'sold', 'discarded', 'reserved')
 - created_at: TIMESTAMP
 - updated_at: TIMESTAMP
 ```
