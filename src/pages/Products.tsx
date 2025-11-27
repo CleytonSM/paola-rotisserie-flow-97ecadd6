@@ -11,9 +11,7 @@ import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export const Products = () => {
     // Custom Hooks
-    const { products, loading, createProduct, updateProduct, deleteProduct } = useProductCatalog();
-
-    const {
+    const { products, loading, createProduct, updateProduct, deleteProduct,
         form,
         dialogOpen,
         setDialogOpen,
@@ -21,46 +19,17 @@ export const Products = () => {
         handleEdit,
         handleSubmit,
         resetForm,
-        submitting
-    } = useProductForm({
-        onSuccess: async (id, data) => {
-            if (id) {
-                return await updateProduct(id, data);
-            } else {
-                return await createProduct(data);
-            }
-        },
-    });
-
-    // Extract catalog IDs for batch stock loading
-    const catalogIds = useMemo(() => products.map(p => p.id), [products]);
-
-    // Load all stock summaries automatically
-    const { stockSummaries, loadingStock, isLoadingAll } = useProductStock({
-        catalogIds,
-        autoLoad: true,
-    });
-
-    // Table Controls
-    const [searchTerm, setSearchTerm] = useState("");
-
-    // Delete Dialog Controls
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
-
-    // --- Delete Handlers ---
-
-    const handleDeleteClick = (id: string) => {
-        setDeletingId(id);
-        setDeleteDialogOpen(true);
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (!deletingId) return;
-        await deleteProduct(deletingId);
-        setDeleteDialogOpen(false);
-        setDeletingId(null);
-    };
+        submitting,
+        stockSummaries,
+        loadingStock,
+        isLoadingAll,
+        handleDeleteClick,
+        handleDeleteConfirm,
+        searchTerm,
+        setSearchTerm,
+        deleteDialogOpen,
+        setDeleteDialogOpen
+    } = useProductCatalog();
 
     return (
         <div className="flex min-h-screen flex-col">

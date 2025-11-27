@@ -1,8 +1,4 @@
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     AlertDialog,
@@ -15,56 +11,28 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { getPixKeys, deletePixKey, PixKey } from "@/services/database";
-import { PixKeyCard } from "./components/PixKeyCard";
-import { PixKeyFormDialog } from "./components/PixKeyFormDialog";
+import { PixKeyCard } from "../components/ui/pixkeys/PixKeyCard";
+import { PixKeyFormDialog } from "../components/ui/pixkeys/PixKeyFormDialog";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { PageHeader } from "@/components/ui/common/PageHeader";
+import { usePixKeys } from "@/hooks/usePixKeys";
 
 export default function PixKeys() {
-    const queryClient = useQueryClient();
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingKey, setEditingKey] = useState<PixKey | null>(null);
-    const [deletingKey, setDeletingKey] = useState<PixKey | null>(null);
-
-    const { data: pixKeys, isLoading } = useQuery({
-        queryKey: ["pixKeys"],
-        queryFn: async () => {
-            const { data, error } = await getPixKeys();
-            if (error) throw error;
-            return data;
-        },
-    });
-
-    const handleCreate = () => {
-        setEditingKey(null);
-        setIsFormOpen(true);
-    };
-
-    const handleEdit = (pixKey: PixKey) => {
-        setEditingKey(pixKey);
-        setIsFormOpen(true);
-    };
-
-    const handleDelete = async () => {
-        if (!deletingKey) return;
-
-        try {
-            const { error } = await deletePixKey(deletingKey.id);
-            if (error) throw error;
-
-            toast.success("Chave Pix excluída com sucesso!");
-            queryClient.invalidateQueries({ queryKey: ["pixKeys"] });
-        } catch (error) {
-            console.error(error);
-            toast.error("Erro ao excluir chave Pix");
-        } finally {
-            setDeletingKey(null);
-        }
-    };
-
-    const handleFormSuccess = () => {
-        queryClient.invalidateQueries({ queryKey: ["pixKeys"] });
-    };
+    const {
+        pixKeys,
+        isLoading,
+        isFormOpen,
+        setIsFormOpen,
+        editingKey,
+        deletingKey,
+        setDeletingKey,
+        handleCreate,
+        handleEdit,
+        handleDelete,
+        handleFormSuccess,
+        handleDeleteDialogClose,
+        handleToggleStatus,
+    } = usePixKeys();
 
     if (isLoading) {
         return (
@@ -77,21 +45,19 @@ export default function PixKeys() {
     return (
         <div className="flex min-h-screen flex-col">
             <main className="container flex-1 py-8 md:py-12">
-                <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-                    <div>
-                        <h1 className="font-display text-4xl font-bold tracking-wide text-foreground md:text-5xl">
-                            Chaves Pix
-                        </h1>
-                        <p className="mt-2 text-lg text-muted-foreground">
-                            Gerencie suas chaves Pix para recebimentos.
-                        </p>
-                        <AppBreadcrumb />
-                    </div>
-                    <Button onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Nova Chave
-                    </Button>
-                </div>
+                <PageHeader
+                    title="Chaves Pix"
+                    subtitle="Gerencie suas chaves Pix para recebimentos."
+                    action={
+                        <PixKeyFormDialog
+                            open={isFormOpen}
+                            onOpenChange={setIsFormOpen}
+                            pixKey={editingKey}
+                            onSuccess={handleFormSuccess}
+                        />
+                    }
+                    children={<AppBreadcrumb />}
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {pixKeys?.map((pixKey) => (
@@ -100,7 +66,7 @@ export default function PixKeys() {
                             pixKey={pixKey}
                             onEdit={handleEdit}
                             onDelete={setDeletingKey}
-                            onToggleStatus={() => queryClient.invalidateQueries({ queryKey: ["pixKeys"] })}
+                            onToggleStatus={handleToggleStatus}
                         />
                     ))}
                     {pixKeys?.length === 0 && (
@@ -118,14 +84,7 @@ export default function PixKeys() {
                     )}
                 </div>
 
-                <PixKeyFormDialog
-                    open={isFormOpen}
-                    onOpenChange={setIsFormOpen}
-                    pixKey={editingKey}
-                    onSuccess={handleFormSuccess}
-                />
-
-                <AlertDialog open={!!deletingKey} onOpenChange={(open) => !open && setDeletingKey(null)}>
+                <AlertDialog open={!!deletingKey} onOpenChange={handleDeleteDialogClose}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Excluir Chave Pix?</AlertDialogTitle>

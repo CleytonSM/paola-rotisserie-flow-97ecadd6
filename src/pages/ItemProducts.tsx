@@ -1,8 +1,6 @@
 // pages/ItemProducts.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ItemFormDialog } from "@/components/ui/product-items/ItemFormDialog";
 import { DeleteItemDialog } from "@/components/ui/product-items/DeleteItemDialog";
 import { ItemsTable } from "@/components/ui/product-items/ItemsTable";
@@ -10,7 +8,6 @@ import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useProductItems } from "@/hooks/useProductItems";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useAuth } from "@/hooks/useAuth";
-import type { ProductItem, FormData } from "@/components/ui/product-items/types";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { DateRange } from "react-day-picker";
 
@@ -26,11 +23,18 @@ export default function ItemProducts() {
         loading,
         statusFilter,
         setStatusFilter,
-        createItem,
-        updateItem,
-        deleteItem,
+        form,
+        editingId,
         markAsSold,
         updateItemStatus,
+        dialogOpen,
+        setDialogOpen,
+        deleteDialogOpen,
+        setDeleteDialogOpen,
+        handleEditClick,
+        handleDeleteClick,
+        handleDeleteConfirm,
+        handleFormSubmit,
     } = useProductItems();
 
     const catalogProducts = useProductCatalog();
@@ -39,86 +43,6 @@ export default function ItemProducts() {
     const [searchTerm, setSearchTerm] = useState("");
     const [productionDate, setProductionDate] = useState<DateRange | undefined>();
     const [expirationPreset, setExpirationPreset] = useState<string>("all");
-
-    // Modal state
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
-    const [submitting, setSubmitting] = useState(false);
-
-    const [formData, setFormData] = useState<FormData>({
-        catalog_id: "",
-        scale_barcode: "",
-        weight_kg: "",
-        sale_price: "",
-        item_discount: "0",
-        produced_at: new Date().toISOString().slice(0, 16),
-        status: "available",
-    });
-
-    // Handlers
-    const resetFormData = () => {
-        setFormData({
-            catalog_id: "",
-            scale_barcode: "",
-            weight_kg: "",
-            sale_price: "",
-            item_discount: "0",
-            produced_at: new Date().toISOString().slice(0, 16),
-            status: "available",
-        });
-    };
-
-    const handleEdit = (item: ProductItem) => {
-        setEditingId(item.id);
-        setFormData({
-            catalog_id: item.catalog_id,
-            scale_barcode: item.scale_barcode.toString(),
-            weight_kg: item.weight_kg.toString(),
-            sale_price: item.sale_price.toString(),
-            item_discount: item.item_discount ? (item.item_discount * 100).toString() : "0",
-            produced_at: new Date(item.produced_at).toISOString().slice(0, 16),
-            status: item.status,
-        });
-        setDialogOpen(true);
-    };
-
-    const handleDeleteClick = (id: string) => {
-        setDeletingId(id);
-        setDeleteDialogOpen(true);
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (!deletingId) return;
-        await deleteItem(deletingId);
-        setDeleteDialogOpen(false);
-        setDeletingId(null);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSubmitting(true);
-
-        const success = editingId
-            ? await updateItem(editingId, formData)
-            : await createItem(formData);
-
-        if (success) {
-            setDialogOpen(false);
-            setEditingId(null);
-            resetFormData();
-        }
-        setSubmitting(false);
-    };
-
-    const handleDialogClose = (open: boolean) => {
-        setDialogOpen(open);
-        if (!open) {
-            setEditingId(null);
-            resetFormData();
-        }
-    };
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -129,13 +53,10 @@ export default function ItemProducts() {
                     action={
                         <ItemFormDialog
                             open={dialogOpen}
-                            onOpenChange={handleDialogClose}
-                            formData={formData}
-                            setFormData={setFormData}
+                            onOpenChange={setDialogOpen}
+                            form={form}
                             editingId={editingId}
-                            onSubmit={handleSubmit}
-                            onReset={resetFormData}
-                            loading={submitting}
+                            onSubmit={handleFormSubmit}
                             catalogProducts={catalogProducts.products}
                         />
                     }
@@ -148,7 +69,7 @@ export default function ItemProducts() {
                     loading={loading}
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
-                    onEdit={handleEdit}
+                    onEdit={handleEditClick}
                     onDelete={handleDeleteClick}
                     onMarkAsSold={markAsSold}
                     onStatusChange={updateItemStatus}

@@ -1,67 +1,19 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { signIn, signUp, getCurrentSession } from "@/services/auth";
-import { toast } from "sonner";
-import { z } from "zod";
 import { Mail, Lock, LogIn, UserPlus } from "lucide-react";
-
-const authSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
-});
+import { useAuthPage } from "@/hooks/useAuthPage";
 
 export default function Auth() {
-  const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: "", password: "" });
-
-  useEffect(() => {
-    // Verificar se já está logado
-    getCurrentSession().then(({ session }) => {
-      if (session) {
-        navigate("/");
-      }
-    });
-  }, [navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // Validar dados
-      authSchema.parse(formData);
-
-      const { error, session } = isLogin
-        ? await signIn(formData.email, formData.password)
-        : await signUp(formData.email, formData.password);
-
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast.error("Email ou senha incorretos");
-        } else if (error.message.includes("User already registered")) {
-          toast.error("Email já cadastrado");
-        } else {
-          toast.error("Erro na autenticação");
-        }
-      } else if (session) {
-        toast.success(isLogin ? "Login realizado!" : "Cadastro realizado!");
-        navigate("/");
-      }
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        toast.error(err.issues[0].message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    loading,
+    register,
+    handleSubmit,
+    errors,
+    onSubmit,
+  } = useAuthPage();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -87,17 +39,15 @@ export default function Auth() {
             </motion.div>
             <div className="space-y-2">
               <CardTitle className="text-4xl font-display font-bold text-foreground">
-                {isLogin ? "Bem-vindo!" : "Criar Conta"}
+                Bem-vindo!
               </CardTitle>
               <CardDescription className="text-base text-muted-foreground">
-                {isLogin
-                  ? "Entre com suas credenciais para acessar o sistema"
-                  : "Crie uma conta para começar a usar o sistema"}
+                Entre com suas credenciais para acessar o sistema
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -112,11 +62,12 @@ export default function Auth() {
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  {...register("email")}
                   className="h-12 rounded-xl border-2 border-border bg-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                  required
                 />
+                {errors.email && (
+                  <span className="text-xs text-destructive">{errors.email.message}</span>
+                )}
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -132,11 +83,12 @@ export default function Auth() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  {...register("password")}
                   className="h-12 rounded-xl border-2 border-border bg-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                  required
                 />
+                {errors.password && (
+                  <span className="text-xs text-destructive">{errors.password.message}</span>
+                )}
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -159,17 +111,8 @@ export default function Auth() {
                     </>
                   ) : (
                     <>
-                      {isLogin ? (
-                        <>
-                          <LogIn className="h-5 w-5" />
+                      <LogIn className="h-5 w-5" />
                           Entrar
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="h-5 w-5" />
-                          Cadastrar
-                        </>
-                      )}
                     </>
                   )}
                 </Button>
@@ -178,8 +121,8 @@ export default function Auth() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="mt-6 text-center"
+              transition={{ delay: 0.7 }}
+              className="mt-4 text-center"
             >
               <p className="text-xs text-muted-foreground">
                 Ao continuar, você concorda com nossos Termos de Serviço

@@ -3,52 +3,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Loader2 } from "lucide-react";
-import type { FormData } from "./types";
-import { applyCpfCnpjMask, applyPhoneMask, maskCpfCnpj, maskPhone } from "./utils";
+import { UseFormReturn } from "react-hook-form";
+import { ClientSchema } from "@/schemas/client.schema";
+import { applyCpfCnpjMask, applyPhoneMask } from "./utils";
 
 interface ClientFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  formData: FormData;
-  setFormData: (data: FormData | ((prev: FormData) => FormData)) => void;
+  form: UseFormReturn<ClientSchema>;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   editingId: string | null;
-  onSubmit: (e: React.FormEvent) => void;
-  onReset: () => void;
   loading?: boolean;
 }
 
 export function ClientFormDialog({
   open,
   onOpenChange,
-  formData,
-  setFormData,
-  editingId,
+  form,
   onSubmit,
-  onReset,
+  editingId,
   loading = false,
 }: ClientFormDialogProps) {
+  const { register, formState: { errors }, setValue, watch } = form;
+
   const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     const maskedValue = applyCpfCnpjMask(value);
-    setFormData((prev) => ({ ...prev, cpf_cnpj: maskedValue }));
+    setValue("cpf_cnpj", maskedValue);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     const maskedValue = applyPhoneMask(value);
-    setFormData((prev) => ({ ...prev, phone: maskedValue }));
+    setValue("phone", maskedValue);
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) {
-          onReset();
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button className="shadow-md transition-transform duration-300 ease-out hover:scale-105">
           <Plus className="mr-2 h-4 w-4" />
@@ -65,40 +56,49 @@ export function ClientFormDialog({
           <div className="space-y-2 sm:col-span-2">
             <Label>Nome</Label>
             <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              {...register("name")}
               placeholder="Nome do cliente"
-              required
             />
+            {errors.name && (
+              <span className="text-xs text-destructive">{errors.name.message}</span>
+            )}
           </div>
           <div className="space-y-2">
             <Label>CPF/CNPJ</Label>
             <Input
-              name="cpf_cnpj"
-              value={formData.cpf_cnpj}
+              {...register("cpf_cnpj")}
               onChange={handleCpfCnpjChange}
+              value={watch("cpf_cnpj") || ""}
               placeholder="000.000.000-00 ou 00.000.000/0000-00"
               maxLength={18}
             />
+            {errors.cpf_cnpj && (
+              <span className="text-xs text-destructive">{errors.cpf_cnpj.message}</span>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Telefone</Label>
             <Input
-              name="phone"
-              value={formData.phone}
+              {...register("phone")}
               onChange={handlePhoneChange}
+              value={watch("phone") || ""}
               placeholder="(00) 90000-0000"
               maxLength={15}
             />
+            {errors.phone && (
+              <span className="text-xs text-destructive">{errors.phone.message}</span>
+            )}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Email</Label>
             <Input
               type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              {...register("email")}
               placeholder="contato@cliente.com"
             />
+            {errors.email && (
+              <span className="text-xs text-destructive">{errors.email.message}</span>
+            )}
           </div>
           <Button type="submit" className="w-full sm:col-span-2" disabled={loading}>
             {loading ? (

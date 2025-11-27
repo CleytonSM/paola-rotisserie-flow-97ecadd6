@@ -5,37 +5,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Combobox } from "@/components/ui/combobox";
-import { Plus, Loader2, QrCode } from "lucide-react";
-import type { Client, FormData } from "./types";
+import { Plus, Loader2 } from "lucide-react";
+import type { Client } from "./types";
 import { maskCpfCnpj } from "./utils";
 import { useQuery } from "@tanstack/react-query";
 import { getMachines, getPixKeys } from "@/services/database";
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import type { UseFormReturn } from "react-hook-form";
+import type { ReceivableSchema } from "@/schemas/receivable.schema";
 
 interface ReceivableFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  formData: FormData;
-  setFormData: (data: FormData | ((prev: FormData) => FormData)) => void;
+  form: UseFormReturn<ReceivableSchema>;
   clients: Client[];
   editingId: string | null;
-  onSubmit: (e: React.FormEvent) => void;
-  onReset: () => void;
-  loading?: boolean;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
 }
 
 export function ReceivableFormDialog({
   open,
   onOpenChange,
-  formData,
-  setFormData,
+  form,
   clients,
   editingId,
   onSubmit,
-  onReset,
-  loading = false,
 }: ReceivableFormDialogProps) {
+  const { register, watch, setValue, formState: { errors, isSubmitting } } = form;
+  const paymentMethod = watch("payment_method");
+  const grossValue = watch("gross_value");
+
   const [selectedMachineId, setSelectedMachineId] = useState<string>("");
   const [selectedPixKeyId, setSelectedPixKeyId] = useState<string>("");
 
@@ -55,10 +55,9 @@ export function ReceivableFormDialog({
       if (error) throw error;
       return data;
     },
-    enabled: formData.payment_method === "pix",
+    enabled: paymentMethod === "pix",
   });
 
-  // Reset selected machine/pix key when dialog closes or resets
   useEffect(() => {
     if (!open) {
       setSelectedMachineId("");
@@ -72,48 +71,26 @@ export function ReceivableFormDialog({
     const flag = machine?.flags?.find(f => f.id === flagId);
 
     if (flag) {
-      setFormData(prev => ({
-        ...prev,
-        card_brand: `${flag.brand} (${flag.type === 'credit' ? 'Crédito' : 'Débito'})`,
-        tax_rate: flag.tax_rate.toString()
-      }));
+      setValue("card_brand", `${flag.brand} (${flag.type === 'credit' ? 'Crédito' : 'Débito'})`);
+      setValue("tax_rate", flag.tax_rate);
     }
   };
 
   const handlePixKeySelect = (keyId: string) => {
     setSelectedPixKeyId(keyId);
-    // Pix usually has no tax, so we set it to 0
-    setFormData(prev => ({
-      ...prev,
-      tax_rate: "0",
-      card_brand: "PIX" // Optional: use card_brand field to store "PIX" for consistency
-    }));
+    setValue("tax_rate", 0);
+    setValue("card_brand", "PIX");
   };
 
   const getQrCodeValue = () => {
-    if (!pixKeys || !selectedPixKeyId || !formData.gross_value) return "";
+    if (!pixKeys || !selectedPixKeyId || !grossValue) return "";
     const key = pixKeys.find(k => k.id === selectedPixKeyId);
     if (!key) return "";
-
-    // Simple Pix Copy and Paste format (simplified)
-    // In a real app, you would generate a full BR Code payload here.
-    // For now, we'll use a link format that some apps understand or just the key if no amount.
-    // But better to just encode the key and amount in a text format for now as a placeholder for full BR Code generation.
-    // Ideally, use a library like 'pix-payload-generator' for real BR Code.
-    // For this MVP, we will just encode the key value.
     return key.key_value;
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) {
-          onReset();
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-secondary text-secondary-foreground shadow-md transition-transform duration-300 ease-out hover:scale-105 hover:bg-secondary/90">
           <Plus className="mr-2 h-4 w-4" />
@@ -134,8 +111,8 @@ export function ReceivableFormDialog({
                 value: c.id,
                 label: c.cpf_cnpj ? `${c.name} - ${maskCpfCnpj(c.cpf_cnpj)}` : c.name,
               }))}
-              value={formData.client_id}
-              onValueChange={(v) => setFormData({ ...formData, client_id: v })}
+              value={watch("client_id") || ""}
+              onValueChange={(v) => setValue("client_id", v)}
               placeholder="Venda avulsa (sem cliente)"
               searchPlaceholder="Buscar cliente..."
               emptyText="Nenhum cliente encontrado."
@@ -146,24 +123,28 @@ export function ReceivableFormDialog({
             <Input
               type="number"
               step="0.01"
-              value={formData.gross_value}
-              onChange={(e) => setFormData({ ...formData, gross_value: e.target.value })}
-              required
+              {...register("gross_value", { valueAsNumber: true })}
             />
+            {errors.gross_value && (
+              <span className="text-xs text-destructive">{errors.gross_value.message}</span>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Data de Entrada *</Label>
             <DatePicker
-              date={formData.entry_date}
-              setDate={(date) => setFormData({ ...formData, entry_date: date })}
+              date={watch("entry_date")}
+              setDate={(date) => setValue("entry_date", date || new Date())}
               placeholder="Selecione uma data"
             />
+            {errors.entry_date && (
+              <span className="text-xs text-destructive">{errors.entry_date.message}</span>
+            )}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Método de Pagamento</Label>
             <Select
-              value={formData.payment_method}
-              onValueChange={(v) => setFormData({ ...formData, payment_method: v })}
+              value={watch("payment_method")}
+              onValueChange={(v) => setValue("payment_method", v)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -177,7 +158,7 @@ export function ReceivableFormDialog({
             </Select>
           </div>
 
-          {formData.payment_method === "pix" && (
+          {paymentMethod === "pix" && (
             <div className="sm:col-span-2 space-y-4 border rounded-lg p-4 bg-muted/20">
               <div className="space-y-2">
                 <Label>Selecione a Chave Pix</Label>
@@ -198,7 +179,7 @@ export function ReceivableFormDialog({
                 </Select>
               </div>
 
-              {selectedPixKeyId && formData.gross_value && (
+              {selectedPixKeyId && grossValue && (
                 <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg border shadow-sm">
                   <Label className="mb-2 text-muted-foreground">QR Code para Pagamento</Label>
                   <QRCodeSVG value={getQrCodeValue()} size={150} />
@@ -206,14 +187,14 @@ export function ReceivableFormDialog({
                     {getQrCodeValue()}
                   </p>
                   <p className="mt-1 text-sm font-medium text-primary">
-                    Valor: R$ {formData.gross_value}
+                    Valor: R$ {grossValue}
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {formData.payment_method === "card" && (
+          {paymentMethod === "card" && (
             <>
               <div className="space-y-2">
                 <Label>Maquininha</Label>
@@ -257,8 +238,7 @@ export function ReceivableFormDialog({
               <div className="space-y-2">
                 <Label>Bandeira (Texto)</Label>
                 <Input
-                  value={formData.card_brand}
-                  onChange={(e) => setFormData({ ...formData, card_brand: e.target.value })}
+                  {...register("card_brand")}
                   placeholder="Ex: Visa, Master"
                   readOnly={!!selectedMachineId}
                   className={selectedMachineId ? "bg-muted" : ""}
@@ -269,8 +249,7 @@ export function ReceivableFormDialog({
                 <Input
                   type="number"
                   step="0.01"
-                  value={formData.tax_rate}
-                  onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
+                  {...register("tax_rate", { valueAsNumber: true })}
                   placeholder="Ex: 2.5"
                   readOnly={!!selectedMachineId}
                   className={selectedMachineId ? "bg-muted" : ""}
@@ -281,9 +260,9 @@ export function ReceivableFormDialog({
           <Button
             type="submit"
             className="w-full sm:col-span-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
-            disabled={loading}
+            disabled={isSubmitting}
           >
-            {loading ? (
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {editingId ? "Salvando..." : "Adicionando..."}
@@ -297,4 +276,3 @@ export function ReceivableFormDialog({
     </Dialog>
   );
 }
-

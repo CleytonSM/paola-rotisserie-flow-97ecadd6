@@ -3,48 +3,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Loader2 } from "lucide-react";
-import type { FormData } from "./types";
 import { maskCnpj, maskPhone } from "./utils";
+import type { UseFormReturn } from "react-hook-form";
+import type { SupplierSchema } from "@/schemas/suppliers.schema";
 
 interface SupplierFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  formData: FormData;
-  setFormData: (data: FormData | ((prev: FormData) => FormData)) => void;
+  form: UseFormReturn<SupplierSchema>;
   editingId: string | null;
-  onSubmit: (e: React.FormEvent) => void;
-  onReset: () => void;
-  loading?: boolean;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
 }
 
 export function SupplierFormDialog({
   open,
   onOpenChange,
-  formData,
-  setFormData,
+  form,
   editingId,
   onSubmit,
-  onReset,
-  loading = false,
 }: SupplierFormDialogProps) {
-  const handleMaskedInputChange = (e: React.ChangeEvent<HTMLInputElement>, mask: (value: string) => string) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: mask(value),
-    }));
+  const { register, watch, setValue, formState: { errors, isSubmitting } } = form;
+
+  const handleMaskedChange = (field: "cnpj" | "phone", value: string, mask: (val: string) => string) => {
+    setValue(field, mask(value));
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) {
-          onReset();
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button className="shadow-md transition-transform duration-300 ease-out hover:scale-105">
           <Plus className="mr-2 h-4 w-4" />
@@ -61,28 +46,30 @@ export function SupplierFormDialog({
           <div className="space-y-2 sm:col-span-2">
             <Label>Nome</Label>
             <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              {...register("name")}
               placeholder="Nome do fornecedor"
-              required
             />
+            {errors.name && (
+              <span className="text-xs text-destructive">{errors.name.message}</span>
+            )}
           </div>
           <div className="space-y-2">
             <Label>CNPJ</Label>
             <Input
-              name="cnpj"
-              value={formData.cnpj}
-              onChange={(e) => handleMaskedInputChange(e, maskCnpj)}
+              value={watch("cnpj") || ""}
+              onChange={(e) => handleMaskedChange("cnpj", e.target.value, maskCnpj)}
               placeholder="00.000.000/0000-00"
               maxLength={18}
             />
+            {errors.cnpj && (
+              <span className="text-xs text-destructive">{errors.cnpj.message}</span>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Telefone</Label>
             <Input
-              name="phone"
-              value={formData.phone}
-              onChange={(e) => handleMaskedInputChange(e, maskPhone)}
+              value={watch("phone") || ""}
+              onChange={(e) => handleMaskedChange("phone", e.target.value, maskPhone)}
               placeholder="(00) 90000-0000"
               maxLength={15}
             />
@@ -91,13 +78,15 @@ export function SupplierFormDialog({
             <Label>Email</Label>
             <Input
               type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              {...register("email")}
               placeholder="contato@fornecedor.com"
             />
+            {errors.email && (
+              <span className="text-xs text-destructive">{errors.email.message}</span>
+            )}
           </div>
-          <Button type="submit" className="w-full sm:col-span-2" disabled={loading}>
-            {loading ? (
+          <Button type="submit" className="w-full sm:col-span-2" disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {editingId ? "Salvando..." : "Adicionando..."}
@@ -111,4 +100,3 @@ export function SupplierFormDialog({
     </Dialog>
   );
 }
-

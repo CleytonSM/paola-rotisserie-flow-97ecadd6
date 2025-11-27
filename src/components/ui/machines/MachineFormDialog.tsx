@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Loader2, Plus, Trash2, Upload, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import {
     Table,
     TableBody,
@@ -46,19 +44,7 @@ import {
     deleteFlag,
 } from "@/services/database";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-
-const flagSchema = z.object({
-    id: z.string().optional(),
-    brand: z.string().min(1, "Selecione a bandeira"),
-    type: z.enum(["credit", "debit"]),
-    tax_rate: z.coerce.number().min(0, "Taxa deve ser positiva").max(100, "Taxa inválida"),
-});
-
-const formSchema = z.object({
-    name: z.string().min(1, "Nome é obrigatório"),
-    image: z.instanceof(File).optional(),
-    flags: z.array(flagSchema).optional(),
-});
+import { machineSchema, type MachineSchema } from "@/schemas/machine.schema";
 
 interface MachineFormDialogProps {
     open: boolean;
@@ -76,8 +62,8 @@ export function MachineFormDialog({
     const [isLoading, setIsLoading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
+    const form = useForm<MachineSchema>({
+        resolver: zodResolver(machineSchema),
         defaultValues: {
             name: "",
             flags: [],
@@ -121,7 +107,7 @@ export function MachineFormDialog({
         }
     };
 
-    const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const onSubmit = async (values: MachineSchema) => {
         setIsLoading(true);
         try {
             let machineId = machine?.id;
