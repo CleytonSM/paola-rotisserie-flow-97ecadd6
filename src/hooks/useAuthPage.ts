@@ -32,8 +32,6 @@ export function useAuthPage() {
 
         try {
             const { error, session } = await signIn(data.email, data.password)
-            console.log("aaaa" + errors.email.message);
-
             if (error) {
                 if (error.message.includes("Invalid login credentials")) {
                     toast.error("Email ou senha incorretos");
