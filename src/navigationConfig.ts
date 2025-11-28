@@ -14,6 +14,7 @@ import {
     BookOpen,
     Box,
     Tag,
+    ShoppingCart,
 } from "lucide-react";
 import { NavItem } from "./types";
 import { PixIcon } from "./components/icons/PixIcon";
@@ -26,6 +27,11 @@ export const navigationGroups = {
                 title: "Dashboard",
                 url: "/",
                 icon: LayoutDashboard,
+            },
+            {
+                title: "PDV",
+                url: "/pdv",
+                icon: ShoppingCart,
             },
         ],
     },

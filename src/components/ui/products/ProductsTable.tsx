@@ -147,8 +147,8 @@ export function ProductsTable({
                                         </span>
                                     </div>
                                     <div className="flex justify-between py-1">
-                                        <span className="text-orange-600">Disponíveis (vencidos):</span>
-                                        <span className="font-medium text-orange-600">
+                                        <span className="text-primary-600">Disponíveis (vencidos):</span>
+                                        <span className="font-medium text-primary-600">
                                             {stock.available_expired}
                                         </span>
                                     </div>
