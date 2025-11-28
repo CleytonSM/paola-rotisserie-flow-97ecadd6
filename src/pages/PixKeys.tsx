@@ -1,21 +1,12 @@
-import { Loader2 } from "lucide-react";
+import { PixKeyFormDialog } from "../components/ui/pix-keys/PixKeyFormDialog";
 import { Button } from "@/components/ui/button";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-import { PixKeyCard } from "../components/ui/pixkeys/PixKeyCard";
-import { PixKeyFormDialog } from "../components/ui/pixkeys/PixKeyFormDialog";
+import { Plus } from "lucide-react";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { usePixKeys } from "@/hooks/usePixKeys";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { PixKeysGrid } from "@/components/ui/pix-keys/PixKeysGrid";
+import { DeletePixKeyDialog } from "@/components/ui/pix-keys/DeletePixKeyDialog";
 
 export default function PixKeys() {
     const {
@@ -35,11 +26,7 @@ export default function PixKeys() {
     } = usePixKeys();
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-        );
+        return <LoadingSpinner />;
     }
 
     return (
@@ -49,61 +36,35 @@ export default function PixKeys() {
                     title="Chaves Pix"
                     subtitle="Gerencie suas chaves Pix para recebimentos."
                     action={
-                        <PixKeyFormDialog
-                            open={isFormOpen}
-                            onOpenChange={setIsFormOpen}
-                            pixKey={editingKey}
-                            onSuccess={handleFormSuccess}
-                        />
+                        <>
+                            <Button onClick={handleCreate}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Nova Chave
+                            </Button>
+                            <PixKeyFormDialog
+                                open={isFormOpen}
+                                onOpenChange={setIsFormOpen}
+                                pixKey={editingKey}
+                                onSuccess={handleFormSuccess}
+                            />
+                        </>
                     }
                     children={<AppBreadcrumb />}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {pixKeys?.map((pixKey) => (
-                        <PixKeyCard
-                            key={pixKey.id}
-                            pixKey={pixKey}
-                            onEdit={handleEdit}
-                            onDelete={setDeletingKey}
-                            onToggleStatus={handleToggleStatus}
-                        />
-                    ))}
-                    {pixKeys?.length === 0 && (
-                        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/10">
-                            <h3 className="text-lg font-medium text-foreground">
-                                Nenhuma chave Pix cadastrada
-                            </h3>
-                            <p className="text-muted-foreground mt-1 mb-4">
-                                Cadastre suas chaves Pix para gerar QR Codes automaticamente.
-                            </p>
-                            <Button variant="outline" onClick={handleCreate}>
-                                Cadastrar Primeira
-                            </Button>
-                        </div>
-                    )}
-                </div>
+                <PixKeysGrid
+                    pixKeys={pixKeys}
+                    onEdit={handleEdit}
+                    onDelete={setDeletingKey}
+                    onToggleStatus={handleToggleStatus}
+                    onCreate={handleCreate}
+                />
 
-                <AlertDialog open={!!deletingKey} onOpenChange={handleDeleteDialogClose}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir Chave Pix?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Tem certeza que deseja excluir a chave "{deletingKey?.key_value}"?
-                                Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleDelete}
-                                className="bg-destructive hover:bg-destructive/90"
-                            >
-                                Excluir
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <DeletePixKeyDialog
+                    pixKey={deletingKey}
+                    onClose={handleDeleteDialogClose}
+                    onConfirm={handleDelete}
+                />
             </main>
         </div>
     );
