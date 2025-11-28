@@ -1,21 +1,10 @@
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-import { MachineCard } from "../components/ui/machines/MachineCard";
 import { MachineFormDialog } from "../components/ui/machines/MachineFormDialog";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useMachines } from "@/hooks/useMachines";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { MachinesGrid } from "@/components/ui/machines/MachinesGrid";
+import { DeleteMachineDialog } from "@/components/ui/machines/DeleteMachineDialog";
 
 export default function Machines() {
     const {
@@ -34,11 +23,7 @@ export default function Machines() {
     } = useMachines();
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-        );
+        return <LoadingSpinner />;
     }
 
     return (
@@ -58,50 +43,18 @@ export default function Machines() {
                     children={<AppBreadcrumb />}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {machines?.map((machine) => (
-                        <MachineCard
-                            key={machine.id}
-                            machine={machine}
-                            onEdit={handleEdit}
-                            onDelete={setDeletingMachine}
-                        />
-                    ))}
-                    {machines?.length === 0 && (
-                        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/10">
-                            <h3 className="text-lg font-medium text-foreground">
-                                Nenhuma maquininha cadastrada
-                            </h3>
-                            <p className="text-muted-foreground mt-1 mb-4">
-                                Cadastre suas maquininhas de cartão para gerenciar taxas e bandeiras.
-                            </p>
-                            <Button variant="outline" onClick={handleCreate}>
-                                Cadastrar Primeira
-                            </Button>
-                        </div>
-                    )}
-                </div>
+                <MachinesGrid
+                    machines={machines}
+                    onEdit={handleEdit}
+                    onDelete={setDeletingMachine}
+                    onCreate={handleCreate}
+                />
 
-                <AlertDialog open={!!deletingMachine} onOpenChange={handleDeleteDialogClose}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir Maquininha?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Tem certeza que deseja excluir a maquininha "{deletingMachine?.name}"?
-                                Esta ação não pode ser desfeita e removerá todas as taxas configuradas.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleDelete}
-                                className="bg-destructive hover:bg-destructive/90"
-                            >
-                                Excluir
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <DeleteMachineDialog
+                    machine={deletingMachine}
+                    onClose={handleDeleteDialogClose}
+                    onConfirm={handleDelete}
+                />
             </main>
         </div>
     );

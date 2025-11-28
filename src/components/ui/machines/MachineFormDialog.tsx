@@ -62,11 +62,21 @@ export function MachineFormDialog({
     const [isLoading, setIsLoading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+    const defaultValues: MachineSchema = {
+        name: machine?.name || "",
+        flags: machine?.flags?.map((f) => ({
+            id: f.id,
+            brand: f.brand,
+            type: f.type as "credit" | "debit",
+            tax_rate: f.tax_rate,
+        })) || [],
+    };
+
     const form = useForm<MachineSchema>({
         resolver: zodResolver(machineSchema),
-        defaultValues: {
-            name: "",
-            flags: [],
+        values: defaultValues,
+        resetOptions: {
+            keepDirtyValues: false,
         },
     });
 
@@ -77,26 +87,10 @@ export function MachineFormDialog({
 
     useEffect(() => {
         if (open) {
-            if (machine) {
-                form.reset({
-                    name: machine.name,
-                    flags: machine.flags?.map((f) => ({
-                        id: f.id,
-                        brand: f.brand,
-                        type: f.type,
-                        tax_rate: f.tax_rate,
-                    })) || [],
-                });
-                setPreviewUrl(machine.image_url || null);
-            } else {
-                form.reset({
-                    name: "",
-                    flags: [],
-                });
-                setPreviewUrl(null);
-            }
+            form.reset(defaultValues);
+            setPreviewUrl(machine?.image_url || null);
         }
-    }, [machine, open]);
+    }, [open, machine, form]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
