@@ -8,7 +8,7 @@ import { maskCpfCnpj, maskPhone } from "@/components/ui/clients/utils";
 import { useClientForm } from "./useClientForm";
 import { Pencil, Trash2 } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";
-import { ColumnDef } from "@/components/ui/data-table";
+import { ColumnDef } from "@/components/ui/generic-table";
 
 export const useClients = () => {
     const navigate = useNavigate();
@@ -125,12 +125,12 @@ export const useClients = () => {
                 ? await handleUpdate(editingId, data)
                 : await handleCreate(data);
 
-        if (success) {
-            setDialogOpen(false);
-            setEditFormData(null);
-        }
+            if (success) {
+                setDialogOpen(false);
+                setEditFormData(null);
+            }
 
-        return success;
+            return success;
         },
     });
 
@@ -142,59 +142,59 @@ export const useClients = () => {
     const handleDialogOpenChange = (open: boolean) => {
         setDialogOpen(open);
         if (!open) {
-        setEditFormData(null);
+            setEditFormData(null);
         }
     };
 
     const columns: ColumnDef<Client>[] = [
         {
-        header: "Cliente",
-        cell: (client) => (
-            <div>
-            <div className="font-medium text-foreground">{client.name}</div>
-            <div className="text-sm text-muted-foreground">{client.email || "Sem email"}</div>
-            </div>
-        ),
+            header: "Cliente",
+            cell: (client) => (
+                <div>
+                    <div className="font-medium text-foreground">{client.name}</div>
+                    <div className="text-sm text-muted-foreground">{client.email || "Sem email"}</div>
+                </div>
+            ),
         },
         {
-        header: "Documento",
-        cell: (client) => (
-            <span className="font-sans tabular-nums text-muted-foreground">
-            {maskCpfCnpj(client.cpf_cnpj)}
-            </span>
-        ),
+            header: "Documento",
+            cell: (client) => (
+                <span className="font-sans tabular-nums text-muted-foreground">
+                    {maskCpfCnpj(client.cpf_cnpj)}
+                </span>
+            ),
         },
         {
-        header: "Telefone",
-        cell: (client) => (
-            <span className="font-sans tabular-nums text-muted-foreground">
-            {maskPhone(client.phone)}
-            </span>
-        ),
+            header: "Telefone",
+            cell: (client) => (
+                <span className="font-sans tabular-nums text-muted-foreground">
+                    {maskPhone(client.phone)}
+                </span>
+            ),
         },
         {
-        header: "Ações",
-        headerClassName: "text-right",
-        cellClassName: "text-right",
-        cell: (client) => (
-            <>
-            <DataTableAction
-                tooltip="Editar cliente"
-                onClick={() => handleEditClick(client)}
-                className="hover:text-primary"
-                icon={Pencil}
-            />
-            <DataTableAction
-                tooltip="Excluir cliente"
-                onClick={() => handleDeleteClick(client.id)}
-                className="hover:text-destructive"
-                icon={Trash2}
-            />
-            </>
-        ),
+            header: "Ações",
+            headerClassName: "text-right",
+            cellClassName: "text-right",
+            cell: (client) => (
+                <>
+                    <DataTableAction
+                        tooltip="Editar cliente"
+                        onClick={() => handleEditClick(client)}
+                        className="hover:text-primary"
+                        icon={Pencil}
+                    />
+                    <DataTableAction
+                        tooltip="Excluir cliente"
+                        onClick={() => handleDeleteClick(client.id)}
+                        className="hover:text-destructive"
+                        icon={Trash2}
+                    />
+                </>
+            ),
         },
     ];
-    
+
     return {
         loading,
         clients: filteredClients,

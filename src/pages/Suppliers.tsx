@@ -4,6 +4,7 @@ import { DeleteSupplierDialog } from "@/components/ui/suppliers/DeleteSupplierDi
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useSuppliers } from "@/hooks/useSuppliers";
+import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function Suppliers() {
   const {
@@ -24,38 +25,35 @@ export default function Suppliers() {
   } = useSuppliers();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="container flex-1 py-8 md:py-12">
-        <PageHeader
-          title="Fornecedores"
-          subtitle="Gerencie seus fornecedores."
-          action={
-            <SupplierFormDialog
-              open={dialogOpen}
-              onOpenChange={setDialogOpen}
-              form={form}
-              editingId={editingId}
-              onSubmit={onSubmit}
-            />
-          }
-          children={<AppBreadcrumb />}
-        />
+    <Scaffolding>
+      <PageHeader
+        title="Fornecedores"
+        subtitle="Gerencie seus fornecedores."
+        action={
+          <SupplierFormDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            form={form}
+            editingId={editingId}
+            onSubmit={onSubmit}
+          />
+        }
+        children={<AppBreadcrumb />}
+      />
 
-        <SupplierTable
-          suppliers={suppliers}
-          loading={loading}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-        />
-      </main>
-
+      <SupplierTable
+        suppliers={suppliers}
+        loading={loading}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
+      />
       <DeleteSupplierDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
       />
-    </div>
+    </Scaffolding>
   );
 }

@@ -4,6 +4,7 @@ import { DeleteReceivableDialog } from "@/components/ui/receivable/DeleteReceiva
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useReceivable } from "@/hooks/useReceivable";
+import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function Receivable() {
   const {
@@ -30,44 +31,41 @@ export default function Receivable() {
   } = useReceivable();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="container flex-1 py-8 md:py-12">
-        <PageHeader
-          title="Contas a Receber"
-          subtitle="Gerencie suas entradas e recebimentos."
-          action={
-            <ReceivableFormDialog
-              open={dialogOpen}
-              onOpenChange={setDialogOpen}
-              form={form}
-              clients={clients}
-              editingId={editingId}
-              onSubmit={onSubmit}
-            />
-          }
-          children={<AppBreadcrumb />}
-        />
+    <Scaffolding>
+      <PageHeader
+        title="Contas a Receber"
+        subtitle="Gerencie suas entradas e recebimentos."
+        action={
+          <ReceivableFormDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            form={form}
+            clients={clients}
+            editingId={editingId}
+            onSubmit={onSubmit}
+          />
+        }
+        children={<AppBreadcrumb />}
+      />
 
-        <ReceivableTable
-          accounts={accounts}
-          loading={loading}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-          onStatusChange={handleStatusChange}
-        />
-      </main>
-
+      <ReceivableTable
+        accounts={accounts}
+        loading={loading}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
+        onStatusChange={handleStatusChange}
+      />
       <DeleteReceivableDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
       />
-    </div>
+    </Scaffolding>
   );
 }

@@ -10,6 +10,7 @@ import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useAuth } from "@/hooks/useAuth";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { DateRange } from "react-day-picker";
+import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function ItemProducts() {
     const navigate = useNavigate();
@@ -45,48 +46,46 @@ export default function ItemProducts() {
     const [expirationPreset, setExpirationPreset] = useState<string>("all");
 
     return (
-        <div className="flex min-h-screen flex-col">
-            <main className="container flex-1 py-8 md:py-12">
-                <PageHeader
-                    title="Itens de Produtos"
-                    subtitle="Gerencie os itens pesados individuais."
-                    action={
-                        <ItemFormDialog
-                            open={dialogOpen}
-                            onOpenChange={setDialogOpen}
-                            form={form}
-                            editingId={editingId}
-                            onSubmit={handleFormSubmit}
-                            catalogProducts={catalogProducts.products}
-                        />
-                    }
-                    children={<AppBreadcrumb />}
-                >
-                </PageHeader>
+        <Scaffolding>
+            <PageHeader
+                title="Itens de Produtos"
+                subtitle="Gerencie os itens pesados individuais."
+                action={
+                    <ItemFormDialog
+                        open={dialogOpen}
+                        onOpenChange={setDialogOpen}
+                        form={form}
+                        editingId={editingId}
+                        onSubmit={handleFormSubmit}
+                        catalogProducts={catalogProducts.products}
+                    />
+                }
+                children={<AppBreadcrumb />}
+            >
+            </PageHeader>
 
-                <ItemsTable
-                    items={items}
-                    loading={loading}
-                    searchTerm={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    onEdit={handleEditClick}
-                    onDelete={handleDeleteClick}
-                    onMarkAsSold={markAsSold}
-                    onStatusChange={updateItemStatus}
-                    statusFilter={statusFilter}
-                    onStatusFilterChange={setStatusFilter}
-                    productionDate={productionDate}
-                    onProductionDateChange={setProductionDate}
-                    expirationPreset={expirationPreset}
-                    onExpirationPresetChange={setExpirationPreset}
-                />
-            </main>
+            <ItemsTable
+                items={items}
+                loading={loading}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                onMarkAsSold={markAsSold}
+                onStatusChange={updateItemStatus}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                productionDate={productionDate}
+                onProductionDateChange={setProductionDate}
+                expirationPreset={expirationPreset}
+                onExpirationPresetChange={setExpirationPreset}
+            />
 
             <DeleteItemDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={handleDeleteConfirm}
             />
-        </div>
+        </Scaffolding>
     );
 }

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ColumnDef, DataTable } from "@/components/ui/data-table";
+import { ColumnDef, GenericTable } from "@/components/ui/generic-table";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, CheckCircle } from "lucide-react";
@@ -237,7 +237,7 @@ export function ItemsTable({
     ];
 
     return (
-        <DataTable
+        <GenericTable
             columns={columns}
             data={filteredItems}
             isLoading={loading}

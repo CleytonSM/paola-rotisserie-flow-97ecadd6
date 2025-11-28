@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { maskCnpj, maskPhone } from "./utils";
 import type { UseFormReturn } from "react-hook-form";
 import type { SupplierSchema } from "@/schemas/suppliers.schema";
+import { GenericFormDialog } from "@/components/ui/generic-form-dialog";
 
 interface SupplierFormDialogProps {
   open: boolean;
@@ -29,74 +29,62 @@ export function SupplierFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
+    <GenericFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={editingId ? "Editar Fornecedor" : "Adicionar Fornecedor"}
+      onSubmit={onSubmit}
+      isEditing={!!editingId}
+      loading={isSubmitting}
+      triggerButton={
         <Button className="shadow-md transition-transform duration-300 ease-out hover:scale-105">
           <Plus className="mr-2 h-4 w-4" />
           Novo Fornecedor
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="font-display text-3xl tracking-wide">
-            {editingId ? "Editar Fornecedor" : "Adicionar Fornecedor"}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Nome</Label>
-            <Input
-              {...register("name")}
-              placeholder="Nome do fornecedor"
-            />
-            {errors.name && (
-              <span className="text-xs text-destructive">{errors.name.message}</span>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>CNPJ</Label>
-            <Input
-              value={watch("cnpj") || ""}
-              onChange={(e) => handleMaskedChange("cnpj", e.target.value, maskCnpj)}
-              placeholder="00.000.000/0000-00"
-              maxLength={18}
-            />
-            {errors.cnpj && (
-              <span className="text-xs text-destructive">{errors.cnpj.message}</span>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>Telefone</Label>
-            <Input
-              value={watch("phone") || ""}
-              onChange={(e) => handleMaskedChange("phone", e.target.value, maskPhone)}
-              placeholder="(00) 90000-0000"
-              maxLength={15}
-            />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Email</Label>
-            <Input
-              type="email"
-              {...register("email")}
-              placeholder="contato@fornecedor.com"
-            />
-            {errors.email && (
-              <span className="text-xs text-destructive">{errors.email.message}</span>
-            )}
-          </div>
-          <Button type="submit" className="w-full sm:col-span-2" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {editingId ? "Salvando..." : "Adicionando..."}
-              </>
-            ) : (
-              editingId ? "Salvar Alterações" : "Adicionar Fornecedor"
-            )}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+      }
+    >
+      <div className="space-y-2 sm:col-span-2">
+        <Label>Nome</Label>
+        <Input
+          {...register("name")}
+          placeholder="Nome do fornecedor"
+        />
+        {errors.name && (
+          <span className="text-xs text-destructive">{errors.name.message}</span>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label>CNPJ</Label>
+        <Input
+          value={watch("cnpj") || ""}
+          onChange={(e) => handleMaskedChange("cnpj", e.target.value, maskCnpj)}
+          placeholder="00.000.000/0000-00"
+          maxLength={18}
+        />
+        {errors.cnpj && (
+          <span className="text-xs text-destructive">{errors.cnpj.message}</span>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label>Telefone</Label>
+        <Input
+          value={watch("phone") || ""}
+          onChange={(e) => handleMaskedChange("phone", e.target.value, maskPhone)}
+          placeholder="(00) 90000-0000"
+          maxLength={15}
+        />
+      </div>
+      <div className="space-y-2 sm:col-span-2">
+        <Label>Email</Label>
+        <Input
+          type="email"
+          {...register("email")}
+          placeholder="contato@fornecedor.com"
+        />
+        {errors.email && (
+          <span className="text-xs text-destructive">{errors.email.message}</span>
+        )}
+      </div>
+    </GenericFormDialog>
   );
 }

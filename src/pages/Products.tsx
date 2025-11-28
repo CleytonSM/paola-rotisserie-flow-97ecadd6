@@ -8,6 +8,7 @@ import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useProductForm } from "@/hooks/useProductForm";
 import { useProductStock } from "@/hooks/useProductStock";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export const Products = () => {
     // Custom Hooks
@@ -32,43 +33,40 @@ export const Products = () => {
     } = useProductCatalog();
 
     return (
-        <div className="flex min-h-screen flex-col">
-            <main className="container flex-1 py-8 md:py-12">
-                <PageHeader
-                    title="Catálogo de Produtos"
-                    subtitle="Gerencie os produtos mestres do catálogo."
-                    action={
-                        <ProductFormDialog
-                            open={dialogOpen}
-                            onOpenChange={setDialogOpen}
-                            form={form}
-                            editingId={editingId}
-                            onSubmit={handleSubmit}
-                            onReset={resetForm}
-                            loading={submitting}
-                        />
-                    }
-                    children={<AppBreadcrumb />}
-                />
+        <Scaffolding>
+            <PageHeader
+                title="Catálogo de Produtos"
+                subtitle="Gerencie os produtos mestres do catálogo."
+                action={
+                    <ProductFormDialog
+                        open={dialogOpen}
+                        onOpenChange={setDialogOpen}
+                        form={form}
+                        editingId={editingId}
+                        onSubmit={handleSubmit}
+                        onReset={resetForm}
+                        loading={submitting}
+                    />
+                }
+                children={<AppBreadcrumb />}
+            />
 
-                <ProductsTable
-                    products={products}
-                    loading={loading}
-                    searchTerm={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    stockSummaries={stockSummaries}
-                    loadingStock={loadingStock}
-                    isLoadingAll={isLoadingAll}
-                    onEdit={handleEdit}
-                    onDelete={handleDeleteClick}
-                />
-            </main>
-
+            <ProductsTable
+                products={products}
+                loading={loading}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                stockSummaries={stockSummaries}
+                loadingStock={loadingStock}
+                isLoadingAll={isLoadingAll}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+            />
             <DeleteProductDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={handleDeleteConfirm}
             />
-        </div>
+        </Scaffolding>
     );
 };

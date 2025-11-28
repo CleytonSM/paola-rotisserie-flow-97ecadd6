@@ -1,13 +1,4 @@
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -16,7 +7,7 @@ import { Plus } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { maskPrice, maskDiscount } from "./utils";
 import { ProductFormValues } from "@/hooks/useProductForm";
-
+import { GenericFormDialog } from "@/components/ui/generic-form-dialog";
 
 
 interface ProductFormDialogProps {
@@ -51,162 +42,143 @@ export function ProductFormDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogTrigger asChild>
+        <GenericFormDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            title={editingId ? "Editar Produto" : "Novo Produto"}
+            description={editingId
+                ? "Atualize as informações do produto no catálogo."
+                : "Adicione um novo produto ao catálogo."}
+            onSubmit={onSubmit}
+            isEditing={!!editingId}
+            loading={loading}
+            onCancel={onReset}
+            submitText={editingId ? "Atualizar" : "Criar"}
+            triggerButton={
                 <Button className="gap-2">
                     <Plus className="h-4 w-4" />
                     Novo Produto
                 </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-                <form onSubmit={onSubmit}>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {editingId ? "Editar Produto" : "Novo Produto"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {editingId
-                                ? "Atualize as informações do produto no catálogo."
-                                : "Adicione um novo produto ao catálogo."}
-                        </DialogDescription>
-                    </DialogHeader>
+            }
+            maxWidth="sm:max-w-[600px]"
+        >
+            <div className="col-span-1 sm:col-span-2 grid gap-4">
+                {/* Name */}
+                <div className="grid gap-2">
+                    <Label htmlFor="name">
+                        Nome <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                        id="name"
+                        placeholder="Ex: Frango Assado"
+                        {...register("name")}
+                        maxLength={100}
+                        required
+                    />
+                </div>
 
-                    <div className="grid gap-4 py-4">
-                        {/* Name */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="name">
-                                Nome <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="name"
-                                placeholder="Ex: Frango Assado"
-                                {...register("name")}
-                                maxLength={100}
-                                required
-                            />
-                        </div>
-
-                        {/* Internal Code and Catalog Barcode */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="internal_code">Código Interno</Label>
-                                <Input
-                                    id="internal_code"
-                                    placeholder="Ex: FRANG-001"
-                                    {...register("internal_code")}
-                                    maxLength={50}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="catalog_barcode">Código de Barras</Label>
-                                <Input
-                                    id="catalog_barcode"
-                                    type="number"
-                                    placeholder="Ex: 7891234567890"
-                                    {...register("catalog_barcode")}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Unit Type */}
-                        <div className="grid gap-2">
-                            <Label>Tipo de Unidade</Label>
-                            <RadioGroup
-                                defaultValue={watch("unit_type")}
-                                onValueChange={(value) => setValue("unit_type", value as "kg" | "un")}
-                                className="flex gap-4"
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="kg" id="kg" />
-                                    <Label htmlFor="kg">Quilograma (kg)</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="un" id="un" />
-                                    <Label htmlFor="un">Unidade (un)</Label>
-                                </div>
-                            </RadioGroup>
-                        </div>
-
-                        {/* Base Price and Default Discount */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="base_price">
-                                    Preço Base (R$/{watch("unit_type") === "un" ? "un" : "kg"}) <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="base_price"
-                                    type="text"
-                                    placeholder="Ex: 45.90"
-                                    value={watch("base_price")}
-                                    onChange={handlePriceChange}
-                                    required
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="default_discount">Desconto Padrão (%)</Label>
-                                <Input
-                                    id="default_discount"
-                                    type="text"
-                                    placeholder="Ex: 10.5"
-                                    value={watch("default_discount")}
-                                    onChange={handleDiscountChange}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Shelf Life Days */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="shelf_life_days">
-                                Tempo de Validade (dias) <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="shelf_life_days"
-                                type="number"
-                                placeholder="Ex: 3"
-                                {...register("shelf_life_days")}
-                                min={1}
-                                required
-                            />
-                        </div>
-
-                        {/* Is Active */}
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                                <Label htmlFor="is_active" className="text-base">
-                                    Produto Ativo
-                                </Label>
-                                <div className="text-sm text-muted-foreground">
-                                    Produtos inativos não aparecem na listagem padrão
-                                </div>
-                            </div>
-                            <Switch
-                                id="is_active"
-                                checked={watch("is_active")}
-                                onCheckedChange={(checked) => setValue("is_active", checked)}
-                            />
-                        </div>
+                {/* Internal Code and Catalog Barcode */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="internal_code">Código Interno</Label>
+                        <Input
+                            id="internal_code"
+                            placeholder="Ex: FRANG-001"
+                            {...register("internal_code")}
+                            maxLength={50}
+                        />
                     </div>
 
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                                onReset();
-                                onOpenChange(false);
-                            }}
-                            disabled={loading}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? "Salvando..." : editingId ? "Atualizar" : "Criar"}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                    <div className="grid gap-2">
+                        <Label htmlFor="catalog_barcode">Código de Barras</Label>
+                        <Input
+                            id="catalog_barcode"
+                            type="number"
+                            placeholder="Ex: 7891234567890"
+                            {...register("catalog_barcode")}
+                        />
+                    </div>
+                </div>
+
+                {/* Unit Type */}
+                <div className="grid gap-2">
+                    <Label>Tipo de Unidade</Label>
+                    <RadioGroup
+                        defaultValue={watch("unit_type")}
+                        onValueChange={(value) => setValue("unit_type", value as "kg" | "un")}
+                        className="flex gap-4"
+                    >
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="kg" id="kg" />
+                            <Label htmlFor="kg">Quilograma (kg)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="un" id="un" />
+                            <Label htmlFor="un">Unidade (un)</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+
+                {/* Base Price and Default Discount */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="base_price">
+                            Preço Base (R$/{watch("unit_type") === "un" ? "un" : "kg"}) <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="base_price"
+                            type="text"
+                            placeholder="Ex: 45.90"
+                            value={watch("base_price")}
+                            onChange={handlePriceChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="default_discount">Desconto Padrão (%)</Label>
+                        <Input
+                            id="default_discount"
+                            type="text"
+                            placeholder="Ex: 10.5"
+                            value={watch("default_discount")}
+                            onChange={handleDiscountChange}
+                        />
+                    </div>
+                </div>
+
+                {/* Shelf Life Days */}
+                <div className="grid gap-2">
+                    <Label htmlFor="shelf_life_days">
+                        Tempo de Validade (dias) <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                        id="shelf_life_days"
+                        type="number"
+                        placeholder="Ex: 3"
+                        {...register("shelf_life_days")}
+                        min={1}
+                        required
+                    />
+                </div>
+
+                {/* Is Active */}
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_active" className="text-base">
+                            Produto Ativo
+                        </Label>
+                        <div className="text-sm text-muted-foreground">
+                            Produtos inativos não aparecem na listagem padrão
+                        </div>
+                    </div>
+                    <Switch
+                        id="is_active"
+                        checked={watch("is_active")}
+                        onCheckedChange={(checked) => setValue("is_active", checked)}
+                    />
+                </div>
+            </div>
+        </GenericFormDialog>
     );
 }

@@ -4,6 +4,7 @@ import { DeletePayableDialog } from "@/components/ui/payable/DeletePayableDialog
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { usePayable } from "@/hooks/usePayable";
+import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function Payable() {
   const {
@@ -30,44 +31,42 @@ export default function Payable() {
   } = usePayable();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="container flex-1 py-8 md:py-12">
-        <PageHeader
-          title="Contas a Pagar"
-          subtitle="Gerencie seus pagamentos e despesas."
-          action={
-            <PayableFormDialog
-              open={dialogOpen}
-              onOpenChange={setDialogOpen}
-              form={form}
-              suppliers={suppliers}
-              editingId={editingId}
-              onSubmit={onSubmit}
-            />
-          }
-          children={<AppBreadcrumb />}
-        />
+    <Scaffolding>
+      <PageHeader
+        title="Contas a Pagar"
+        subtitle="Gerencie seus pagamentos e despesas."
+        action={
+          <PayableFormDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            form={form}
+            suppliers={suppliers}
+            editingId={editingId}
+            onSubmit={onSubmit}
+          />
+        }
+        children={<AppBreadcrumb />}
+      />
 
-        <PayableTable
-          accounts={accounts}
-          loading={loading}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-          onStatusChange={handleStatusChange}
-        />
-      </main>
+      <PayableTable
+        accounts={accounts}
+        loading={loading}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
+        onStatusChange={handleStatusChange}
+      />
 
       <DeletePayableDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
       />
-    </div>
+    </Scaffolding>
   );
 }

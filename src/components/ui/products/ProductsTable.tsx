@@ -1,6 +1,6 @@
 // components/products/ProductsTable.tsx
 import { useMemo } from "react";
-import { ColumnDef, DataTable } from "@/components/ui/data-table";
+import { ColumnDef, GenericTable } from "@/components/ui/generic-table";
 import { ChevronDown, Loader2, Package, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -184,7 +184,7 @@ export function ProductsTable({
     ];
 
     return (
-        <DataTable
+        <GenericTable
             columns={columns}
             data={filteredProducts}
             isLoading={loading}

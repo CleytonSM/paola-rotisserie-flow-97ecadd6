@@ -8,12 +8,6 @@ import { IMaskInput } from "react-imask";
 
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
     Form,
     FormControl,
     FormField,
@@ -36,6 +30,7 @@ import {
     updatePixKey,
     PixKeyType,
 } from "@/services/database";
+import { GenericFormDialog } from "@/components/ui/generic-form-dialog";
 
 const formSchema = z.object({
     type: z.enum(['aleatoria', 'telefone', 'cpf', 'cnpj', 'email']),
@@ -86,9 +81,6 @@ export function PixKeyFormDialog({
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsLoading(true);
         try {
-            // Clean mask characters for specific types if needed, 
-            // but usually for Pix keys we want to keep the format or clean it depending on the bank requirements.
-            // Standard is usually clean numbers for CPF/CNPJ/Phone.
             let cleanValue = values.key_value;
             if (['cpf', 'cnpj', 'telefone'].includes(values.type)) {
                 cleanValue = values.key_value.replace(/[^0-9+]/g, '');
@@ -128,95 +120,82 @@ export function PixKeyFormDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle>
-                        {pixKey ? "Editar Chave Pix" : "Nova Chave Pix"}
-                    </DialogTitle>
-                </DialogHeader>
-
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <FormField
-                            control={form.control}
-                            name="type"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Tipo de Chave</FormLabel>
-                                    <Select
-                                        onValueChange={(val) => {
-                                            field.onChange(val);
-                                            form.setValue('key_value', ''); // Reset value on type change
-                                        }}
-                                        defaultValue={field.value}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="cpf">CPF</SelectItem>
-                                            <SelectItem value="cnpj">CNPJ</SelectItem>
-                                            <SelectItem value="telefone">Telefone</SelectItem>
-                                            <SelectItem value="email">E-mail</SelectItem>
-                                            <SelectItem value="aleatoria">Chave Aleatória</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name="key_value"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Chave</FormLabel>
+        <GenericFormDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            title={pixKey ? "Editar Chave Pix" : "Nova Chave Pix"}
+            onSubmit={form.handleSubmit(onSubmit)}
+            isEditing={!!pixKey}
+            loading={isLoading}
+            onCancel={() => onOpenChange(false)}
+            maxWidth="max-w-md"
+        >
+            <Form {...form}>
+                <div className="space-y-6 w-full">
+                    <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Tipo de Chave</FormLabel>
+                                <Select
+                                    onValueChange={(val) => {
+                                        field.onChange(val);
+                                        form.setValue('key_value', ''); // Reset value on type change
+                                    }}
+                                    defaultValue={field.value}
+                                >
                                     <FormControl>
-                                        {['cpf', 'cnpj', 'telefone'].includes(selectedType) ? (
-                                            <IMaskInput
-                                                mask={getMask(selectedType as PixKeyType)}
-                                                value={field.value}
-                                                unmask={false} // Keep mask for display, clean on submit
-                                                onAccept={(value: any) => field.onChange(value)}
-                                                placeholder={
-                                                    selectedType === 'cpf' ? '000.000.000-00' :
-                                                        selectedType === 'cnpj' ? '00.000.000/0000-00' :
-                                                            '+55 (00) 00000-0000'
-                                                }
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            />
-                                        ) : (
-                                            <Input
-                                                {...field}
-                                                placeholder={selectedType === 'email' ? 'exemplo@email.com' : 'Chave aleatória'}
-                                            />
-                                        )}
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
                                     </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                    <SelectContent>
+                                        <SelectItem value="cpf">CPF</SelectItem>
+                                        <SelectItem value="cnpj">CNPJ</SelectItem>
+                                        <SelectItem value="telefone">Telefone</SelectItem>
+                                        <SelectItem value="email">E-mail</SelectItem>
+                                        <SelectItem value="aleatoria">Chave Aleatória</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => onOpenChange(false)}
-                            >
-                                Cancelar
-                            </Button>
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                Salvar
-                            </Button>
-                        </div>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
+                    <FormField
+                        control={form.control}
+                        name="key_value"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Chave</FormLabel>
+                                <FormControl>
+                                    {['cpf', 'cnpj', 'telefone'].includes(selectedType) ? (
+                                        <IMaskInput
+                                            mask={getMask(selectedType as PixKeyType)}
+                                            value={field.value}
+                                            unmask={false} // Keep mask for display, clean on submit
+                                            onAccept={(value: any) => field.onChange(value)}
+                                            placeholder={
+                                                selectedType === 'cpf' ? '000.000.000-00' :
+                                                    selectedType === 'cnpj' ? '00.000.000/0000-00' :
+                                                        '+55 (00) 00000-0000'
+                                            }
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        />
+                                    ) : (
+                                        <Input
+                                            {...field}
+                                            placeholder={selectedType === 'email' ? 'exemplo@email.com' : 'Chave aleatória'}
+                                        />
+                                    )}
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+            </Form>
+        </GenericFormDialog>
     );
 }

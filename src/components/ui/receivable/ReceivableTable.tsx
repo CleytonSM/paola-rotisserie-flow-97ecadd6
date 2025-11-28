@@ -1,10 +1,19 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { GenericTable, ColumnDef } from "@/components/ui/generic-table";
 import type { DateRange } from "react-day-picker";
 import type { AccountReceivable, StatusFilter } from "./types";
 import { ReceivableFilters } from "./ReceivableFilters";
-import { ReceivableTableRow } from "./ReceivableTableRow";
-import { getAccountStatus } from "./utils";
+import { DataTableAction } from "@/components/ui/data-table-action";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pencil, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatDate,
+  getAccountStatus,
+  translateStatus,
+  getStatusBadgeClass,
+  maskCpfCnpj,
+} from "./utils";
 
 interface ReceivableTableProps {
   accounts: AccountReceivable[];
@@ -33,9 +42,108 @@ export function ReceivableTable({
   onDelete,
   onStatusChange,
 }: ReceivableTableProps) {
+
+  const columns: ColumnDef<AccountReceivable>[] = [
+    {
+      header: "Cliente",
+      cell: (account) => (
+        <div className="py-4">
+          <div className="font-medium text-foreground">{account.client?.name || "Venda Avulsa"}</div>
+          <div className="hidden text-sm text-muted-foreground md:inline">
+            {maskCpfCnpj(account.client?.cpf_cnpj)}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "Data de Entrada",
+      cell: (account) => (
+        <span className="font-sans py-4">{formatDate(account.entry_date)}</span>
+      ),
+    },
+    {
+      header: "Status",
+      cell: (account) => {
+        const status = getAccountStatus(account);
+        return (
+          <div className="py-4">
+            <Select
+              value={status}
+              onValueChange={(value) => onStatusChange(account.id, value as "pending" | "received")}
+            >
+              <SelectTrigger className="h-auto w-auto min-w-[110px] border-0 bg-transparent p-0 focus:ring-0">
+                <SelectValue asChild>
+                  <span
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-semibold",
+                      getStatusBadgeClass(status)
+                    )}
+                  >
+                    {translateStatus(status)}
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="received">Recebido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Valor Líquido",
+      headerClassName: "text-right",
+      cellClassName: "text-right",
+      cell: (account) => (
+        <div className="text-right font-sans text-base font-medium tabular-nums text-secondary py-4">
+          {formatCurrency(account.net_value)}
+          {account.gross_value !== account.net_value && (
+            <p className="text-xs font-normal text-muted-foreground line-through">
+              {formatCurrency(account.gross_value)}
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: "Ações",
+      headerClassName: "text-right",
+      cellClassName: "text-right",
+      cell: (account) => (
+        <div className="py-4">
+          <DataTableAction
+            tooltip="Editar entrada"
+            onClick={() => onEdit(account)}
+            className="hover:text-secondary"
+            icon={Pencil}
+          />
+          <DataTableAction
+            tooltip="Excluir entrada"
+            onClick={() => onDelete(account.id)}
+            className="hover:text-destructive"
+            icon={Trash2}
+          />
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <Card className="overflow-hidden shadow-md shadow-[#F0E6D2]/30">
-      <CardHeader className="flex flex-col gap-4 border-b bg-accent/30 p-4 md:flex-row md:items-center md:justify-between md:p-6">
+    <GenericTable
+      columns={columns}
+      data={accounts}
+      isLoading={loading}
+      searchTerm={searchTerm}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="Buscar por cliente..."
+      emptyStateMessage={
+        statusFilter === "all" && searchTerm === ""
+          ? "Nenhuma entrada registrada."
+          : "Nenhuma entrada encontrada com esses filtros."
+      }
+      filterControls={
         <ReceivableFilters
           searchTerm={searchTerm}
           onSearchChange={onSearchChange}
@@ -44,59 +152,8 @@ export function ReceivableTable({
           dateRange={dateRange}
           onDateRangeChange={onDateRangeChange}
         />
-      </CardHeader>
-
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-display text-xs uppercase tracking-wide">
-                  Cliente
-                </TableHead>
-                <TableHead className="font-display text-xs uppercase tracking-wide">
-                  Data de Entrada
-                </TableHead>
-                <TableHead className="font-display text-xs uppercase tracking-wide">Status</TableHead>
-                <TableHead className="font-display text-xs uppercase tracking-wide text-right">
-                  Valor Líquido
-                </TableHead>
-                <TableHead className="font-display text-xs uppercase tracking-wide text-right">
-                  Ações
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
-              ) : accounts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    {statusFilter === "all" && searchTerm === ""
-                      ? "Nenhuma entrada registrada."
-                      : "Nenhuma entrada encontrada com esses filtros."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                accounts.map((account) => (
-                  <ReceivableTableRow
-                    key={account.id}
-                    account={account}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onStatusChange={onStatusChange}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+      }
+    />
   );
 }
 
