@@ -15,22 +15,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { maskPrice, maskDiscount } from "./utils";
+import { ProductFormValues } from "@/hooks/useProductForm";
 
-interface FormValues {
-    name: string;
-    base_price: string;
-    internal_code?: string;
-    catalog_barcode?: string;
-    shelf_life_days: string;
-    default_discount?: string;
-    unit_type: "kg" | "un";
-    is_active: boolean;
-}
+
 
 interface ProductFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    form: UseFormReturn<FormValues>;
+    form: UseFormReturn<ProductFormValues>;
     editingId: string | null;
     onSubmit: () => void;
     onReset: () => void;

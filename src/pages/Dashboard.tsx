@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useDashboard } from "@/hooks/useDashboard";
 import { StatsGrid } from "@/components/ui/dashboard/StatsGrid";
 import { QuickActions } from "@/components/ui/dashboard/QuickActions";
-import { Summary } from "@/components/ui/dashboard/summary";
+import { Summary } from "@/components/ui/dashboard/Summary";
 
 export default function Dashboard() {
   const {

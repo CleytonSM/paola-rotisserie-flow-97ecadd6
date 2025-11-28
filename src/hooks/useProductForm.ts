@@ -22,7 +22,8 @@ const formSchema = z.object({
     is_active: z.boolean().default(true),
 });
 
-type FormSchemaType = z.infer<typeof formSchema>;
+export type ProductFormValues = z.infer<typeof formSchema>;
+type FormSchemaType = ProductFormValues;
 
 interface UseProductFormProps {
     onSuccess: (id: string | null, data: CatalogSchemaType) => Promise<{ success: boolean }>;
