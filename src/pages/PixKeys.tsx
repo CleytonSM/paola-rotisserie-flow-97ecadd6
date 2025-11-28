@@ -1,21 +1,13 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 
 import { PixKeyCard } from "../components/ui/pixkeys/PixKeyCard";
 import { PixKeyFormDialog } from "../components/ui/pixkeys/PixKeyFormDialog";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { usePixKeys } from "@/hooks/usePixKeys";
+import { GenericAlertDialog } from "@/components/GenericAlertDialog";
 
 export default function PixKeys() {
     const {
@@ -83,27 +75,15 @@ export default function PixKeys() {
                         </div>
                     )}
                 </div>
-
-                <AlertDialog open={!!deletingKey} onOpenChange={handleDeleteDialogClose}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir Chave Pix?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Tem certeza que deseja excluir a chave "{deletingKey?.key_value}"?
-                                Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleDelete}
-                                className="bg-destructive hover:bg-destructive/90"
-                            >
-                                Excluir
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <GenericAlertDialog
+                    open={!!deletingKey}
+                    onOpenChange={handleDeleteDialogClose}
+                    title="Excluir Chave Pix?"
+                    description={`Tem certeza que deseja excluir a chave "${deletingKey?.key_value}"? Esta ação não pode ser desfeita.`}
+                    confirmText="Excluir"
+                    onConfirm={handleDelete}
+                    variant="destructive"
+                />
             </main>
         </div>
     );

@@ -1,13 +1,4 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface DeleteSupplierDialogProps {
   open: boolean;
@@ -21,27 +12,12 @@ export function DeleteSupplierDialog({
   onConfirm,
 }: DeleteSupplierDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="font-display text-2xl tracking-wide">
-            Confirmar exclusão
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-base text-muted-foreground">
-            Tem certeza que deseja excluir este fornecedor? Esta ação não pode ser desfeita.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive hover:bg-destructive/90"
-          >
-            Excluir
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={onConfirm}
+      entityName="fornecedor"
+    />
   );
 }
 
