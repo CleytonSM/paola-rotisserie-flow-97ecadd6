@@ -19,7 +19,7 @@ interface PixKeyCardProps {
     pixKey: PixKey;
     onEdit: (pixKey: PixKey) => void;
     onDelete: (pixKey: PixKey) => void;
-    onToggleStatus: () => void;
+    onToggleStatus: (pixKey: PixKey) => void;
 }
 
 export function PixKeyCard({ pixKey, onEdit, onDelete, onToggleStatus }: PixKeyCardProps) {
@@ -44,7 +44,7 @@ export function PixKeyCard({ pixKey, onEdit, onDelete, onToggleStatus }: PixKeyC
                 setIsActive(!checked);
                 throw error;
             }
-            onToggleStatus();
+            onToggleStatus(pixKey);
             toast.success(`Chave ${checked ? "ativada" : "desativada"}!`);
         } catch (error) {
             console.error(error);

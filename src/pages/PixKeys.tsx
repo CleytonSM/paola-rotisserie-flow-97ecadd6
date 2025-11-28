@@ -1,13 +1,13 @@
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-
-import { PixKeyCard } from "../components/ui/pixkeys/PixKeyCard";
-import { PixKeyFormDialog } from "../components/ui/pixkeys/PixKeyFormDialog";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { usePixKeys } from "@/hooks/usePixKeys";
 import { GenericAlertDialog } from "@/components/GenericAlertDialog";
+import { PixKeysGrid } from "@/components/ui/pix-keys/PixKeysGrid";
+import { Plus } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { PixKeyFormDialog } from "@/components/ui/pix-keys/PixKeyFormDialog";
+import { PixKeyCard } from "@/components/ui/pix-keys/PixKeyCard";
 
 export default function PixKeys() {
     const {
@@ -27,11 +27,7 @@ export default function PixKeys() {
     } = usePixKeys();
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-        );
+        return <LoadingSpinner />;
     }
 
     return (
@@ -41,16 +37,21 @@ export default function PixKeys() {
                     title="Chaves Pix"
                     subtitle="Gerencie suas chaves Pix para recebimentos."
                     action={
-                        <PixKeyFormDialog
-                            open={isFormOpen}
-                            onOpenChange={setIsFormOpen}
-                            pixKey={editingKey}
-                            onSuccess={handleFormSuccess}
-                        />
+                        <>
+                            <Button onClick={handleCreate}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Nova Chave
+                            </Button>
+                            <PixKeyFormDialog
+                                open={isFormOpen}
+                                onOpenChange={setIsFormOpen}
+                                pixKey={editingKey}
+                                onSuccess={handleFormSuccess}
+                            />
+                        </>
                     }
                     children={<AppBreadcrumb />}
                 />
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {pixKeys?.map((pixKey) => (
                         <PixKeyCard
@@ -84,6 +85,14 @@ export default function PixKeys() {
                     onConfirm={handleDelete}
                     variant="destructive"
                 />
+                <PixKeysGrid
+                    pixKeys={pixKeys}
+                    onEdit={handleEdit}
+                    onDelete={setDeletingKey}
+                    onToggleStatus={handleToggleStatus}
+                    onCreate={handleCreate}
+                />
+
             </main>
         </div>
     );
