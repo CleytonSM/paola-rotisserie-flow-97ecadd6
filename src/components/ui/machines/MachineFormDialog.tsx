@@ -172,8 +172,8 @@ export function MachineFormDialog({
             maxWidth="max-w-4xl"
         >
             <Form {...form}>
-                <div className="grid gap-6 md:grid-cols-2 w-full">
-                    <div className="space-y-4">
+                <div className="col-span-1 sm:col-span-2 space-y-6">
+                    <div className="grid gap-6 md:grid-cols-2 w-full">
                         <FormField
                             control={form.control}
                             name="name"
