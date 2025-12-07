@@ -451,7 +451,7 @@ Navigation is defined in `src/navigationConfig.ts`:
 ```typescript
 export const navigationGroups = {
   overview: {
-    label: "Visão Geral",
+    label: "Geral",
     items: [
       { title: "Dashboard", url: "/", icon: LayoutDashboard }
     ]

@@ -21,7 +21,7 @@ import { PixIcon } from "./components/icons/PixIcon";
 
 export const navigationGroups = {
     overview: {
-        label: "Visão Geral",
+        label: "Geral",
         items: [
             {
                 title: "Dashboard",

@@ -25,6 +25,9 @@ export function usePayment() {
     // Cash State
     const [amountGiven, setAmountGiven] = useState<string>("");
 
+    // Client State
+    const [selectedClient, setSelectedClient] = useState<any | null>(null);
+
     useEffect(() => {
         if (items.length === 0) {
             navigate("/pdv");
@@ -80,6 +83,7 @@ export function usePayment() {
                     payment_method: selectedMethod,
                     notes: notes,
                     status: "completed"
+                    // client_id: selectedClient?.id // TODO: Enable when DB schema is ready
                 }])
                 .select()
                 .single();
@@ -146,6 +150,8 @@ export function usePayment() {
         setAmountGiven,
         calculateTotalWithFees,
         calculateChange,
-        handleConfirm
+        handleConfirm,
+        selectedClient,
+        setSelectedClient
     };
 }

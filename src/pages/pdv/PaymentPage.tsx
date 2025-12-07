@@ -4,6 +4,8 @@ import { PaymentHeader } from "@/components/pdv/payment/PaymentHeader";
 import { PaymentSummary } from "@/components/pdv/payment/PaymentSummary";
 import { PaymentMethods } from "@/components/pdv/payment/PaymentMethods";
 
+import { ClientSearch } from "@/components/pdv/payment/ClientSearch";
+
 export default function PaymentPage() {
     const {
         items,
@@ -27,7 +29,9 @@ export default function PaymentPage() {
         setAmountGiven,
         calculateTotalWithFees,
         calculateChange,
-        handleConfirm
+        handleConfirm,
+        selectedClient,
+        setSelectedClient
     } = usePayment();
 
     return (
@@ -36,13 +40,19 @@ export default function PaymentPage() {
 
             <div className="flex-1 p-6 max-w-5xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Column: Summary */}
-                <PaymentSummary
-                    items={items}
-                    subtotal={total()}
-                    total={calculateTotalWithFees()}
-                    notes={notes}
-                    setNotes={setNotes}
-                />
+                <div className="space-y-6">
+                    <ClientSearch
+                        selectedClient={selectedClient}
+                        onSelectClient={setSelectedClient}
+                    />
+                    <PaymentSummary
+                        items={items}
+                        subtotal={total()}
+                        total={calculateTotalWithFees()}
+                        notes={notes}
+                        setNotes={setNotes}
+                    />
+                </div>
 
                 {/* Right Column: Payment Methods */}
                 <PaymentMethods
