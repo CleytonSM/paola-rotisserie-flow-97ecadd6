@@ -94,7 +94,7 @@ export function ItemFormDialog({
                                 <SelectContent>
                                     {catalogProducts.map((product) => (
                                         <SelectItem key={product.id} value={product.id}>
-                                            {product.name} - {product.internal_code || 'Sem código'}
+                                            {product.name} - {product.catalog_barcode || 'Sem código'}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -117,7 +117,7 @@ export function ItemFormDialog({
                                 type="number"
                                 placeholder="Ex: 1234567890123"
                                 value={field.value || ''}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={(e) => field.onChange(e.target.value)}
                                 disabled={!!editingId}
                             />
                         )}
@@ -144,12 +144,13 @@ export function ItemFormDialog({
                                     placeholder="Ex: 1.250"
                                     value={field.value || ''}
                                     onChange={(e) => {
-                                        const weight = Number(e.target.value);
-                                        field.onChange(weight);
+                                        const rawValue = e.target.value;
+                                        field.onChange(rawValue);
 
                                         // Calculate price if product is by weight
                                         const product = catalogProducts.find(p => p.id === watch('catalog_id'));
-                                        if (product && product.unit_type === 'kg' && weight > 0) {
+                                        const weight = parseFloat(rawValue);
+                                        if (product && product.unit_type === 'kg' && !isNaN(weight) && weight > 0) {
                                             const price = weight * product.base_price;
                                             setValue('sale_price', Number(price.toFixed(2)));
                                         }
@@ -174,7 +175,7 @@ export function ItemFormDialog({
                                     step="0.01"
                                     placeholder="Ex: 57.38"
                                     value={field.value || ''}
-                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                    onChange={(e) => field.onChange(e.target.value)}
                                 />
                             )}
                         />
@@ -196,7 +197,7 @@ export function ItemFormDialog({
                                 max="1"
                                 placeholder="Ex: 0.05 (5%)"
                                 value={field.value || ''}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={(e) => field.onChange(e.target.value)}
                             />
                         )}
                     />

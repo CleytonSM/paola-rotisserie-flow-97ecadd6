@@ -6,7 +6,6 @@ export interface ProductCatalog {
     id: string;
     name: string;
     base_price: number;
-    internal_code?: string | null;
     catalog_barcode?: number | null;
     shelf_life_days: number;
     default_discount?: number | null;

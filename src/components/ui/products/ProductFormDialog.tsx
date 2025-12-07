@@ -94,30 +94,18 @@ export function ProductFormDialog({
                     />
                 </div>
 
-                {/* Internal Code and Catalog Barcode - SWAPPED */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="catalog_barcode">Código de Barras</Label>
-                        <Input
-                            id="catalog_barcode"
-                            type="number"
-                            placeholder="Ex: 7891234567890"
-                            {...register("catalog_barcode")}
-                        />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="internal_code" className={!watch("is_internal") ? "text-muted-foreground" : ""}>
-                            Código Interno
-                        </Label>
-                        <Input
-                            id="internal_code"
-                            placeholder="Ex: FRANG-001"
-                            {...register("internal_code")}
-                            maxLength={50}
-                            disabled={!watch("is_internal")}
-                        />
-                    </div>
+                {/* Catalog Barcode */}
+                <div className="grid gap-2">
+                    <Label htmlFor="catalog_barcode">Código de Barras</Label>
+                    <Input
+                        id="catalog_barcode"
+                        type="number"
+                        placeholder="Ex: 2000220"
+                        {...register("catalog_barcode")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Para produtos pesados, use o prefixo da balança (ex: 2000220)
+                    </p>
                 </div>
 
                 {/* Unit Type */}

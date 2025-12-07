@@ -29,6 +29,7 @@ export default function PDVPage() {
         selectedProduct,
         handleInternalItemSelect,
         handleAddInternalItem,
+        handleScannedProduct,
     } = usePDV();
 
     return (
@@ -47,6 +48,8 @@ export default function PDVPage() {
                     isMobile={isMobile}
                     searchContainerRef={searchContainerRef}
                     performSearch={performSearch}
+                    handleScannedProduct={handleScannedProduct}
+                    handleInternalItemSelect={handleInternalItemSelect}
                 />
 
                 <PDVCart items={items} onAddInternalItem={handleAddInternalItem} />

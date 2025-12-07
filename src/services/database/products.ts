@@ -125,11 +125,11 @@ export const getProductsByCodeOrName = async (
             .eq("is_active", true);
 
         if (isNumeric) {
-            // Search by barcode or internal code
-            dbQuery = dbQuery.or(`catalog_barcode.eq.${query},internal_code.eq.${query}`);
+            // Search by barcode
+            dbQuery = dbQuery.or(`catalog_barcode.eq.${query}`);
         } else {
-            // Search by name (case insensitive) or internal code
-            dbQuery = dbQuery.or(`name.ilike.%${query}%,internal_code.ilike.%${query}%`);
+            // Search by name (case insensitive)
+            dbQuery = dbQuery.or(`name.ilike.%${query}%`);
         }
         
         const { data, error } = await dbQuery.limit(20);

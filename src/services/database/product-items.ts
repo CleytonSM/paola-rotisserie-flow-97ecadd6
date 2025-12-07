@@ -84,6 +84,29 @@ export const getProductItems = async (
 };
 
 /**
+ * Get a specific product item by its scale barcode
+ */
+export const getProductItemByBarcode = async (
+    barcode: number
+): Promise<DatabaseResult<ProductItem>> => {
+    try {
+        const { data, error } = await supabase
+            .from("product_item")
+            .select(`
+        *,
+        product_catalog (*)
+      `)
+            .eq('scale_barcode', barcode)
+            .maybeSingle();
+
+        if (error) throw error;
+        return { data, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+
+/**
  * Create a new product item
  * Note: expires_at will be auto-calculated by the database trigger
  */

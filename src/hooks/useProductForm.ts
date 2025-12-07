@@ -14,7 +14,7 @@ import { percentToDecimal, decimalToPercent } from "@/components/ui/products/uti
 const formSchema = z.object({
     name: z.string().min(1, "Nome é obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
     base_price: z.string().min(1, "Preço base é obrigatório"),
-    internal_code: z.string().optional(),
+    // internal_code removed
     catalog_barcode: z.string().optional(),
     shelf_life_days: z.string().min(1, "Tempo de validade é obrigatório"),
     default_discount: z.string().optional(),
@@ -44,7 +44,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
         defaultValues: {
             name: "",
             base_price: "",
-            internal_code: "",
+            // internal_code removed
             catalog_barcode: "",
             shelf_life_days: "",
             default_discount: "0",
@@ -61,7 +61,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
         return {
             name: data.name,
             base_price: parseFloat(data.base_price),
-            internal_code: data.internal_code || undefined,
+            // internal_code removed
             catalog_barcode: data.catalog_barcode ? parseInt(data.catalog_barcode) : undefined,
             shelf_life_days: parseInt(data.shelf_life_days),
             default_discount: data.default_discount ? percentToDecimal(data.default_discount) : undefined,
@@ -104,7 +104,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
         form.reset({
             name: product.name,
             base_price: product.base_price.toString(),
-            internal_code: product.internal_code || "",
+            // internal_code: product.internal_code || "",
             catalog_barcode: product.catalog_barcode?.toString() || "",
             shelf_life_days: product.shelf_life_days.toString(),
             default_discount: decimalToPercent(product.default_discount),

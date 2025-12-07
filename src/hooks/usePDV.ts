@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useCartStore } from "@/stores/cartStore";
 import { searchProductCatalog, ProductCatalog } from "@/services/database/product-catalog";
 import { Html5Qrcode } from "html5-qrcode";
@@ -33,7 +33,7 @@ export function usePDV() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const performSearch = async (query: string) => {
+    const performSearch = useCallback(async (query: string) => {
         if (query.length >= 3) {
             const { data } = await searchProductCatalog(query);
             if (data) {
@@ -44,17 +44,17 @@ export function usePDV() {
             setSearchResults([]);
             setShowPreview(false);
         }
-    };
+    }, []);
 
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
             performSearch(searchQuery);
-        }, 300);
+        }, 150);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    const handleProductSelect = (product: ProductCatalog) => {
+    const handleProductSelect = useCallback((product: ProductCatalog) => {
         if (product.is_internal) {
             setSelectedProduct(product);
             setSelectionOpen(true);
@@ -72,32 +72,60 @@ export function usePDV() {
         setSearchResults([]);
         setShowPreview(false);
         toast.success(`Produto adicionado: ${product.name}`);
-    };
+    }, [addItem]);
 
-    const handleInternalItemSelect = (item: ProductItem) => {
-        if (!selectedProduct) return;
+    const handleInternalItemSelect = useCallback((item: ProductItem) => {
+        // Fallback for catalog data: use selectedProduct state OR item.product_catalog join
+        const catalogData = selectedProduct || item.product_catalog;
+        
+        if (!catalogData) {
+            toast.error("Erro: Dados do produto não encontrados.");
+            return;
+        }
+
+        // Check for duplicate manually (Deep check including sub-items)
+        const barcodeToCheck = String(item.scale_barcode);
+        const isDuplicate = items.some((cartItem: any) => {
+            // 1. Check top-level scanned_barcode (for non-grouped or first items)
+            if (cartItem.scanned_barcode === barcodeToCheck) return true;
+            
+            // 2. Check sub-items array (for grouped internal items)
+            if (cartItem.subItems && cartItem.subItems.some((sub: any) => String(sub.barcode) === barcodeToCheck)) {
+                return true;
+            }
+            
+            return false;
+        });
+
+        if (isDuplicate) {
+            toast.warning("Este item já foi adicionado ao pedido!");
+            setSelectionOpen(false);
+            setSelectedProduct(null);
+            return;
+        }
 
         const cartItem: any = {
-            id: selectedProduct.id, // Use CATALOG ID as the main ID for grouping
-            name: selectedProduct.name, // Use generic name
+            id: catalogData.id, // Use CATALOG ID as the main ID for grouping
+            name: catalogData.name, // Use generic name
             base_price: item.sale_price, // This will be used as price for this sub-item
             // Additional info for grouping logic
             is_internal: true,
-            catalog_id: selectedProduct.id,
+            catalog_id: catalogData.id,
             sub_item_id: item.id,
             weight: item.weight_kg,
             catalog_barcode: item.scale_barcode, // Scale barcode
+            scanned_barcode: barcodeToCheck, // Unified duplicate check field
             
             // Legacy/Standard fields
-            internal_code: selectedProduct.internal_code,
+            // internal_code removed
             unit_type: 'un', 
         };
 
         addItem(cartItem);
         setSelectionOpen(false);
         setSelectedProduct(null);
-        toast.success(`Item adicionado: ${selectedProduct.name}`);
-    };
+        toast.success(`Item adicionado: ${catalogData.name}`);
+    }, [selectedProduct, addItem, items]);
 
     // Scanner logic
     useEffect(() => {
@@ -182,37 +210,85 @@ export function usePDV() {
         setSelectionOpen,
         selectedProduct,
         handleInternalItemSelect,
+        // Expose helper to auto-add scanned product (bypassing selection if internal)
+        handleScannedProduct: useCallback(async (product: ProductCatalog, overridePrice?: number, rawBarcode?: string) => {
+             // If manual price override exists (scale barcode), we trust the scan
+             if (overridePrice !== undefined) {
+                 // Check for duplicate scan of the same specific item
+                 const isDuplicate = rawBarcode && items.some((i: any) => {
+                     if (i.scanned_barcode === rawBarcode) return true;
+                     if (i.subItems && i.subItems.some((sub: any) => String(sub.barcode) === rawBarcode)) return true;
+                     return false;
+                 });
+
+                 if (isDuplicate) {
+                    toast.warning("Este item já foi adicionado ao pedido!");
+                    setSearchQuery("");
+                    setSearchResults([]);
+                    setShowPreview(false);
+                    return;
+                 }
+
+                 const cartItem: any = {
+                     id: product.id,
+                     name: product.name,
+                     base_price: overridePrice, // Use the price from the barcode
+                     
+                     // Internal Product Fields
+                     is_internal: true,
+                     catalog_id: product.id,
+                     sub_item_id: null, // No specific sub-item ID from DB, but we have the specific scan
+                     weight: product.unit_type === 'kg' && product.base_price > 0 
+                        ? Number((overridePrice / product.base_price).toFixed(3)) 
+                        : 1, // Estimate weight if possible
+                     catalog_barcode: product.catalog_barcode,
+                     scanned_barcode: rawBarcode, // Store for duplicate checking
+                     
+                     // internal_code removed
+                     unit_type: product.unit_type,
+                 };
+                 
+                 addItem(cartItem);
+                 setSearchQuery("");
+                 setSearchResults([]);
+                 setShowPreview(false);
+                 toast.success(`Item adicionado: ${product.name} (R$ ${overridePrice.toFixed(2)})`);
+                 return;
+             }
+
+             // If no override, treat as normal select
+             handleProductSelect(product);
+        }, [addItem, handleProductSelect, items]),
         // Expose helper to open selection dialog from cart
-        handleAddInternalItem: async (catalogId: string) => {
+        handleAddInternalItem: useCallback(async (catalogId: string) => {
              // We need to set selectedProduct to open the dialog.
              // We can try to find it in the search cache (unlikely) or fetch it.
              // For reliability, let's fetch it by ID.
-             const { data, error } = await searchProductCatalog(catalogId); // Assuming search supports ID or we have getProductCatalog
-             // Actually searchProductCatalog is likely text search.
-             // We should check if we have a direct lookup. If not, use search or assume we can get it from the cart item?
-             // Cart item has `name`, `internal_code`, `base_price` (maybe), etc. 
-             // But simpler to just use the CartItem as the "ProductCatalog" basis if possible, 
-             // OR implement a proper fetch.
              
-             // Let's assume for now we search by ID (if supported) or name.
-             // A better way: find the item in local cart which has the catalog data!
+             // Find the item in local cart which has the catalog data
              const cartItem = items.find(i => i.id === catalogId);
              if (cartItem) {
                  // Construct a ProductCatalog-like object from CartItem
                  const productCatalogForSelection = {
                      id: cartItem.id, // catalog_id
                      name: cartItem.name,
-                     base_price: cartItem.base_price, // This might be unit price?
-                     internal_code: cartItem.internal_code,
+                     base_price: cartItem.base_price,
                      unit_type: cartItem.unit_type,
                      is_active: true,
-                     is_internal: true, // We know it is
-                     // other fields might be missing but maybe not needed for the dialog header?
+                     is_internal: true,
+                     catalog_barcode: cartItem.catalog_barcode
                  } as ProductCatalog;
                  
                  setSelectedProduct(productCatalogForSelection);
                  setSelectionOpen(true);
+             } else {
+                 // Fallback to fetch if not in cart (shouldn't happen for this flow)
+                 const { data } = await searchProductCatalog(catalogId);
+                 if (data && data.length > 0) {
+                     setSelectedProduct(data[0]);
+                     setSelectionOpen(true);
+                 }
              }
-        }
+        }, [items])
     };
 }

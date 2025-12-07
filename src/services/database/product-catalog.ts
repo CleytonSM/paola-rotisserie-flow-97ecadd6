@@ -10,7 +10,7 @@ export interface ProductCatalog {
     id: string;
     name: string;
     base_price: number;  // price per kg or per unit
-    internal_code?: string | null;
+    // internal_code removed
     catalog_barcode?: number | null;
     shelf_life_days?: number | null;
     default_discount?: number | null;  // 0-1 range
@@ -24,7 +24,7 @@ export interface ProductCatalog {
 export interface ProductCatalogInput {
     name: string;
     base_price: number;
-    internal_code?: string | null;
+    // internal_code removed
     catalog_barcode?: number | null;
     shelf_life_days: number;
     default_discount?: number | null;
@@ -159,11 +159,11 @@ export const searchProductCatalog = async (
             .eq("is_active", true);
 
         if (isNumeric) {
-            // Search by barcode or internal code
-            dbQuery = dbQuery.or(`catalog_barcode.eq.${query},internal_code.eq.${query}`);
+            // Search by barcode
+            dbQuery = dbQuery.eq('catalog_barcode', query);
         } else {
-            // Search by name (case insensitive) or internal code
-            dbQuery = dbQuery.or(`name.ilike.%${query}%,internal_code.ilike.%${query}%`);
+            // Search by name (case insensitive)
+            dbQuery = dbQuery.ilike('name', `%${query}%`);
         }
         
         const { data, error } = await dbQuery.limit(20);
