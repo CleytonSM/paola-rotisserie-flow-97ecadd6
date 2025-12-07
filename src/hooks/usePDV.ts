@@ -4,6 +4,7 @@ import { searchProductCatalog, ProductCatalog } from "@/services/database/produc
 import { Html5Qrcode } from "html5-qrcode";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ProductItem } from "@/services/database/product-items";
 
 export function usePDV() {
     const { items, addItem, total, itemCount } = useCartStore();
@@ -11,6 +12,11 @@ export function usePDV() {
     const [searchResults, setSearchResults] = useState<ProductCatalog[]>([]);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    
+    // Internal Product Selection State
+    const [selectionOpen, setSelectionOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<ProductCatalog | null>(null);
+
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const isMobile = useIsMobile();
     const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -49,6 +55,15 @@ export function usePDV() {
     }, [searchQuery]);
 
     const handleProductSelect = (product: ProductCatalog) => {
+        if (product.is_internal) {
+            setSelectedProduct(product);
+            setSelectionOpen(true);
+            setShowPreview(false);
+            setSearchQuery("");
+            setSearchResults([]);
+            return;
+        }
+
         const cartItem: any = {
             ...product,
         };
@@ -57,6 +72,31 @@ export function usePDV() {
         setSearchResults([]);
         setShowPreview(false);
         toast.success(`Produto adicionado: ${product.name}`);
+    };
+
+    const handleInternalItemSelect = (item: ProductItem) => {
+        if (!selectedProduct) return;
+
+        const cartItem: any = {
+            id: selectedProduct.id, // Use CATALOG ID as the main ID for grouping
+            name: selectedProduct.name, // Use generic name
+            base_price: item.sale_price, // This will be used as price for this sub-item
+            // Additional info for grouping logic
+            is_internal: true,
+            catalog_id: selectedProduct.id,
+            sub_item_id: item.id,
+            weight: item.weight_kg,
+            catalog_barcode: item.scale_barcode, // Scale barcode
+            
+            // Legacy/Standard fields
+            internal_code: selectedProduct.internal_code,
+            unit_type: 'un', 
+        };
+
+        addItem(cartItem);
+        setSelectionOpen(false);
+        setSelectedProduct(null);
+        toast.success(`Item adicionado: ${selectedProduct.name}`);
     };
 
     // Scanner logic
@@ -137,6 +177,42 @@ export function usePDV() {
         handleProductSelect,
         handleButtonClick,
         isMobile,
-        performSearch
+        performSearch,
+        selectionOpen,
+        setSelectionOpen,
+        selectedProduct,
+        handleInternalItemSelect,
+        // Expose helper to open selection dialog from cart
+        handleAddInternalItem: async (catalogId: string) => {
+             // We need to set selectedProduct to open the dialog.
+             // We can try to find it in the search cache (unlikely) or fetch it.
+             // For reliability, let's fetch it by ID.
+             const { data, error } = await searchProductCatalog(catalogId); // Assuming search supports ID or we have getProductCatalog
+             // Actually searchProductCatalog is likely text search.
+             // We should check if we have a direct lookup. If not, use search or assume we can get it from the cart item?
+             // Cart item has `name`, `internal_code`, `base_price` (maybe), etc. 
+             // But simpler to just use the CartItem as the "ProductCatalog" basis if possible, 
+             // OR implement a proper fetch.
+             
+             // Let's assume for now we search by ID (if supported) or name.
+             // A better way: find the item in local cart which has the catalog data!
+             const cartItem = items.find(i => i.id === catalogId);
+             if (cartItem) {
+                 // Construct a ProductCatalog-like object from CartItem
+                 const productCatalogForSelection = {
+                     id: cartItem.id, // catalog_id
+                     name: cartItem.name,
+                     base_price: cartItem.base_price, // This might be unit price?
+                     internal_code: cartItem.internal_code,
+                     unit_type: cartItem.unit_type,
+                     is_active: true,
+                     is_internal: true, // We know it is
+                     // other fields might be missing but maybe not needed for the dialog header?
+                 } as ProductCatalog;
+                 
+                 setSelectedProduct(productCatalogForSelection);
+                 setSelectionOpen(true);
+             }
+        }
     };
 }

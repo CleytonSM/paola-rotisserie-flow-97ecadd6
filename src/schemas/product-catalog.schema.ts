@@ -12,6 +12,7 @@ export const catalogSchema = z.object({
     shelf_life_days: z.number().positive("Tempo de validade deve ser maior que zero"),
     default_discount: z.number().min(0, "Desconto não pode ser negativo").max(1, "Desconto não pode ser maior que 100%").optional(),
     unit_type: z.enum(["kg", "un"]).default("kg"),
+    is_internal: z.boolean().default(true),
     is_active: z.boolean().default(true),
 });
 

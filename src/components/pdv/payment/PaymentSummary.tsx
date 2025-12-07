@@ -17,9 +17,27 @@ export function PaymentSummary({ items, subtotal, total, notes, setNotes }: Paym
                 <h2 className="font-playfair font-semibold text-lg mb-4 text-foreground">Resumo do Pedido</h2>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                     {items.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">{item.quantity}x {item.name}</span>
-                            <span className="font-medium text-foreground">{formatCurrency(item.base_price * item.quantity)}</span>
+                        <div key={item.id}>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">{item.quantity}x {item.name}</span>
+                                <span className="font-medium text-foreground">
+                                    {formatCurrency(
+                                        item.subItems && item.subItems.length > 0
+                                            ? item.subItems.reduce((acc, sub) => acc + sub.price, 0)
+                                            : item.base_price * item.quantity
+                                    )}
+                                </span>
+                            </div>
+                            {item.subItems && item.subItems.length > 0 && (
+                                <div className="pl-4 mt-1 space-y-0.5">
+                                    {item.subItems.map((sub) => (
+                                        <div key={sub.id} className="flex justify-between text-xs text-muted-foreground/80">
+                                            <span>{sub.weight.toFixed(3)}kg</span>
+                                            <span>{formatCurrency(sub.price)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

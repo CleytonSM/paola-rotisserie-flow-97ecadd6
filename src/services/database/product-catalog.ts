@@ -15,6 +15,7 @@ export interface ProductCatalog {
     shelf_life_days?: number | null;
     default_discount?: number | null;  // 0-1 range
     unit_type: 'kg' | 'un';
+    is_internal: boolean;
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
@@ -28,6 +29,7 @@ export interface ProductCatalogInput {
     shelf_life_days: number;
     default_discount?: number | null;
     unit_type?: 'kg' | 'un';
+    is_internal?: boolean;
     is_active?: boolean;
 }
 

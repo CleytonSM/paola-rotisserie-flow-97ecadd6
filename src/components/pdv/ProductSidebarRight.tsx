@@ -9,11 +9,16 @@ import { formatCurrency } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
-export function ProductSidebarRight() {
+interface ProductSidebarRightProps {
+    onProductSelect: (product: ProductCatalog) => void;
+}
+
+export function ProductSidebarRight({ onProductSelect }: ProductSidebarRightProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [products, setProducts] = useState<ProductCatalog[]>([]);
     const [search, setSearch] = useState("");
-    const addItem = useCartStore((state) => state.addItem);
+    // Removed direct useCartStore use for adding items, relying on parent handler
+    // const addItem = useCartStore((state) => state.addItem);
 
     useEffect(() => {
         loadProducts();
@@ -31,9 +36,7 @@ export function ProductSidebarRight() {
     const topProducts = products.slice(0, 6); // Mock top products for now
 
     const handleAddItem = (product: ProductCatalog) => {
-        // Map ProductCatalog to Product structure expected by cart
-        const cartItem: any = { ...product };
-        addItem(cartItem);
+        onProductSelect(product);
     };
 
     return (

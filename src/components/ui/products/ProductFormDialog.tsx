@@ -77,18 +77,25 @@ export function ProductFormDialog({
                     />
                 </div>
 
-                {/* Internal Code and Catalog Barcode */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="internal_code">Código Interno</Label>
-                        <Input
-                            id="internal_code"
-                            placeholder="Ex: FRANG-001"
-                            {...register("internal_code")}
-                            maxLength={50}
-                        />
+                {/* New: Internal Product Switch */}
+                <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/20">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_internal" className="text-base">
+                            Produto Interno
+                        </Label>
+                        <div className="text-sm text-muted-foreground">
+                            Produtos internos requerem seleção de itens específicos
+                        </div>
                     </div>
+                    <Switch
+                        id="is_internal"
+                        checked={watch("is_internal")}
+                        onCheckedChange={(checked) => setValue("is_internal", checked)}
+                    />
+                </div>
 
+                {/* Internal Code and Catalog Barcode - SWAPPED */}
+                <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="catalog_barcode">Código de Barras</Label>
                         <Input
@@ -96,6 +103,19 @@ export function ProductFormDialog({
                             type="number"
                             placeholder="Ex: 7891234567890"
                             {...register("catalog_barcode")}
+                        />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="internal_code" className={!watch("is_internal") ? "text-muted-foreground" : ""}>
+                            Código Interno
+                        </Label>
+                        <Input
+                            id="internal_code"
+                            placeholder="Ex: FRANG-001"
+                            {...register("internal_code")}
+                            maxLength={50}
+                            disabled={!watch("is_internal")}
                         />
                     </div>
                 </div>

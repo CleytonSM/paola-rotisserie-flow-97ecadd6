@@ -1,24 +1,34 @@
 import { CartItem } from "@/components/pdv/CartItem";
 import { EmptyCartState } from "@/components/pdv/EmptyCartState";
 import { CartItem as CartItemType } from "@/stores/cartStore";
+import { AnimatePresence } from "framer-motion";
+import { ShoppingBasket } from "lucide-react";
 
 interface PDVCartProps {
     items: CartItemType[];
+    onAddInternalItem: (catalogId: string) => void;
 }
 
-export function PDVCart({ items }: PDVCartProps) {
+export function PDVCart({ items, onAddInternalItem }: PDVCartProps) {
     return (
-        <div className="flex-1 overflow-y-auto p-6 pt-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
             <div className="max-w-3xl mx-auto h-full">
-                {items.length === 0 ? (
-                    <EmptyCartState />
-                ) : (
-                    <div className="space-y-2 pb-24">
-                        {items.map((item) => (
-                            <CartItem key={item.id} item={item} />
-                        ))}
-                    </div>
-                )}
+                <AnimatePresence>
+                    {items.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground opacity-50">
+                            <ShoppingBasket className="h-12 w-12 mb-2" />
+                            <p>Seu carrinho está vazio</p>
+                        </div>
+                    ) : (
+                        items.map((item) => (
+                            <CartItem
+                                key={item.id}
+                                item={item}
+                                onAddMore={onAddInternalItem}
+                            />
+                        ))
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

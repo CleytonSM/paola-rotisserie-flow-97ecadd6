@@ -19,6 +19,7 @@ const formSchema = z.object({
     shelf_life_days: z.string().min(1, "Tempo de validade é obrigatório"),
     default_discount: z.string().optional(),
     unit_type: z.enum(["kg", "un"]).default("kg"),
+    is_internal: z.boolean().default(true),
     is_active: z.boolean().default(true),
 });
 
@@ -48,6 +49,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             shelf_life_days: "",
             default_discount: "0",
             unit_type: "kg",
+            is_internal: true,
             is_active: true,
         },
     });
@@ -64,6 +66,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             shelf_life_days: parseInt(data.shelf_life_days),
             default_discount: data.default_discount ? percentToDecimal(data.default_discount) : undefined,
             unit_type: data.unit_type,
+            is_internal: data.is_internal,
             is_active: data.is_active,
         };
     };
@@ -106,6 +109,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             shelf_life_days: product.shelf_life_days.toString(),
             default_discount: decimalToPercent(product.default_discount),
             unit_type: product.unit_type,
+            is_internal: product.is_internal,
             is_active: product.is_active,
         });
         setDialogOpen(true);

@@ -5,6 +5,7 @@ import { PDVSearch } from "@/components/pdv/PDVSearch";
 import { PDVCart } from "@/components/pdv/PDVCart";
 import { PDVFooter } from "@/components/pdv/PDVFooter";
 import { ScannerDialog } from "@/components/pdv/ScannerDialog";
+import { ProductItemSelectionDialog } from "@/components/pdv/ProductItemSelectionDialog";
 
 export default function PDVPage() {
     const {
@@ -22,7 +23,12 @@ export default function PDVPage() {
         handleProductSelect,
         handleButtonClick,
         isMobile,
-        performSearch
+        performSearch,
+        selectionOpen,
+        setSelectionOpen,
+        selectedProduct,
+        handleInternalItemSelect,
+        handleAddInternalItem,
     } = usePDV();
 
     return (
@@ -43,14 +49,26 @@ export default function PDVPage() {
                     performSearch={performSearch}
                 />
 
-                <PDVCart items={items} />
+                <PDVCart items={items} onAddInternalItem={handleAddInternalItem} />
 
                 <PDVFooter total={total()} hasItems={items.length > 0} />
             </div>
 
-            <ProductSidebarRight />
+            <ProductSidebarRight onProductSelect={handleProductSelect} />
 
             <ScannerDialog open={isScannerOpen} onOpenChange={setIsScannerOpen} />
+
+            <ProductItemSelectionDialog
+                open={selectionOpen}
+                onOpenChange={setSelectionOpen}
+                product={selectedProduct}
+                onSelect={handleInternalItemSelect}
+                excludedItemIds={
+                    selectedProduct
+                        ? items.find(i => i.id === selectedProduct.id)?.subItems?.map(s => s.id)
+                        : []
+                }
+            />
         </div>
     );
 }
