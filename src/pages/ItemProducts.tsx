@@ -11,6 +11,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { DateRange } from "react-day-picker";
 import { Scaffolding } from "@/components/ui/Scaffolding";
+import { BulkScanDialog } from "@/components/ui/product-items/BulkScanDialog";
+import { Button } from "@/components/ui/button";
+import { ScanBarcode } from "lucide-react";
 
 export default function ItemProducts() {
     const navigate = useNavigate();
@@ -36,6 +39,7 @@ export default function ItemProducts() {
         handleDeleteClick,
         handleDeleteConfirm,
         handleFormSubmit,
+        refreshItems,
     } = useProductItems();
 
     const catalogProducts = useProductCatalog();
@@ -44,6 +48,9 @@ export default function ItemProducts() {
     const [searchTerm, setSearchTerm] = useState("");
     const [productionDate, setProductionDate] = useState<DateRange | undefined>();
     const [expirationPreset, setExpirationPreset] = useState<string>("all");
+
+    // Bulk Scan state
+    const [bulkScanOpen, setBulkScanOpen] = useState(false);
 
     return (
         <Scaffolding>
@@ -86,6 +93,24 @@ export default function ItemProducts() {
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={handleDeleteConfirm}
             />
+
+            <BulkScanDialog
+                open={bulkScanOpen}
+                onOpenChange={setBulkScanOpen}
+                catalogProducts={catalogProducts.products}
+                onSuccess={() => {
+                    refreshItems();
+                }}
+            />
+
+            <Button
+                size="lg"
+                className="fixed bottom-6 right-6 rounded-full shadow-lg h-14 w-14 p-0 z-50"
+                onClick={() => setBulkScanOpen(true)}
+            >
+                <ScanBarcode className="h-6 w-6" />
+                <span className="sr-only">Leitura em Lote</span>
+            </Button>
         </Scaffolding>
     );
 }
