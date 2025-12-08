@@ -29,7 +29,7 @@ export function MethodPix({ pixKeys, selectedPixKey, setSelectedPixKey, onGenera
                 </SelectTrigger>
                 <SelectContent>
                     {pixKeys.map(key => (
-                        <SelectItem key={key.id} value={key.key_value}>
+                        <SelectItem key={key.id} value={key.id}>
                             {getTypeLabel(key.type)}: {formatPixKey(key.type, key.key_value)}
                         </SelectItem>
                     ))}

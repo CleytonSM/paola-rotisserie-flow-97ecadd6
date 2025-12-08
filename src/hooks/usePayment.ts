@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useCartStore } from "@/stores/cartStore";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CardMachine, CardFlag } from "@/services/database/machines";
+import { CardMachine } from "@/services/database/machines";
+import { completeSale, SaleItem, SalePayment } from "@/services/database/sales";
 
 export function usePayment() {
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ export function usePayment() {
         const { data: keys } = await supabase.from("pix_keys").select("*").eq("active", true);
         if (keys) setPixKeys(keys);
 
-        const { data: machs, error } = await supabase
+        const { data: machs } = await supabase
             .from("card_machines")
             .select(`
                 *,
@@ -51,7 +52,7 @@ export function usePayment() {
 
     const calculateTotalWithFees = () => {
         let currentTotal = total();
-        if ((selectedMethod === "credit_card" || selectedMethod === "debit_card") && selectedFlag) {
+        if ((selectedMethod === "card_credit" || selectedMethod === "card_debit") && selectedFlag) {
             const machine = machines.find(m => m.id === selectedMachine);
             const flag = machine?.flags?.find(f => f.id === selectedFlag);
             if (flag) {
@@ -74,52 +75,89 @@ export function usePayment() {
         setIsProcessing(true);
         try {
             const totalAmount = calculateTotalWithFees();
+            const changeAmount = selectedMethod === 'cash' ? calculateChange() : 0;
 
-            // 1. Create Sale
-            const { data: sale, error: saleError } = await supabase
-                .from("sales")
-                .insert([{
+            // Prepare Items
+            const saleItems: SaleItem[] = items.flatMap(item => {
+                // If it's a grouped internal item, we should split it into individual sales items 
+                // IF we want to track them individually (e.g. for statistics). 
+                // However, the cart item structure for internal items groups them.
+                // Our schema allows "snapshot" names.
+                
+                if (item.subItems && item.subItems.length > 0) {
+                   return item.subItems.map(sub => ({
+                       product_catalog_id: item.id, // The group ID is the catalog ID
+                       product_item_id: sub.id, // Specific item ID
+                       name: `${item.name} (${sub.weight}kg)`, // Descriptive name
+                       unit_price: sub.price, // Price of this specific item
+                       quantity: 1,
+                       total_price: sub.price
+                   }));
+                }
+
+                // Standard item or simple internal item
+                return [{
+                    product_catalog_id: item.id,
+                    product_item_id: null, // Standard items might not have specific item IDs unless tracked. Assuming null for generic stock.
+                    name: item.name,
+                    unit_price: item.base_price,
+                    quantity: item.quantity,
+                    total_price: item.base_price * item.quantity
+                }];
+            });
+
+            // Prepare Payments
+            // Currently supporting single payment method per sale, but structure allows multiple.
+            const payment: SalePayment = {
+                amount: totalAmount, // For now, 100% of amount
+                payment_method: selectedMethod as any,
+                installments: 1
+            };
+
+            if (selectedMethod === 'pix') {
+                payment.pix_key_id = selectedPixKey;
+            } else if (selectedMethod === 'card_credit' || selectedMethod === 'card_debit') {
+                payment.machine_id = selectedMachine;
+                payment.card_flag = machines.find(m => m.id === selectedMachine)?.flags?.find(f => f.id === selectedFlag)?.brand;
+            }
+
+            // Call Service
+            const { data, error } = await completeSale({
+                sale: {
                     total_amount: totalAmount,
-                    payment_method: selectedMethod,
+                    client_id: selectedClient?.id,
                     notes: notes,
-                    status: "completed"
-                    // client_id: selectedClient?.id // TODO: Enable when DB schema is ready
-                }])
-                .select()
-                .single();
+                    change_amount: changeAmount
+                },
+                items: saleItems,
+                payments: [payment]
+            });
 
-            if (saleError) throw saleError;
+            if (error) throw error;
 
-            // 2. Create Sale Items
-            const saleItems = items.map(item => ({
-                sale_id: sale.id,
-                product_id: item.id,
-                quantity: item.quantity,
-                unit_price: item.base_price,
-                total_price: item.base_price * item.quantity
-            }));
+            console.log('Complete Sale Data:', data);
 
-            const { error: itemsError } = await supabase
-                .from("sales_items")
-                .insert(saleItems);
+            if (data?.sale_id) {
+                // Pass necessary data for Success Page (especially for Pix re-display)
+                navigate("/pdv/success", { 
+                    state: { 
+                        saleId: data.sale_id,
+                        displayId: data.display_id, 
+                        total: totalAmount, 
+                        method: selectedMethod,
+                        clientName: selectedClient?.name,
+                        
+                        // Pass Pix Data for modal re-opening
+                        pixKey: selectedMethod === 'pix' ? pixKeys.find(k => k.id === selectedPixKey) : null,
+                        pixAmount: totalAmount
+                    } 
+                });
+                // We do NOT clear cart here immediately if we want to allow "back"? 
+                // No, standard flow is to clear. Success page has "New Sale" button.
+                // We'll clear it here to ensure state consistency.
+                // clearCart(); // Moved to SuccessPage to prevent race condition
+            }
 
-            if (itemsError) throw itemsError;
-
-            // 3. Create Account Receivable
-            const { error: arError } = await supabase
-                .from("accounts_receivable")
-                .insert([{
-                    description: `Venda PDV #${sale.id.slice(0, 8)}`,
-                    amount: totalAmount,
-                    due_date: new Date().toISOString(),
-                    status: "paid",
-                    payment_method: selectedMethod
-                }]);
-
-            if (arError) throw arError;
-
-            navigate("/pdv/success", { state: { orderId: sale.id, total: totalAmount, method: selectedMethod } });
-            clearCart();
         } catch (error) {
             console.error(error);
             toast.error("Erro ao processar venda");
