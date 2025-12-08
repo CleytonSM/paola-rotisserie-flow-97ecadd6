@@ -10,11 +10,12 @@ export interface ProductCatalog {
     id: string;
     name: string;
     base_price: number;  // price per kg or per unit
-    internal_code?: string | null;
+    // internal_code removed
     catalog_barcode?: number | null;
     shelf_life_days?: number | null;
     default_discount?: number | null;  // 0-1 range
     unit_type: 'kg' | 'un';
+    is_internal: boolean;
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
@@ -23,11 +24,12 @@ export interface ProductCatalog {
 export interface ProductCatalogInput {
     name: string;
     base_price: number;
-    internal_code?: string | null;
+    // internal_code removed
     catalog_barcode?: number | null;
     shelf_life_days: number;
     default_discount?: number | null;
     unit_type?: 'kg' | 'un';
+    is_internal?: boolean;
     is_active?: boolean;
 }
 
@@ -133,6 +135,41 @@ export const hardDeleteCatalogProduct = async (
 
         if (error) throw error;
         return { data: null, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+
+/**
+ * Search product catalog by code (barcode or internal) or name
+ */
+export const searchProductCatalog = async (
+    query: string
+): Promise<DatabaseResult<ProductCatalog[]>> => {
+    try {
+        // If query is short, don't search
+        if (query.length < 3) return { data: [], error: null };
+
+        // Check if query is numeric (potential barcode)
+        const isNumeric = /^\d+$/.test(query);
+
+        let dbQuery = supabase
+            .from("product_catalog")
+            .select("*")
+            .eq("is_active", true);
+
+        if (isNumeric) {
+            // Search by barcode
+            dbQuery = dbQuery.eq('catalog_barcode', query);
+        } else {
+            // Search by name (case insensitive)
+            dbQuery = dbQuery.ilike('name', `%${query}%`);
+        }
+        
+        const { data, error } = await dbQuery.limit(20);
+
+        if (error) throw error;
+        return { data, error: null };
     } catch (error) {
         return { data: null, error: error as Error };
     }

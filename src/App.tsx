@@ -16,6 +16,9 @@ import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 import { Products } from "./pages/Products";
 import ItemProducts from "./pages/ItemProducts";
+import PDVPage from "./pages/pdv/PDVPage";
+import PaymentPage from "./pages/pdv/PaymentPage";
+import SuccessPage from "./pages/pdv/SuccessPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +42,9 @@ const App = () => (
             <Route path="/pix-keys" element={<PixKeys />} />
             <Route path="/products" element={<Products />} />
             <Route path="/product-items" element={<ItemProducts />} />
+            <Route path="/pdv" element={<PDVPage />} />
+            <Route path="/pdv/payment" element={<PaymentPage />} />
+            <Route path="/pdv/success" element={<SuccessPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

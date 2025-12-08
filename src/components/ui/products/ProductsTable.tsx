@@ -49,7 +49,6 @@ export function ProductsTable({
             const searchLower = searchTerm.toLowerCase();
             return (
                 product.name.toLowerCase().includes(searchLower) ||
-                (product.internal_code && product.internal_code.toLowerCase().includes(searchLower)) ||
                 (product.catalog_barcode && product.catalog_barcode.toString().includes(searchLower))
             );
         });
@@ -62,7 +61,7 @@ export function ProductsTable({
                 <div>
                     <div className="font-medium text-foreground">{product.name}</div>
                     <div className="text-sm text-muted-foreground">
-                        {product.internal_code || "Sem código"}
+                        {product.catalog_barcode || "Sem código"}
                     </div>
                 </div>
             ),
@@ -147,8 +146,8 @@ export function ProductsTable({
                                         </span>
                                     </div>
                                     <div className="flex justify-between py-1">
-                                        <span className="text-orange-600">Disponíveis (vencidos):</span>
-                                        <span className="font-medium text-orange-600">
+                                        <span className="text-primary-600">Disponíveis (vencidos):</span>
+                                        <span className="font-medium text-primary-600">
                                             {stock.available_expired}
                                         </span>
                                     </div>

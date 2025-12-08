@@ -105,3 +105,38 @@ export const deleteProduct = async (
         return { data: null, error: error as Error };
     }
 };
+
+/**
+ * Search products by code (barcode or internal) or name
+ */
+export const getProductsByCodeOrName = async (
+    query: string
+): Promise<DatabaseResult<Product[]>> => {
+    try {
+        // If query is short, don't search
+        if (query.length < 3) return { data: [], error: null };
+
+        // Check if query is numeric (potential barcode)
+        const isNumeric = /^\d+$/.test(query);
+
+        let dbQuery = supabase
+            .from("products")
+            .select("*")
+            .eq("is_active", true);
+
+        if (isNumeric) {
+            // Search by barcode
+            dbQuery = dbQuery.or(`catalog_barcode.eq.${query}`);
+        } else {
+            // Search by name (case insensitive)
+            dbQuery = dbQuery.or(`name.ilike.%${query}%`);
+        }
+        
+        const { data, error } = await dbQuery.limit(20);
+
+        if (error) throw error;
+        return { data, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};

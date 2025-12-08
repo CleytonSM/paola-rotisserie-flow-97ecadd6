@@ -114,7 +114,7 @@ export function ItemsTable({
         return filtered.filter(item =>
             item.product_catalog?.name?.toLowerCase().includes(searchLower) ||
             item.scale_barcode.toString().includes(searchLower) ||
-            item.product_catalog?.internal_code?.toLowerCase().includes(searchLower)
+            item.product_catalog?.catalog_barcode?.toLowerCase().includes(searchLower)
         );
     }, [items, searchTerm, statusFilter, productionDate, expirationPreset]);
 
