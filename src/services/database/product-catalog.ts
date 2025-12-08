@@ -16,6 +16,7 @@ export interface ProductCatalog {
     default_discount?: number | null;  // 0-1 range
     unit_type: 'kg' | 'un';
     is_internal: boolean;
+    quantity?: number | null;
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
@@ -30,6 +31,7 @@ export interface ProductCatalogInput {
     default_discount?: number | null;
     unit_type?: 'kg' | 'un';
     is_internal?: boolean;
+    quantity?: number | null;
     is_active?: boolean;
 }
 
@@ -165,7 +167,7 @@ export const searchProductCatalog = async (
             // Search by name (case insensitive)
             dbQuery = dbQuery.ilike('name', `%${query}%`);
         }
-        
+
         const { data, error } = await dbQuery.limit(20);
 
         if (error) throw error;

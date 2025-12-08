@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,16 @@ export function ProductFormDialog({
         const masked = maskDiscount(e.target.value);
         setValue("default_discount", masked);
     };
+
+    // Effect to force 'un' unit type when product is not internal
+    useEffect(() => {
+        const subscription = watch((value, { name }) => {
+            if (name === 'is_internal' && value.is_internal === false) {
+                setValue('unit_type', 'un');
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [watch, setValue]);
 
     return (
         <GenericFormDialog
@@ -109,23 +120,42 @@ export function ProductFormDialog({
                 </div>
 
                 {/* Unit Type */}
-                <div className="grid gap-2">
-                    <Label>Tipo de Unidade</Label>
-                    <RadioGroup
-                        defaultValue={watch("unit_type")}
-                        onValueChange={(value) => setValue("unit_type", value as "kg" | "un")}
-                        className="flex gap-4"
-                    >
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="kg" id="kg" />
-                            <Label htmlFor="kg">Quilograma (kg)</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="un" id="un" />
-                            <Label htmlFor="un">Unidade (un)</Label>
-                        </div>
-                    </RadioGroup>
-                </div>
+                {watch("is_internal") && (
+                    <div className="grid gap-2">
+                        <Label>Tipo de Unidade</Label>
+                        <RadioGroup
+                            defaultValue={watch("unit_type")}
+                            onValueChange={(value) => setValue("unit_type", value as "kg" | "un")}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="kg" id="kg" />
+                                <Label htmlFor="kg">Quilograma (kg)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="un" id="un" />
+                                <Label htmlFor="un">Unidade (un)</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                )}
+
+                {/* Not Internal Quantity */}
+                {!watch("is_internal") && (
+                    <div className="grid gap-2">
+                        <Label htmlFor="quantity">
+                            Quantidade <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="quantity"
+                            type="number"
+                            placeholder="Ex: 3"
+                            {...register("quantity")}
+                            min={1}
+                            required
+                        />
+                    </div>
+                )}
 
                 {/* Base Price and Default Discount */}
                 <div className="grid grid-cols-2 gap-4">
@@ -156,19 +186,21 @@ export function ProductFormDialog({
                 </div>
 
                 {/* Shelf Life Days */}
-                <div className="grid gap-2">
-                    <Label htmlFor="shelf_life_days">
-                        Tempo de Validade (dias) <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                        id="shelf_life_days"
-                        type="number"
-                        placeholder="Ex: 3"
-                        {...register("shelf_life_days")}
-                        min={1}
-                        required
-                    />
-                </div>
+                {watch("is_internal") && (
+                    <div className="grid gap-2">
+                        <Label htmlFor="shelf_life_days">
+                            Tempo de Validade (dias) <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="shelf_life_days"
+                            type="number"
+                            placeholder="Ex: 3"
+                            {...register("shelf_life_days")}
+                            min={1}
+                            required
+                        />
+                    </div>
+                )}
 
                 {/* Is Active */}
                 <div className="flex items-center justify-between rounded-lg border p-4">

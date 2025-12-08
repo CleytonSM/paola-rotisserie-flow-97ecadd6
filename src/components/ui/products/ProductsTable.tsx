@@ -138,19 +138,23 @@ export function ProductsTable({
                                         <span className="text-muted-foreground">Total de Itens:</span>
                                         <span className="font-medium">{stock.total_items}</span>
                                     </div>
-                                    <DropdownMenuSeparator className="my-1" />
-                                    <div className="flex justify-between py-1">
-                                        <span className="text-green-600">Disponíveis (válidos):</span>
-                                        <span className="font-medium text-green-600">
-                                            {stock.available_valid}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between py-1">
-                                        <span className="text-primary-600">Disponíveis (vencidos):</span>
-                                        <span className="font-medium text-primary-600">
-                                            {stock.available_expired}
-                                        </span>
-                                    </div>
+                                    {product.is_internal && (
+                                        <>
+                                            <DropdownMenuSeparator className="my-1" />
+                                            <div className="flex justify-between py-1">
+                                                <span className="text-green-600">Disponíveis (válidos):</span>
+                                                <span className="font-medium text-green-600">
+                                                    {stock.available_valid}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between py-1">
+                                                <span className="text-primary-600">Disponíveis (vencidos):</span>
+                                                <span className="font-medium text-primary-600">
+                                                    {stock.available_expired}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </DropdownMenuContent>
                         )}
