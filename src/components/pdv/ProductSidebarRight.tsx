@@ -40,7 +40,7 @@ export function ProductSidebarRight({ onProductSelect }: ProductSidebarRightProp
     };
 
     return (
-        <div className="relative h-full my-4 mr-4 flex items-center">
+        <div className="relative h-[calc(100%-2rem)] my-4 mr-4 flex items-center">
             <Button
                 variant="ghost"
                 size="icon"
