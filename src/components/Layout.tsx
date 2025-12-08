@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 export default function Layout() {
     return (
         <SidebarProvider>
-            <div className="flex min-h-screen w-full bg-background">
+            <div className="flex h-screen w-full overflow-hidden bg-background">
                 <AppSidebar />
                 <main className="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out">
                     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-4 backdrop-blur-md md:hidden transition-[width,height] ease-linear">

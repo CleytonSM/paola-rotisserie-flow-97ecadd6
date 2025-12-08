@@ -16,18 +16,26 @@ export const SidebarFooter = React.forwardRef<HTMLDivElement, React.ComponentPro
 );
 SidebarFooter.displayName = "SidebarFooter";
 
-export const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
-    ({ className, ...props }, ref) => {
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+// ... existing imports
+
+export const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollArea>>(
+    ({ className, children, ...props }, ref) => {
         return (
-            <div
+            <ScrollArea
                 ref={ref}
                 data-sidebar="content"
                 className={cn(
-                    "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+                    "flex min-h-0 flex-1 flex-col group-data-[collapsible=icon]:overflow-hidden",
                     className,
                 )}
                 {...props}
-            />
+            >
+                <div className="flex flex-col gap-2">
+                    {children}
+                </div>
+            </ScrollArea>
         );
     },
 );
