@@ -11,6 +11,7 @@ export interface ProductCatalog {
     default_discount?: number | null;
     unit_type: 'kg' | 'un';
     is_internal: boolean;
+    quantity?: number | null;
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
