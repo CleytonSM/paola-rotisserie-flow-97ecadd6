@@ -17,6 +17,7 @@ import {
 import { getCurrentSession } from "@/services/auth";
 import { receivableSchema, type ReceivableSchema } from "@/schemas/receivable.schema";
 import { getAccountStatus } from "@/components/ui/receivable/utils";
+import { PAGE_SIZE } from "@/config/constants";
 
 export function useReceivable() {
     const navigate = useNavigate();
@@ -27,6 +28,12 @@ export function useReceivable() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
     const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+    // Pagination
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(PAGE_SIZE);
+
+    const [totalCount, setTotalCount] = useState(0);
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -67,14 +74,14 @@ export function useReceivable() {
             }
         };
         checkAndLoad();
-    }, [dateRange]);
+    }, [dateRange, page]);
 
     const loadData = async () => {
         setLoading(true);
 
         const accountsResult = dateRange?.from
-            ? await getAccountsReceivableByDateRange({ from: dateRange.from, to: dateRange.to })
-            : await getAccountsReceivable();
+            ? await getAccountsReceivableByDateRange({ from: dateRange.from, to: dateRange.to }, page, pageSize)
+            : await getAccountsReceivable(page, pageSize);
 
         const clientsResult = await getClients();
 
@@ -82,6 +89,7 @@ export function useReceivable() {
             toast.error("Erro ao carregar contas");
         } else if (accountsResult.data) {
             setAccounts(accountsResult.data as AccountReceivable[]);
+            setTotalCount(accountsResult.count || 0);
         }
 
         if (clientsResult.error) {
@@ -184,33 +192,9 @@ export function useReceivable() {
         }
     };
 
-    // --- Filtering ---
-
-    const filteredAccounts = useMemo(() => {
-        return accounts.filter((account) => {
-            const status = getAccountStatus(account);
-            const searchLower = searchTerm.toLowerCase();
-
-            const statusMatch =
-                statusFilter === "all" ||
-                (statusFilter === "pending" && status === "pending") ||
-                (statusFilter === "received" && status === "received") ||
-                (statusFilter === "overdue" && status === "overdue");
-
-            const searchMatch =
-                account.client?.name.toLowerCase().includes(searchLower) ||
-                (account.client?.cpf_cnpj && account.client.cpf_cnpj.includes(searchLower)) ||
-                (!account.client && "venda avulsa".includes(searchLower)) ||
-                account.net_value.toString().includes(searchLower) ||
-                account.gross_value.toString().includes(searchLower);
-
-            return statusMatch && searchMatch;
-        });
-    }, [accounts, searchTerm, statusFilter]);
-
     return {
         loading,
-        accounts: filteredAccounts,
+        accounts, // Server side filtered
         clients,
         searchTerm,
         setSearchTerm,
@@ -230,5 +214,9 @@ export function useReceivable() {
         handleDeleteClick,
         handleDeleteConfirm,
         handleStatusChange,
+        page,
+        setPage,
+        pageSize,
+        totalCount
     };
 }

@@ -47,7 +47,9 @@ export interface ProductItemFilters {
  * Get all product items with optional filters
  */
 export const getProductItems = async (
-    filters?: ProductItemFilters
+    filters?: ProductItemFilters,
+    page: number = 1,
+    pageSize: number = 100
 ): Promise<DatabaseResult<ProductItem[]>> => {
     try {
         let query = supabase
@@ -55,7 +57,7 @@ export const getProductItems = async (
             .select(`
         *,
         product_catalog (*)
-      `)
+      `, { count: 'exact' })
             .order("produced_at", { ascending: false });
 
         if (filters?.status) {
@@ -74,10 +76,13 @@ export const getProductItems = async (
                 .eq("status", "available");
         }
 
-        const { data, error } = await query;
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
+        const { data, error, count } = await query.range(from, to);
 
         if (error) throw error;
-        return { data, error: null };
+        return { data, error: null, count };
     } catch (error) {
         return { data: null, error: error as Error };
     }

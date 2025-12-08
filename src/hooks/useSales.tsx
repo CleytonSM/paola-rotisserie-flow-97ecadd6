@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ColumnDef } from "@/components/ui/generic-table";
 import { formatCurrency } from "@/utils/format";
+import { PAGE_SIZE } from "@/config/constants";
 
 export function useSales() {
     const [loading, setLoading] = useState(true);
@@ -12,7 +13,9 @@ export function useSales() {
 
     // Pagination / Filtering state
     const [page, setPage] = useState(1);
-    const [pageSize] = useState(20);
+    const [pageSize] = useState(PAGE_SIZE);
+
+    const [totalCount, setTotalCount] = useState(0);
 
     const [selectedSale, setSelectedSale] = useState<any | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
@@ -32,7 +35,7 @@ export function useSales() {
                     clients ( name ),
                     sale_items ( * ),
                     sale_payments ( * )
-                `)
+                `, { count: 'exact' })
                 .order("created_at", { ascending: false });
 
             if (searchTerm) {
@@ -52,10 +55,11 @@ export function useSales() {
             const to = from + pageSize - 1;
             query = query.range(from, to);
 
-            const { data, error } = await query;
+            const { data, error, count } = await query;
 
             if (error) throw error;
             setSales(data || []);
+            setTotalCount(count || 0);
         } catch (error) {
             console.error("Error fetching sales:", error);
             toast.error("Erro ao carregar vendas");
@@ -117,6 +121,8 @@ export function useSales() {
         setSearchTerm,
         page,
         setPage,
+        pageSize,
+        totalCount,
         selectedSale,
         detailsOpen,
         setDetailsOpen,

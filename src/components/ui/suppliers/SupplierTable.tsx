@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { GenericTable, ColumnDef } from "@/components/ui/generic-table";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
 import type { Supplier } from "./types";
-import { SupplierFilters } from "./SupplierFilters";
-import { SupplierTableRow } from "./SupplierTableRow";
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -11,6 +10,10 @@ interface SupplierTableProps {
   onSearchChange: (value: string) => void;
   onEdit: (supplier: Supplier) => void;
   onDelete: (id: string) => void;
+  count?: number;
+  page?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function SupplierTable({
@@ -20,62 +23,63 @@ export function SupplierTable({
   onSearchChange,
   onEdit,
   onDelete,
+  count,
+  page,
+  rowsPerPage,
+  onPageChange,
 }: SupplierTableProps) {
-  return (
-    <Card className="overflow-hidden shadow-md shadow-[#F0E6D2]/30">
-      <CardHeader className="flex flex-col gap-4 border-b bg-accent/30 p-4 md:flex-row md:items-center md:justify-between md:p-6">
-        <SupplierFilters searchTerm={searchTerm} onSearchChange={onSearchChange} />
-      </CardHeader>
-
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-display text-xs uppercase tracking-wide">
-                  Fornecedor
-                </TableHead>
-                <TableHead className="font-display text-xs uppercase tracking-wide">
-                  Documento
-                </TableHead>
-                <TableHead className="font-display text-xs uppercase tracking-wide">
-                  Telefone
-                </TableHead>
-                <TableHead className="font-display text-xs uppercase tracking-wide text-right">
-                  Ações
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
-              ) : suppliers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                    {searchTerm === ""
-                      ? "Nenhum fornecedor registrado."
-                      : "Nenhum fornecedor encontrado."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                suppliers.map((supplier) => (
-                  <SupplierTableRow
-                    key={supplier.id}
-                    supplier={supplier}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
+  const columns: ColumnDef<Supplier>[] = [
+    {
+      header: "Fornecedor",
+      cell: (row) => <span className="font-medium text-stone-700">{row.name}</span>
+    },
+    {
+      header: "Documento",
+      cell: (row) => <span className="font-mono text-xs text-stone-500">{row.cnpj || "-"}</span>
+    },
+    {
+      header: "Telefone",
+      cell: (row) => <span className="text-stone-600">{row.phone || "-"}</span>
+    },
+    {
+      header: "Ações",
+      cell: (row) => (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(row)}
+            className="h-8 w-8 text-stone-400 hover:text-amber-600 hover:bg-amber-50"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(row.id)}
+            className="h-8 w-8 text-stone-400 hover:text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      )
+    }
+  ];
+
+  return (
+    <GenericTable
+      data={suppliers}
+      columns={columns}
+      isLoading={loading}
+      searchTerm={searchTerm}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="Buscar por nome, documento..."
+      emptyStateMessage="Nenhum fornecedor encontrado."
+      count={count}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      onPageChange={onPageChange}
+    />
   );
 }
 

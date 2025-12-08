@@ -5,20 +5,29 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
 
-export const getAccountsReceivable = async (): Promise<DatabaseResult<any[]>> => {
-  const { data, error } = await supabase
+export const getAccountsReceivable = async (
+  page: number = 1,
+  pageSize: number = 100
+): Promise<DatabaseResult<any[]>> => {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await supabase
     .from('accounts_receivable')
     .select(`
       *,
       client:clients(id, name, cpf_cnpj)
-    `)
-    .order('entry_date', { ascending: false });
+    `, { count: 'exact' })
+    .order('entry_date', { ascending: false })
+    .range(from, to);
 
-  return { data, error };
+  return { data, error, count };
 };
 
 export const getAccountsReceivableByDateRange = async (
-  dateRange: { from: Date; to?: Date }
+  dateRange: { from: Date; to?: Date },
+  page: number = 1,
+  pageSize: number = 100
 ): Promise<DatabaseResult<any[]>> => {
   // Format as YYYY-MM-DD to avoid timezone issues
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
@@ -28,7 +37,7 @@ export const getAccountsReceivableByDateRange = async (
     .select(`
       *,
       client:clients(id, name, cpf_cnpj)
-    `)
+    `, { count: 'exact' })
     .gte('entry_date', fromDateStr);
 
   if (dateRange.to) {
@@ -45,9 +54,14 @@ export const getAccountsReceivableByDateRange = async (
     query = query.lt('entry_date', nextDayStr);
   }
 
-  const { data, error } = await query.order('entry_date', { ascending: false });
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-  return { data, error };
+  const { data, error, count } = await query
+    .order('entry_date', { ascending: false })
+    .range(from, to);
+
+  return { data, error, count };
 };
 
 export const createAccountReceivable = async (account: any): Promise<DatabaseResult<any>> => {

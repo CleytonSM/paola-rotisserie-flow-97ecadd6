@@ -28,6 +28,10 @@ export default function Payable() {
     handleDeleteClick,
     handleDeleteConfirm,
     handleStatusChange,
+    page,
+    setPage,
+    pageSize,
+    totalCount
   } = usePayable();
 
   return (
@@ -60,6 +64,10 @@ export default function Payable() {
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
         onStatusChange={handleStatusChange}
+        count={totalCount}
+        page={page}
+        rowsPerPage={pageSize}
+        onPageChange={setPage}
       />
 
       <DeletePayableDialog

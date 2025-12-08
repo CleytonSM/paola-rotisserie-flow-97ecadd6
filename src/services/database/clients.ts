@@ -5,8 +5,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
 
-export const getClients = async (searchTerm?: string): Promise<DatabaseResult<any[]>> => {
-  let query = supabase.from('clients').select('*');
+export const getClients = async (
+  searchTerm?: string,
+  page: number = 1,
+  pageSize: number = 100
+): Promise<DatabaseResult<any[]>> => {
+  let query = supabase.from('clients').select('*', { count: 'exact' });
 
   if (searchTerm) {
     // Sanitize input to prevent SQL injection - escape wildcards and limit length
@@ -17,8 +21,14 @@ export const getClients = async (searchTerm?: string): Promise<DatabaseResult<an
     query = query.or(`name.ilike.%${sanitized}%,cpf_cnpj.ilike.%${sanitized}%`);
   }
 
-  const { data, error } = await query.order('name');
-  return { data, error };
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await query
+    .order('name')
+    .range(from, to);
+
+  return { data, error, count };
 };
 
 export const createClient = async (client: any): Promise<DatabaseResult<any>> => {

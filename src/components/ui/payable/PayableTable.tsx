@@ -20,6 +20,10 @@ interface PayableTableProps {
   onEdit: (account: AccountPayable) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: "pending" | "paid") => void;
+  count?: number;
+  page?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function PayableTable({
@@ -34,6 +38,10 @@ export function PayableTable({
   onEdit,
   onDelete,
   onStatusChange,
+  count,
+  page,
+  rowsPerPage,
+  onPageChange,
 }: PayableTableProps) {
 
   const columns: ColumnDef<AccountPayable>[] = [
@@ -144,6 +152,10 @@ export function PayableTable({
           onDateRangeChange={onDateRangeChange}
         />
       }
+      count={count}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      onPageChange={onPageChange}
     />
   );
 }

@@ -28,6 +28,10 @@ export default function Receivable() {
     handleDeleteClick,
     handleDeleteConfirm,
     handleStatusChange,
+    page,
+    setPage,
+    pageSize,
+    totalCount
   } = useReceivable();
 
   return (
@@ -60,6 +64,10 @@ export default function Receivable() {
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
         onStatusChange={handleStatusChange}
+        count={totalCount}
+        page={page}
+        rowsPerPage={pageSize}
+        onPageChange={setPage}
       />
       <DeleteReceivableDialog
         open={deleteDialogOpen}

@@ -39,6 +39,10 @@ interface ItemsTableProps {
     onProductionDateChange: (date: DateRange | undefined) => void;
     expirationPreset: string;
     onExpirationPresetChange: (value: string) => void;
+    count?: number;
+    page?: number;
+    rowsPerPage?: number;
+    onPageChange?: (page: number) => void;
 }
 
 export function ItemsTable({
@@ -56,6 +60,10 @@ export function ItemsTable({
     onProductionDateChange,
     expirationPreset,
     onExpirationPresetChange,
+    count,
+    page,
+    rowsPerPage,
+    onPageChange,
 }: ItemsTableProps) {
     const filteredItems = useMemo(() => {
         let filtered = items;
@@ -114,7 +122,7 @@ export function ItemsTable({
         return filtered.filter(item =>
             item.product_catalog?.name?.toLowerCase().includes(searchLower) ||
             item.scale_barcode.toString().includes(searchLower) ||
-            item.product_catalog?.catalog_barcode?.toLowerCase().includes(searchLower)
+            (item.product_catalog?.catalog_barcode && item.product_catalog.catalog_barcode.toString().includes(searchLower))
         );
     }, [items, searchTerm, statusFilter, productionDate, expirationPreset]);
 
@@ -245,6 +253,10 @@ export function ItemsTable({
             onSearchChange={onSearchChange}
             searchPlaceholder="Buscar por produto, código de barras..."
             emptyStateMessage="Nenhum item encontrado."
+            count={count}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={onPageChange}
             filterControls={
                 <div className="flex flex-col gap-2 sm:flex-row">
                     <Select

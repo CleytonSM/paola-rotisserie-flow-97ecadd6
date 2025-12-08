@@ -22,6 +22,10 @@ export default function Clients() {
     onSubmit,
     columns,
     handleDialogOpenChange,
+    page,
+    setPage,
+    pageSize,
+    totalCount
   } = useClients();
 
   return (
@@ -50,6 +54,10 @@ export default function Clients() {
         onSearchChange={setSearchTerm}
         searchPlaceholder="Buscar por nome, CPF/CNPJ, email..."
         emptyStateMessage="Nenhum cliente registrado."
+        page={page}
+        rowsPerPage={pageSize}
+        count={totalCount}
+        onPageChange={setPage}
       />
       <DeleteClientDialog
         open={deleteDialogOpen}

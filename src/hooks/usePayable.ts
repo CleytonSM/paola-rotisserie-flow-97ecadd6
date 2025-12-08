@@ -15,6 +15,7 @@ import {
 } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { payableSchema, type PayableSchema } from "@/schemas/payable.schema";
+import { PAGE_SIZE } from "@/config/constants";
 
 export function usePayable() {
     const navigate = useNavigate();
@@ -25,6 +26,12 @@ export function usePayable() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
     const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+    // Pagination
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(PAGE_SIZE);
+
+    const [totalCount, setTotalCount] = useState(0);
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -66,14 +73,14 @@ export function usePayable() {
             }
         };
         checkAndLoad();
-    }, [dateRange]);
+    }, [dateRange, page]);
 
     const loadData = async () => {
         setLoading(true);
 
         const accountsResult = dateRange?.from
-            ? await getAccountsPayableByDateRange({ from: dateRange.from, to: dateRange.to })
-            : await getAccountsPayable();
+            ? await getAccountsPayableByDateRange({ from: dateRange.from, to: dateRange.to }, page, pageSize)
+            : await getAccountsPayable(page, pageSize);
 
         const suppliersResult = await getSuppliers();
 
@@ -81,6 +88,7 @@ export function usePayable() {
             toast.error("Erro ao carregar contas");
         } else if (accountsResult.data) {
             setAccounts(accountsResult.data as AccountPayable[]);
+            setTotalCount(accountsResult.count || 0);
         }
 
         if (suppliersResult.error) {
@@ -205,31 +213,9 @@ export function usePayable() {
         }
     };
 
-    // --- Filtering ---
-
-    const filteredAccounts = useMemo(() => {
-        return accounts.filter((account) => {
-            const status = account.status;
-            const searchLower = searchTerm.toLowerCase();
-
-            const statusMatch =
-                statusFilter === "all" ||
-                (statusFilter === "pending" && status === "pending") ||
-                (statusFilter === "paid" && status === "paid") ||
-                (statusFilter === "overdue" && status === "overdue");
-
-            const searchMatch =
-                account.supplier?.name.toLowerCase().includes(searchLower) ||
-                (account.notes && account.notes.toLowerCase().includes(searchLower)) ||
-                account.value.toString().includes(searchLower);
-
-            return statusMatch && searchMatch;
-        });
-    }, [accounts, searchTerm, statusFilter]);
-
     return {
         loading,
-        accounts: filteredAccounts,
+        accounts, // Server side filtered
         suppliers,
         searchTerm,
         setSearchTerm,
@@ -249,5 +235,9 @@ export function usePayable() {
         handleDeleteClick,
         handleDeleteConfirm,
         handleStatusChange,
+        page,
+        setPage,
+        pageSize,
+        totalCount
     };
 }

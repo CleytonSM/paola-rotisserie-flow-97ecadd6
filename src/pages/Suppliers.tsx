@@ -22,6 +22,10 @@ export default function Suppliers() {
     handleEdit,
     handleDeleteClick,
     handleDeleteConfirm,
+    page,
+    setPage,
+    pageSize,
+    totalCount
   } = useSuppliers();
 
   return (
@@ -48,6 +52,10 @@ export default function Suppliers() {
         onSearchChange={setSearchTerm}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
+        page={page}
+        rowsPerPage={pageSize}
+        count={totalCount}
+        onPageChange={setPage}
       />
       <DeleteSupplierDialog
         open={deleteDialogOpen}

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { createSupplier, deleteSupplier, getSuppliers, updateSupplier } from "@/services/database";
 import { FormData } from "@/components/ui/suppliers/types";
+import { PAGE_SIZE } from "@/config/constants";
 
 export const useSuppliers = () => {
     const navigate = useNavigate();
@@ -21,6 +22,12 @@ export const useSuppliers = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
+    // Pagination
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(PAGE_SIZE);
+
+    const [totalCount, setTotalCount] = useState(0);
+
     const form = useForm<SupplierSchema>({
         resolver: zodResolver(supplierSchema),
         defaultValues: {
@@ -33,12 +40,13 @@ export const useSuppliers = () => {
 
     const loadData = async () => {
         setLoading(true);
-        const result = await getSuppliers();
+        const result = await getSuppliers(searchTerm, page, pageSize);
 
         if (result.error) {
             toast.error("Erro ao carregar fornecedores");
         } else if (result.data) {
             setSuppliers(result.data as Supplier[]);
+            setTotalCount(result.count || 0);
         }
 
         setLoading(false);
@@ -54,7 +62,7 @@ export const useSuppliers = () => {
             loadData();
         };
         checkAuth();
-    }, [navigate]);
+    }, [navigate, page, searchTerm]);
 
     const onSubmit = async (data: SupplierSchema) => {
         try {
@@ -124,22 +132,9 @@ export const useSuppliers = () => {
         }
     };
 
-    const filteredSuppliers = useMemo(() => {
-        return suppliers.filter((supplier) => {
-            const searchLower = searchTerm.toLowerCase();
-
-            return (
-                supplier.name.toLowerCase().includes(searchLower) ||
-                (supplier.cnpj && supplier.cnpj.includes(searchLower)) ||
-                (supplier.email && supplier.email.toLowerCase().includes(searchLower)) ||
-                (supplier.phone && supplier.phone.includes(searchLower))
-            );
-        });
-    }, [suppliers, searchTerm]);
-
     return {
         loading,
-        suppliers: filteredSuppliers,
+        suppliers, // Server side filtered
         searchTerm,
         setSearchTerm,
         dialogOpen,
@@ -153,5 +148,9 @@ export const useSuppliers = () => {
         handleEdit,
         handleDeleteClick,
         handleDeleteConfirm,
+        page,
+        setPage,
+        pageSize,
+        totalCount
     };
 };

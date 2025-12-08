@@ -5,6 +5,7 @@
 export interface DatabaseResult<T> {
   data: T | null;
   error: Error | null;
+  count?: number | null;
 }
 
 export type DatabaseQuery<T> = (params?: any) => Promise<DatabaseResult<T>>;

@@ -31,6 +31,10 @@ interface ProductsTableProps {
     isLoadingAll: boolean;
     onEdit: (product: ProductCatalog) => void;
     onDelete: (id: string) => void;
+    count?: number;
+    page?: number;
+    rowsPerPage?: number;
+    onPageChange?: (page: number) => void;
 }
 
 export function ProductsTable({
@@ -43,6 +47,10 @@ export function ProductsTable({
     isLoadingAll,
     onEdit,
     onDelete,
+    count,
+    page,
+    rowsPerPage,
+    onPageChange,
 }: ProductsTableProps) {
     const filteredProducts = useMemo(() => {
         return products.filter((product) => {
@@ -195,6 +203,10 @@ export function ProductsTable({
             onSearchChange={onSearchChange}
             searchPlaceholder="Buscar por nome, código interno, código de barras..."
             emptyStateMessage="Nenhum produto cadastrado no catálogo."
+            count={count}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={onPageChange}
         />
     );
 }

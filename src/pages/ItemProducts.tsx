@@ -40,6 +40,10 @@ export default function ItemProducts() {
         handleDeleteConfirm,
         handleFormSubmit,
         refreshItems,
+        page,
+        setPage,
+        pageSize,
+        totalCount
     } = useProductItems();
 
     const catalogProducts = useProductCatalog();
@@ -86,6 +90,10 @@ export default function ItemProducts() {
                 onProductionDateChange={setProductionDate}
                 expirationPreset={expirationPreset}
                 onExpirationPresetChange={setExpirationPreset}
+                count={totalCount}
+                page={page}
+                rowsPerPage={pageSize}
+                onPageChange={setPage}
             />
 
             <DeleteItemDialog

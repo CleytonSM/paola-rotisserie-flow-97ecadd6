@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import type { ProductItem, ProductItemStatus } from "@/components/ui/product-items/types";
+import type { ProductItem, ProductItemStatus, ProductItemInput } from "@/services/database/product-items";
 import {
     getProductItems,
     createProductItem,
@@ -12,12 +12,19 @@ import {
     markItemAsSold
 } from "@/services/database";
 import { itemSchema, type ItemSchema } from "@/schemas/item.schema";
+import { PAGE_SIZE } from "@/config/constants";
 
 export function useProductItems() {
     const [items, setItems] = useState<ProductItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<ProductItemStatus | "all">("available");
     const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Pagination
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(PAGE_SIZE);
+
+    const [totalCount, setTotalCount] = useState(0);
 
     const form = useForm<ItemSchema>({
         resolver: zodResolver(itemSchema),
@@ -35,19 +42,20 @@ export function useProductItems() {
     const loadItems = async () => {
         setLoading(true);
         const filters = statusFilter !== "all" ? { status: statusFilter } : undefined;
-        const result = await getProductItems(filters);
+        const result = await getProductItems(filters, page, pageSize);
 
         if (result.error) {
             toast.error("Erro ao carregar itens");
         } else if (result.data) {
             setItems(result.data as ProductItem[]);
+            setTotalCount(result.count || 0);
         }
         setLoading(false);
     };
 
     useEffect(() => {
         loadItems();
-    }, [statusFilter]);
+    }, [statusFilter, page]);
 
     const onSubmit = async (data: ItemSchema) => {
         try {
@@ -58,8 +66,8 @@ export function useProductItems() {
             };
 
             const { error } = editingId
-                ? await updateProductItem(editingId, apiData)
-                : await createProductItem(apiData);
+                ? await updateProductItem(editingId, apiData as ProductItemInput)
+                : await createProductItem(apiData as ProductItemInput);
 
             if (error) {
                 toast.error(editingId ? "Erro ao atualizar item" : "Erro ao criar item");
@@ -203,5 +211,9 @@ export function useProductItems() {
         handleDeleteClick,
         handleDeleteConfirm,
         handleFormSubmit,
+        page,
+        setPage,
+        pageSize,
+        totalCount
     };
 }

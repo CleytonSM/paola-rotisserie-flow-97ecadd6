@@ -2,8 +2,10 @@ import * as React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search, Eye } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";
+import { PAGE_SIZE } from "@/config/constants";
 
 // Definição de tipo genérica para uma coluna
 export interface ColumnDef<T> {
@@ -33,6 +35,12 @@ interface GenericTableProps<T> {
 
     // Ações
     onViewDetails?: (item: T) => void;
+
+    // Paginação
+    count?: number;
+    page?: number;
+    rowsPerPage?: number;
+    onPageChange?: (page: number) => void;
 }
 
 /**
@@ -49,10 +57,15 @@ export function GenericTable<T extends { id: string }>({
     filterControls,
     emptyStateMessage,
     onViewDetails,
-    emptyStateSearchMessage = "Nenhum resultado encontrado."
+    emptyStateSearchMessage = "Nenhum resultado encontrado.",
+    count,
+    page = 1,
+    rowsPerPage = PAGE_SIZE,
+    onPageChange
 }: GenericTableProps<T>) {
 
     const hasSearch = searchTerm && searchTerm.length > 0;
+    const totalPages = count ? Math.ceil(count / rowsPerPage) : 0;
 
     const displayColumns = React.useMemo(() => {
         if (!onViewDetails) return columns;
@@ -141,6 +154,32 @@ export function GenericTable<T extends { id: string }>({
                         </TableBody>
                     </Table>
                 </div>
+                {/* Rodapé de Paginação */}
+                {onPageChange && count !== undefined && count > 0 && (
+                    <div className="flex items-center justify-between border-t p-4">
+                        <div className="text-sm text-muted-foreground">
+                            Página {page} de {totalPages} ({count} itens)
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onPageChange(Math.max(1, page - 1))}
+                                disabled={page === 1 || isLoading}
+                            >
+                                Anterior
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+                                disabled={page === totalPages || isLoading}
+                            >
+                                Próxima
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

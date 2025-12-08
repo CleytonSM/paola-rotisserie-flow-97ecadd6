@@ -16,6 +16,10 @@ export default function Sales() {
         setDetailsOpen,
         columns,
         handleViewDetails,
+        page,
+        setPage,
+        pageSize,
+        totalCount
     } = useSales();
 
     return (
@@ -35,6 +39,10 @@ export default function Sales() {
                 onViewDetails={handleViewDetails}
                 searchPlaceholder="Buscar por número do pedido..."
                 emptyStateMessage="Nenhuma venda encontrada."
+                page={page}
+                rowsPerPage={pageSize}
+                count={totalCount}
+                onPageChange={setPage}
             />
 
             <SalesDetailsDialog

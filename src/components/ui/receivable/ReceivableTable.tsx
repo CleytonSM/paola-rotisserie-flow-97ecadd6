@@ -27,6 +27,10 @@ interface ReceivableTableProps {
   onEdit: (account: AccountReceivable) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: "pending" | "received") => void;
+  count?: number;
+  page?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function ReceivableTable({
@@ -41,6 +45,10 @@ export function ReceivableTable({
   onEdit,
   onDelete,
   onStatusChange,
+  count,
+  page,
+  rowsPerPage,
+  onPageChange,
 }: ReceivableTableProps) {
 
   const columns: ColumnDef<AccountReceivable>[] = [
@@ -153,6 +161,10 @@ export function ReceivableTable({
           onDateRangeChange={onDateRangeChange}
         />
       }
+      count={count}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      onPageChange={onPageChange}
     />
   );
 }

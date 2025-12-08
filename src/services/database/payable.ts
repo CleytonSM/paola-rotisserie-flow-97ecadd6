@@ -14,19 +14,28 @@ const formatDateToYYYYMMDD = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-export const getAccountsPayable = async (): Promise<DatabaseResult<any[]>> => {
-  const { data, error } = await supabase
+export const getAccountsPayable = async (
+  page: number = 1,
+  pageSize: number = 100
+): Promise<DatabaseResult<any[]>> => {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await supabase
     .from('accounts_payable')
     .select(`
       *,
       supplier:suppliers(id, name)
-    `)
-    .order('payment_date', { ascending: false });
-  return { data, error };
+    `, { count: 'exact' })
+    .order('payment_date', { ascending: false })
+    .range(from, to);
+  return { data, error, count };
 };
 
 export const getAccountsPayableByDateRange = async (
-  dateRange: { from: Date; to?: Date }
+  dateRange: { from: Date; to?: Date },
+  page: number = 1,
+  pageSize: number = 100
 ): Promise<DatabaseResult<any[]>> => {
   // Format as YYYY-MM-DD to avoid timezone issues
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
@@ -36,7 +45,7 @@ export const getAccountsPayableByDateRange = async (
     .select(`
       *,
       supplier:suppliers(id, name)
-    `)
+    `, { count: 'exact' })
     .gte('payment_date', fromDateStr);
 
   if (dateRange.to) {
@@ -53,8 +62,13 @@ export const getAccountsPayableByDateRange = async (
     query = query.lt('payment_date', nextDayStr);
   }
 
-  const { data, error } = await query.order('payment_date', { ascending: false });
-  return { data, error };
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await query
+    .order('payment_date', { ascending: false })
+    .range(from, to);
+  return { data, error, count };
 };
 
 export const createAccountPayable = async (account: any): Promise<DatabaseResult<any>> => {

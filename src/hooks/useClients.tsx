@@ -9,12 +9,19 @@ import { useClientForm } from "./useClientForm";
 import { Pencil, Trash2 } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { ColumnDef } from "@/components/ui/generic-table";
+import { PAGE_SIZE } from "@/config/constants";
 
 export const useClients = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [clients, setClients] = useState<Client[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
+
+    // Pagination state
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(PAGE_SIZE);
+
+    const [totalCount, setTotalCount] = useState(0);
 
     // Modal states
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,15 +39,16 @@ export const useClients = () => {
             loadData();
         };
         checkAuth();
-    }, [navigate]);
+    }, [navigate, page, searchTerm]);
 
     const loadData = async () => {
         setLoading(true);
-        const result = await getClients();
+        const result = await getClients(searchTerm, page, pageSize);
         if (result.error) {
             toast.error("Erro ao carregar clientes");
         } else if (result.data) {
             setClients(result.data as Client[]);
+            setTotalCount(result.count || 0);
         }
         setLoading(false);
     };
@@ -197,9 +205,13 @@ export const useClients = () => {
 
     return {
         loading,
-        clients: filteredClients,
+        clients, // Using server-side filtered clients
         searchTerm,
         setSearchTerm,
+        page,
+        setPage,
+        totalCount,
+        pageSize,
         dialogOpen,
         setDialogOpen: handleDialogClose,
         editingId,

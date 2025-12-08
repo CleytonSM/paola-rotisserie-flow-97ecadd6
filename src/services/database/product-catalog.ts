@@ -40,7 +40,10 @@ export interface ProductCatalogInput {
  * @param activeOnly - If true, only return active products (default: true)
  */
 export const getProductCatalog = async (
-    activeOnly: boolean = true
+    activeOnly: boolean = true,
+    searchTerm: string = "",
+    page: number = 1,
+    pageSize: number = 100
 ): Promise<DatabaseResult<ProductCatalog[]>> => {
     try {
         let query = supabase
@@ -52,7 +55,13 @@ export const getProductCatalog = async (
             query = query.eq("is_active", true);
         }
 
-        const { data, error } = await query;
+        if (searchTerm) {
+            query = query.ilike("name", `%${searchTerm}%`);
+        }
+
+        const { data, error } = await query
+            .range((page - 1) * pageSize, page * pageSize - 1)
+            .limit(pageSize);
 
         if (error) throw error;
         return { data, error: null };

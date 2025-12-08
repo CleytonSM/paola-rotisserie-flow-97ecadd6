@@ -29,7 +29,11 @@ export const Products = () => {
         searchTerm,
         setSearchTerm,
         deleteDialogOpen,
-        setDeleteDialogOpen
+        setDeleteDialogOpen,
+        page,
+        setPage,
+        pageSize,
+        totalCount
     } = useProductCatalog();
 
     return (
@@ -61,6 +65,10 @@ export const Products = () => {
                 isLoadingAll={isLoadingAll}
                 onEdit={handleEdit}
                 onDelete={handleDeleteClick}
+                count={totalCount}
+                page={page}
+                rowsPerPage={pageSize}
+                onPageChange={setPage}
             />
             <DeleteProductDialog
                 open={deleteDialogOpen}
