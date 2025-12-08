@@ -5,6 +5,7 @@ import { CartItem as CartItemType, useCartStore } from "@/stores/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface CartItemProps {
     item: CartItemType;
@@ -78,11 +79,19 @@ export function CartItem({ item, onAddMore }: CartItemProps) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 rounded-full hover:bg-primary/20 text-primary"
+                            className={cn(
+                                "h-7 w-7 rounded-full hover:bg-primary/20 text-primary",
+                                (!isInternalGroup && item.stock !== undefined && item.quantity >= item.stock) && "opacity-50 cursor-not-allowed"
+                            )}
+                            disabled={!isInternalGroup && item.stock !== undefined && item.quantity >= item.stock}
                             onClick={() => {
                                 if (isInternalGroup) {
                                     if (onAddMore) onAddMore(item.id);
                                 } else {
+                                    if (item.stock !== undefined && item.quantity >= item.stock) {
+                                        toast.error(`Limite de estoque atingido: ${item.stock}`);
+                                        return;
+                                    }
                                     updateQuantity(item.id, item.quantity + 1);
                                 }
                             }}

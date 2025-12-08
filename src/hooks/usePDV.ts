@@ -64,6 +64,15 @@ export function usePDV() {
             return;
         }
 
+        // Validate Quantity for non-internal products
+        if (product.quantity !== undefined && product.quantity !== null) {
+            const currentInCart = items.find(i => i.id === product.id)?.quantity || 0;
+            if (currentInCart + 1 > product.quantity) {
+                toast.error(`Estoque insuficiente! Apenas ${product.quantity} unidades disponíveis.`);
+                return;
+            }
+        }
+
         const cartItem: any = {
             ...product,
         };
@@ -72,7 +81,7 @@ export function usePDV() {
         setSearchResults([]);
         setShowPreview(false);
         toast.success(`Produto adicionado: ${product.name}`);
-    }, [addItem]);
+    }, [addItem, items]);
 
     const handleInternalItemSelect = useCallback((item: ProductItem) => {
         // Fallback for catalog data: use selectedProduct state OR item.product_catalog join

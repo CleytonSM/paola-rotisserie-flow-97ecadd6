@@ -4,6 +4,7 @@ import { Product } from '@/services/database/products';
 
 export interface CartItem extends Product {
   quantity: number;
+  stock?: number;
   notes?: string;
   is_internal?: boolean;
   unit_type?: string;
@@ -70,6 +71,7 @@ export const useCartStore = create<CartState>()(
 
         const targetCatalogId = (product as any).catalog_id || product.id; // Fallback for standard products where id is the main id.
         const isInternal = (product as any).is_internal;
+        const productStock = (product as any).quantity; // Capture stock from input product (ProductCatalog)
 
         if (isInternal) {
              // Try to find existing group for this catalog product
@@ -122,7 +124,8 @@ export const useCartStore = create<CartState>()(
                          id: targetCatalogId, // Group ID
                          quantity: 1,
                          is_internal: true,
-                         subItems: [newSubItem]
+                         subItems: [newSubItem],
+                         stock: productStock
                      }] 
                  });
                  return;
@@ -136,12 +139,12 @@ export const useCartStore = create<CartState>()(
           set({
             items: items.map((item) =>
               item.id === product.id
-                ? { ...item, quantity: item.quantity + 1 }
+                ? { ...item, quantity: item.quantity + 1, stock: productStock ?? item.stock } // Update stock if fresh info provided
                 : item
             ),
           });
         } else {
-          set({ items: [...items, { ...product, quantity: 1 }] });
+          set({ items: [...items, { ...product, quantity: 1, stock: productStock }] });
         }
       },
       removeItem: (productId) => {
