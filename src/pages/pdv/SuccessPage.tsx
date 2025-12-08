@@ -12,7 +12,7 @@ import { Printer } from "lucide-react";
 export default function SuccessPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { saleId, displayId: numericId, total, method, pixKey, pixAmount, orderId, clientName, items, change } = location.state || {}; // Support both new saleId and legacy orderId
+    const { saleId, displayId: numericId, total, subtotal, method, pixKey, pixAmount, orderId, clientName, items, change } = location.state || {}; // Support both new saleId and legacy orderId
 
     const finalDisplayId = numericId ? `#${numericId}` : (saleId || orderId)?.slice(0, 8);
     const [showPixModal, setShowPixModal] = useState(false);
@@ -39,7 +39,7 @@ export default function SuccessPage() {
                     price: item.price || item.base_price || 0, // Handle different item structures
                     total: (item.price || item.base_price || 0) * item.quantity
                 })),
-                subtotal: total || 0,
+                subtotal: subtotal || 0,
                 // discount: 0, 
                 total: total || 0,
                 paymentMethod: method === 'card_credit' ? 'Crédito' :

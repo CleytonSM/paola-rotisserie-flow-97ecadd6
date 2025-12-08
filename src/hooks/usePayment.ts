@@ -144,6 +144,7 @@ export function usePayment() {
                         saleId: data.sale_id,
                         displayId: data.display_id, 
                         total: totalAmount, 
+                        subtotal: total(),
                         method: selectedMethod,
                         clientName: selectedClient?.name,
                         items: items, // Pass items for receipt printing
