@@ -80,7 +80,7 @@ export default function PaymentPage() {
             <QRCodeModal
                 open={showPixModal}
                 onOpenChange={setShowPixModal}
-                value={selectedPixKey}
+                pixKey={selectedPixKey}
                 amount={calculateTotalWithFees()}
             />
         </div>
