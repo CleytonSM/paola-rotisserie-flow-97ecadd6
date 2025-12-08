@@ -110,7 +110,7 @@ export function usePayment() {
             // Currently supporting single payment method per sale, but structure allows multiple.
             const payment: SalePayment = {
                 amount: totalAmount, // For now, 100% of amount
-                payment_method: selectedMethod as any,
+                payment_method: selectedMethod as SalePayment['payment_method'],
                 installments: 1
             };
 

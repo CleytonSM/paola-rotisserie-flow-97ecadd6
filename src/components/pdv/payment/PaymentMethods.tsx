@@ -69,13 +69,13 @@ export function PaymentMethods({
                 </PaymentMethodCard>
 
                 <PaymentMethodCard
-                    id="money"
+                    id="cash"
                     title="Dinheiro"
                     icon={Banknote}
-                    selected={selectedMethod === "money"}
-                    onClick={() => setSelectedMethod("money")}
+                    selected={selectedMethod === "cash"}
+                    onClick={() => setSelectedMethod("cash")}
                 >
-                    {selectedMethod === "money" && (
+                    {selectedMethod === "cash" && (
                         <MethodCash
                             amountGiven={amountGiven}
                             setAmountGiven={setAmountGiven}
@@ -85,13 +85,13 @@ export function PaymentMethods({
                 </PaymentMethodCard>
 
                 <PaymentMethodCard
-                    id="credit_card"
+                    id="card_credit"
                     title="Cartão de Crédito"
                     icon={CreditCard}
-                    selected={selectedMethod === "credit_card"}
-                    onClick={() => setSelectedMethod("credit_card")}
+                    selected={selectedMethod === "card_credit"}
+                    onClick={() => setSelectedMethod("card_credit")}
                 >
-                    {selectedMethod === "credit_card" && (
+                    {selectedMethod === "card_credit" && (
                         <MethodCard
                             machines={machines}
                             selectedMachine={selectedMachine}
@@ -106,13 +106,13 @@ export function PaymentMethods({
                 </PaymentMethodCard>
 
                 <PaymentMethodCard
-                    id="debit_card"
+                    id="card_debit"
                     title="Cartão de Débito"
                     icon={CreditCard}
-                    selected={selectedMethod === "debit_card"}
-                    onClick={() => setSelectedMethod("debit_card")}
+                    selected={selectedMethod === "card_debit"}
+                    onClick={() => setSelectedMethod("card_debit")}
                 >
-                    {selectedMethod === "debit_card" && (
+                    {selectedMethod === "card_debit" && (
                         <MethodCard
                             machines={machines}
                             selectedMachine={selectedMachine}
