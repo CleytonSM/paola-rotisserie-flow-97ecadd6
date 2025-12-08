@@ -146,6 +146,8 @@ export function usePayment() {
                         total: totalAmount, 
                         method: selectedMethod,
                         clientName: selectedClient?.name,
+                        items: items, // Pass items for receipt printing
+                        change: changeAmount, // Pass change amount for receipt
                         
                         // Pass Pix Data for modal re-opening
                         pixKey: selectedMethod === 'pix' ? pixKeys.find(k => k.id === selectedPixKey) : null,
