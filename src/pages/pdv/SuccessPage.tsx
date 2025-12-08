@@ -6,14 +6,54 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format";
 import { motion } from "framer-motion";
 import { QRCodeModal } from "@/components/pdv/QRCodeModal";
+import { printerService } from "@/services/printer/PrinterService";
+import { Printer } from "lucide-react";
 
 export default function SuccessPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { saleId, displayId: numericId, total, method, pixKey, pixAmount, orderId, clientName } = location.state || {}; // Support both new saleId and legacy orderId
+    const { saleId, displayId: numericId, total, method, pixKey, pixAmount, orderId, clientName, items, change } = location.state || {}; // Support both new saleId and legacy orderId
 
     const finalDisplayId = numericId ? `#${numericId}` : (saleId || orderId)?.slice(0, 8);
     const [showPixModal, setShowPixModal] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
+
+    const handlePrint = async () => {
+        if (!items || items.length === 0) {
+            console.warn("No items to print");
+            return;
+        }
+
+        setIsPrinting(true);
+        try {
+            await printerService.printReceipt({
+                storeName: "Paola Gonçalves Rotisseria",
+                // storeAddress: "Rua Exemplo, 123", // Add if available
+                // storePhone: "(11) 99999-9999", // Add if available
+                date: new Date(),
+                orderId: finalDisplayId,
+                clientName: clientName,
+                items: items.map((item: any) => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price || item.base_price || 0, // Handle different item structures
+                    total: (item.price || item.base_price || 0) * item.quantity
+                })),
+                subtotal: total || 0,
+                // discount: 0, 
+                total: total || 0,
+                paymentMethod: method === 'card_credit' ? 'Crédito' :
+                    method === 'card_debit' ? 'Débito' :
+                        method === 'pix' ? 'Pix' :
+                            method === 'cash' || method === 'money' ? 'Dinheiro' : method,
+                change: change,
+            });
+        } catch (error) {
+            console.error("Failed to print", error);
+        } finally {
+            setIsPrinting(false);
+        }
+    };
 
     const { clearCart } = useCartStore();
 
@@ -97,6 +137,16 @@ export default function SuccessPage() {
                     >
                         Nova Venda
                         <ArrowRight className="ml-2 h-5 w-5 opacity-90" />
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        className="w-full text-stone-500 hover:text-stone-700 hover:bg-stone-50"
+                        onClick={handlePrint}
+                        disabled={isPrinting}
+                    >
+                        <Printer className="mr-2 h-4 w-4" />
+                        {isPrinting ? "Imprimindo..." : "Imprimir Comprovante"}
                     </Button>
                 </div>
             </motion.div>
