@@ -38,10 +38,6 @@ export default function PixKeys() {
                 subtitle="Gerencie suas chaves Pix para recebimentos."
                 action={
                     <>
-                        <Button onClick={handleCreate}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Nova Chave
-                        </Button>
                         <PixKeyFormDialog
                             open={isFormOpen}
                             onOpenChange={setIsFormOpen}
@@ -52,30 +48,7 @@ export default function PixKeys() {
                 }
                 children={<AppBreadcrumb />}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {pixKeys?.map((pixKey) => (
-                    <PixKeyCard
-                        key={pixKey.id}
-                        pixKey={pixKey}
-                        onEdit={handleEdit}
-                        onDelete={setDeletingKey}
-                        onToggleStatus={handleToggleStatus}
-                    />
-                ))}
-                {pixKeys?.length === 0 && (
-                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/10">
-                        <h3 className="text-lg font-medium text-foreground">
-                            Nenhuma chave Pix cadastrada
-                        </h3>
-                        <p className="text-muted-foreground mt-1 mb-4">
-                            Cadastre suas chaves Pix para gerar QR Codes automaticamente.
-                        </p>
-                        <Button variant="outline" onClick={handleCreate}>
-                            Cadastrar Primeira
-                        </Button>
-                    </div>
-                )}
-            </div>
+
             <GenericAlertDialog
                 open={!!deletingKey}
                 onOpenChange={handleDeleteDialogClose}

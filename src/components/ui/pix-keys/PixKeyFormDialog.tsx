@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { IMaskInput } from "react-imask";
 
@@ -129,6 +129,12 @@ export function PixKeyFormDialog({
             loading={isLoading}
             onCancel={() => onOpenChange(false)}
             maxWidth="max-w-md"
+            triggerButton={
+                <Button className="shadow-md transition-transform duration-300 ease-out hover:scale-105">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nova Chave Pix
+                </Button>
+            }
         >
             <Form {...form}>
                 <div className="space-y-6 w-full">
