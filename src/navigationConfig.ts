@@ -44,6 +44,11 @@ export const navigationGroups = {
                 icon: ArrowUpCircle,
             },
             {
+                title: "Histórico de Vendas",
+                url: "/sales",
+                icon: BookOpen,
+            },
+            {
                 title: "Contas a Pagar",
                 url: "/payable",
                 icon: ArrowDownCircle,
