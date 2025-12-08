@@ -2,7 +2,8 @@ import * as React from "react";
 
 // Definição de tipo genérica para uma coluna
 export interface ColumnDef<T> {
-    header: string;
+    id?: string;
+    header: string | ((props: { column: ColumnDef<T> }) => React.ReactNode);
     cell: (row: T) => React.ReactNode;
     headerClassName?: string;
     cellClassName?: string;

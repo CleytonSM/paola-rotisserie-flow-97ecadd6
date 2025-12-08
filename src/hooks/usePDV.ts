@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useCartStore } from "@/stores/cartStore";
 import { searchProductCatalog, ProductCatalog } from "@/services/database/product-catalog";
+import { getProductItemByBarcode } from "@/services/database/product-items";
 import { Html5Qrcode } from "html5-qrcode";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,6 +19,7 @@ export function usePDV() {
     const [selectedProduct, setSelectedProduct] = useState<ProductCatalog | null>(null);
 
     const scannerRef = useRef<Html5Qrcode | null>(null);
+    const lastScanTimeRef = useRef<number>(0);
     const isMobile = useIsMobile();
     const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -148,30 +150,141 @@ export function usePDV() {
                 const html5QrCode = new Html5Qrcode("reader");
                 scannerRef.current = html5QrCode;
 
-                try {
-                    await html5QrCode.start(
-                        { facingMode: "environment" },
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        async (decodedText) => {
-                            const { data } = await searchProductCatalog(decodedText);
-                            if (data && data.length > 0) {
-                                const product = data[0];
-                                handleProductSelect(product);
-                                setIsScannerOpen(false);
-                                await html5QrCode.stop();
-                                html5QrCode.clear();
-                            } else {
-                                toast.error("Produto não encontrado");
+                // Configuration optimized for barcode scanning
+                const config = { 
+                    fps: 20,
+                    qrbox: { width: 300, height: 300 },
+                    aspectRatio: 1.0,
+                    disableFlip: false,
+                    // Verbose logging for debugging
+                    verbose: true
+                };
+                
+                const onScanSuccess = async (decodedText: string) => {
+                    // Prevent rapid-fire scanning (cooldown of 2 seconds)
+                    const now = Date.now();
+                    if (now - lastScanTimeRef.current < 2000) {
+                        console.log("[Scanner] ⏳ Cooldown active, ignoring scan");
+                        return;
+                    }
+                    lastScanTimeRef.current = now;
+                    
+                    console.log("[Scanner] ✅ Barcode detected:", decodedText);
+                    
+                    // First, try to find a product_item by scale_barcode (available items only)
+                    const scannedBarcode = parseInt(decodedText, 10);
+                    
+                    if (!isNaN(scannedBarcode)) {
+                        const itemResult = await getProductItemByBarcode(scannedBarcode);
+                        
+                        if (itemResult.data) {
+                            const item = itemResult.data;
+                            console.log("[Scanner] ✅ Found product item:", item);
+                            
+                            // Add the item using the internal item select handler
+                            handleInternalItemSelect(item);
+                            
+                            // Close scanner dialog first
+                            setIsScannerOpen(false);
+                            
+                            // Stop scanner safely
+                            try {
+                                if (scannerRef.current && scannerRef.current.getState() === 2) { // 2 = SCANNING
+                                    await scannerRef.current.stop();
+                                }
+                            } catch (err) {
+                                console.warn("[Scanner] Stop error (ignore):", err);
                             }
-                        },
-                        (errorMessage) => {
-                            // ignore errors
+                            
+                            return; // Success - don't search catalog
                         }
-                    );
-                } catch (err) {
-                    console.error("Error starting scanner", err);
-                    toast.error("Erro ao iniciar câmera");
-                    setIsScannerOpen(false);
+                        
+                        console.log("[Scanner] ℹ️ No product item found, trying catalog...");
+                    }
+                    
+                    // Fallback: try searching product catalog by catalog_barcode or name
+                    const { data } = await searchProductCatalog(decodedText);
+                    if (data && data.length > 0) {
+                        const product = data[0];
+                        console.log("[Scanner] ✅ Found product catalog:", product);
+                        handleProductSelect(product);
+                        
+                        // Close scanner dialog first
+                        setIsScannerOpen(false);
+                        
+                        // Stop scanner safely
+                        try {
+                            if (scannerRef.current && scannerRef.current.getState() === 2) {
+                                await scannerRef.current.stop();
+                            }
+                        } catch (err) {
+                            console.warn("[Scanner] Stop error (ignore):", err);
+                        }
+                    } else {
+                        console.log("[Scanner] ❌ Product not found for barcode:", decodedText);
+                        toast.error("Produto não encontrado");
+                    }
+                };
+
+                const onScanError = (errorMessage: string) => {
+                    // Only log errors that aren't just "no code found"
+                    if (!errorMessage.includes("NotFoundException")) {
+                        console.warn("[Scanner] Scan error:", errorMessage);
+                    }
+                };
+
+                // Try multiple camera strategies with fallback
+                const cameraStrategies = [
+                    { facingMode: "environment" }, // Rear camera (preferred)
+                    { facingMode: "user" },        // Front camera
+                    undefined                       // Any available camera
+                ];
+
+                let cameraStarted = false;
+
+                for (const constraints of cameraStrategies) {
+                    try {
+                        await html5QrCode.start(
+                            constraints || { facingMode: "environment" },
+                            config,
+                            onScanSuccess,
+                            onScanError
+                        );
+                        cameraStarted = true;
+                        console.log("Camera started successfully with constraints:", constraints);
+                        break; // Success, exit the loop
+                    } catch (err: any) {
+                        console.warn("Failed to start camera with constraints:", constraints, err);
+                        
+                        // If this is the last strategy, handle the error
+                        if (constraints === undefined) {
+                            // All strategies failed
+                            console.error("All camera strategies failed. Error details:", err);
+                            
+                            // Check if HTTPS is required (common issue in production)
+                            const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+                            const isHttps = window.location.protocol === "https:";
+                            
+                            if (!isHttps && !isLocalhost) {
+                                toast.error("Câmera requer conexão HTTPS. Use https:// na URL ou localhost para testar.");
+                            } else if (err.name === "NotFoundError" || err.message?.includes("not found")) {
+                                toast.error("Nenhuma câmera encontrada no dispositivo");
+                            } else if (err.name === "NotAllowedError" || err.message?.includes("permission")) {
+                                toast.error("Permissão de câmera negada. Por favor, permita o acesso à câmera.");
+                            } else if (err.name === "NotReadableError" || err.message?.includes("in use")) {
+                                toast.error("Câmera está em uso por outro aplicativo");
+                            } else {
+                                toast.error("Erro ao iniciar câmera. Verifique as permissões e tente novamente.");
+                            }
+                            setIsScannerOpen(false);
+                        }
+                        // Continue to next strategy
+                    }
+                }
+
+                if (!cameraStarted) {
+                    // Clean up if all strategies failed
+                    scannerRef.current = null;
                 }
             };
 
@@ -179,10 +292,29 @@ export function usePDV() {
         }
 
         return () => {
-            if (!isScannerOpen && scannerRef.current) {
-                scannerRef.current.stop().catch(console.error);
-                scannerRef.current.clear();
-                scannerRef.current = null;
+            if (scannerRef.current) {
+                try {
+                    // Check if scanner is running before stopping
+                    if (scannerRef.current.getState() === 2) { // 2 = SCANNING state
+                        scannerRef.current.stop().then(() => {
+                            if (scannerRef.current) {
+                                scannerRef.current.clear();
+                                scannerRef.current = null;
+                            }
+                        }).catch(err => {
+                            console.warn("[Scanner] Cleanup stop error (ignore):", err);
+                            if (scannerRef.current) {
+                                scannerRef.current = null;
+                            }
+                        });
+                    } else {
+                        // Scanner not running, just clear ref
+                        scannerRef.current = null;
+                    }
+                } catch (err) {
+                    console.warn("[Scanner] Cleanup error (ignore):", err);
+                    scannerRef.current = null;
+                }
             }
         };
     }, [isScannerOpen, addItem]);

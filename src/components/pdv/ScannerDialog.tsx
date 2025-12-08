@@ -1,6 +1,4 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 interface ScannerDialogProps {
     open: boolean;
@@ -11,16 +9,8 @@ export function ScannerDialog({ open, onOpenChange }: ScannerDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-black border-0 text-white">
-                <DialogHeader className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent">
+                <DialogHeader className="p-4 bg-gradient-to-b from-black/80 to-transparent">
                     <DialogTitle className="text-center text-white font-medium">Escanear Código</DialogTitle>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-2 text-white hover:bg-white/20 rounded-full"
-                        onClick={() => onOpenChange(false)}
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
                 </DialogHeader>
                 <div className="relative w-full aspect-square bg-black">
                     <div id="reader" className="w-full h-full"></div>
@@ -34,6 +24,7 @@ export function ScannerDialog({ open, onOpenChange }: ScannerDialogProps) {
                 </div>
                 <div className="p-4 bg-black text-center">
                     <p className="text-sm text-gray-400">Aponte a câmera para o código de barras</p>
+                    <p className="text-xs text-gray-500 mt-2">EAN-13, UPC, QR Code e outros formatos</p>
                 </div>
             </DialogContent>
         </Dialog>

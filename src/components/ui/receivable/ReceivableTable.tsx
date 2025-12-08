@@ -153,8 +153,6 @@ export function ReceivableTable({
       }
       filterControls={
         <ReceivableFilters
-          searchTerm={searchTerm}
-          onSearchChange={onSearchChange}
           statusFilter={statusFilter}
           onStatusFilterChange={onStatusFilterChange}
           dateRange={dateRange}

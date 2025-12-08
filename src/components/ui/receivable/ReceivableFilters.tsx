@@ -7,8 +7,6 @@ import { cn } from "@/lib/utils";
 import type { StatusFilter } from "./types";
 
 interface ReceivableFiltersProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
   dateRange: DateRange | undefined;
@@ -16,32 +14,19 @@ interface ReceivableFiltersProps {
 }
 
 export function ReceivableFilters({
-  searchTerm,
-  onSearchChange,
   statusFilter,
   onStatusFilterChange,
   dateRange,
   onDateRangeChange,
-}: ReceivableFiltersProps) {
+}: Omit<ReceivableFiltersProps, "searchTerm" | "onSearchChange">) {
   return (
-    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-      {/* Barra de Busca */}
-      <div className="relative w-full md:max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por cliente, CPF/CNPJ, valor..."
-          className="pl-10"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-      </div>
-      {/* Filtros */}
-      <div className="flex flex-nowrap gap-4 items-center">
-        <DateRangePicker
-          date={dateRange}
-          setDate={onDateRangeChange}
-          className="[&_button]:h-9 [&_button]:w-auto [&_button]:min-w-[200px] [&_button]:md:w-[260px]"
-        />
+    <div className="flex flex-wrap gap-2 items-center">
+      <DateRangePicker
+        date={dateRange}
+        setDate={onDateRangeChange}
+        className="[&_button]:h-9 [&_button]:w-auto [&_button]:min-w-[200px]"
+      />
+      <div className="flex flex-wrap gap-2">
         <Button
           variant={statusFilter === "all" ? "outline" : "ghost"}
           size="sm"

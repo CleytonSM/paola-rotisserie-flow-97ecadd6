@@ -90,6 +90,7 @@ export const getProductItems = async (
 
 /**
  * Get a specific product item by its scale barcode
+ * Only returns items with 'available' status
  */
 export const getProductItemByBarcode = async (
     barcode: number
@@ -102,6 +103,7 @@ export const getProductItemByBarcode = async (
         product_catalog (*)
       `)
             .eq('scale_barcode', barcode)
+            .eq('status', 'available')
             .maybeSingle();
 
         if (error) throw error;
