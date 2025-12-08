@@ -2,7 +2,8 @@ import * as React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Eye } from "lucide-react";
+import { DataTableAction } from "@/components/ui/data-table-action";
 
 // Definição de tipo genérica para uma coluna
 export interface ColumnDef<T> {
@@ -29,6 +30,9 @@ interface GenericTableProps<T> {
     // Mensagens
     emptyStateMessage: string;
     emptyStateSearchMessage?: string;
+
+    // Ações
+    onViewDetails?: (item: T) => void;
 }
 
 /**
@@ -44,10 +48,30 @@ export function GenericTable<T extends { id: string }>({
     searchPlaceholder,
     filterControls,
     emptyStateMessage,
+    onViewDetails,
     emptyStateSearchMessage = "Nenhum resultado encontrado."
 }: GenericTableProps<T>) {
 
     const hasSearch = searchTerm && searchTerm.length > 0;
+
+    const displayColumns = React.useMemo(() => {
+        if (!onViewDetails) return columns;
+
+        const actionsColumn: ColumnDef<T> = {
+            header: "Ações",
+            headerClassName: "text-right",
+            cellClassName: "text-right",
+            cell: (row) => (
+                <DataTableAction
+                    tooltip="Ver detalhes"
+                    onClick={() => onViewDetails(row)}
+                    icon={Eye}
+                />
+            )
+        };
+
+        return [...columns, actionsColumn];
+    }, [columns, onViewDetails]);
 
     return (
         <Card className="overflow-hidden shadow-md shadow-[#F0E6D2]/30">
@@ -77,7 +101,7 @@ export function GenericTable<T extends { id: string }>({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                {columns.map((col) => (
+                                {displayColumns.map((col) => (
                                     <TableHead
                                         key={col.header}
                                         className={`font-display text-xs uppercase tracking-wide ${col.headerClassName || ''}`}
@@ -90,20 +114,20 @@ export function GenericTable<T extends { id: string }>({
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={displayColumns.length} className="h-24 text-center text-muted-foreground">
                                         Carregando...
                                     </TableCell>
                                 </TableRow>
                             ) : data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={displayColumns.length} className="h-24 text-center text-muted-foreground">
                                         {hasSearch ? emptyStateSearchMessage : emptyStateMessage}
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 data.map((row) => (
                                     <TableRow key={row.id} className="hover:bg-accent/30">
-                                        {columns.map((col, index) => (
+                                        {displayColumns.map((col, index) => (
                                             <TableCell
                                                 key={`${row.id}-${index}`}
                                                 className={`py-4 ${col.cellClassName || ''}`}

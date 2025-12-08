@@ -13,6 +13,7 @@ const routeNameMap: Record<string, string> = {
     "": "Home",
     "dashboard": "Dashboard",
     "payable": "Contas a Pagar",
+    "sales": "Histórico de Vendas",
     "receivable": "Contas a Receber",
     "reports": "Relatórios",
     "suppliers": "Fornecedores",
