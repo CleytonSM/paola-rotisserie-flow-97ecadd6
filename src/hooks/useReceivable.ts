@@ -126,8 +126,12 @@ export function useReceivable() {
                 }
                 
                 const totalAllocated = paymentEntries.reduce((sum, entry) => sum + entry.amount, 0);
-                if (Math.abs(totalAllocated - data.gross_value) > 0.01) {
-                    toast.error("O valor alocado deve ser igual ao valor bruto");
+                const remaining = data.gross_value - totalAllocated;
+                // Allow negative remaining if cash was overpaid (for change/troco)
+                const hasCashOverpayment = remaining < -0.01 && paymentEntries.some(e => e.method === 'cash');
+                // Must be fully allocated OR overpaid with cash
+                if (remaining > 0.01 || (remaining < -0.01 && !hasCashOverpayment)) {
+                    toast.error("O valor alocado deve ser igual ou maior que o valor bruto (com dinheiro para troco)");
                     return false;
                 }
             }

@@ -98,8 +98,11 @@ export function usePayment() {
             }
             
             const remaining = getRemainingBalance();
-            if (Math.abs(remaining) > 0.01) {
-                toast.error("O valor alocado deve ser igual ao total da venda");
+            // Allow negative remaining if cash was overpaid (for change/troco)
+            const hasCashOverpayment = remaining < -0.01 && paymentEntries.some(e => e.method === 'cash');
+            // Must be fully allocated (remaining ~0) OR overpaid with cash
+            if (remaining > 0.01 || (remaining < -0.01 && !hasCashOverpayment)) {
+                toast.error("O valor alocado deve ser igual ou maior que o total (com dinheiro para troco)");
                 return;
             }
         } else {
@@ -110,7 +113,18 @@ export function usePayment() {
         setIsProcessing(true);
         try {
             const totalAmount = calculateTotalWithFees();
-            const changeAmount = selectedMethod === 'cash' ? calculateChange() : 0;
+            
+            // Calculate change: for single payment use amountGiven, for partial use cash overpayment
+            let changeAmount = 0;
+            if (isPartialPayment) {
+                // For partial payments, change comes from cash overpayment
+                const remaining = getRemainingBalance();
+                if (remaining < 0 && paymentEntries.some(e => e.method === 'cash')) {
+                    changeAmount = Math.abs(remaining);
+                }
+            } else if (selectedMethod === 'cash') {
+                changeAmount = calculateChange();
+            }
 
             // Prepare Items
             const saleItems: SaleItem[] = items.flatMap(item => {

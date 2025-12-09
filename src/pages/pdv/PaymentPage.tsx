@@ -130,15 +130,21 @@ export default function PaymentPage() {
                     )}
 
                     {/* Confirm Button for Partial Payment Mode */}
-                    {isPartialPayment && (
-                        <button
-                            className="w-full h-16 text-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={Math.abs(getRemainingBalance()) > 0.01 || paymentEntries.length === 0 || isProcessing}
-                            onClick={handleConfirm}
-                        >
-                            {isProcessing ? "Processando..." : "Confirmar e Cobrar"}
-                        </button>
-                    )}
+                    {isPartialPayment && (() => {
+                        const remaining = getRemainingBalance();
+                        // Allow if fully paid (remaining ~0) OR overpaid with cash for change
+                        const hasCashOverpayment = remaining < -0.01 && paymentEntries.some(e => e.method === 'cash');
+                        const isComplete = Math.abs(remaining) < 0.01 || hasCashOverpayment;
+                        return (
+                            <button
+                                className="w-full h-16 text-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!isComplete || paymentEntries.length === 0 || isProcessing}
+                                onClick={handleConfirm}
+                            >
+                                {isProcessing ? "Processando..." : "Confirmar e Cobrar"}
+                            </button>
+                        );
+                    })()}
                 </div>
             </div>
 

@@ -54,6 +54,17 @@ export function PartialPaymentBuilder({
         return totalAmount - getTotalAllocated();
     };
 
+    // Calculate change from cash overpayment
+    const getChangeAmount = () => {
+        const remaining = getRemainingBalance();
+        if (remaining < 0) {
+            // Check if any cash entry caused the overpayment
+            const hasCash = paymentEntries.some(e => e.method === 'cash');
+            if (hasCash) return Math.abs(remaining);
+        }
+        return 0;
+    };
+
     const handleAddEntry = () => {
         if (!selectedMethod || !entryAmount) return;
         // Require pix key selection if method is pix
@@ -63,8 +74,10 @@ export function PartialPaymentBuilder({
         if (isNaN(amount) || amount <= 0) return;
 
         const remaining = getRemainingBalance();
-        if (amount > remaining) {
-            return; // Don't add if exceeds remaining
+        // For cash, allow exceeding the remaining (for change/troco)
+        // For other methods, don't allow exceeding
+        if (selectedMethod !== 'cash' && amount > remaining + 0.01) {
+            return; // Don't add if exceeds remaining (allow small floating point tolerance)
         }
 
         const entry: PaymentEntry = {
@@ -92,7 +105,10 @@ export function PartialPaymentBuilder({
         return labels[method] || method;
     };
 
-    const isComplete = Math.abs(getRemainingBalance()) < 0.01;
+    // Consider complete if remaining is 0, OR if negative (overpaid) and there's cash
+    const remaining = getRemainingBalance();
+    const changeAmount = getChangeAmount();
+    const isComplete = Math.abs(remaining) < 0.01 || (remaining < 0 && changeAmount > 0);
 
     return (
         <Card className="border-2">
@@ -113,9 +129,17 @@ export function PartialPaymentBuilder({
                     <div className="flex justify-between border-t pt-1">
                         <span className="text-muted-foreground">Restante:</span>
                         <span className={`font-bold ${isComplete ? 'text-emerald-600' : 'text-orange-600'}`}>
-                            {formatCurrency(getRemainingBalance())}
+                            {formatCurrency(Math.max(0, remaining))}
                         </span>
                     </div>
+                    {changeAmount > 0 && (
+                        <div className="flex justify-between border-t pt-1">
+                            <span className="text-muted-foreground font-medium">Troco:</span>
+                            <span className="font-bold text-primary">
+                                {formatCurrency(changeAmount)}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Payment Entries List */}
