@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -233,31 +234,26 @@ export function BulkScanDialog({ open, onOpenChange, catalogProducts, onSuccess 
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    step="0.001"
+                                                <MoneyInput
+                                                    decimalPlaces={3}
                                                     value={item.weight_kg}
-                                                    onChange={(e) => handleUpdateItem(item.id, 'weight_kg', parseFloat(e.target.value))}
+                                                    onChange={(val) => handleUpdateItem(item.id, 'weight_kg', parseFloat(val) || 0)}
                                                     disabled={item.unit_type === 'un'}
                                                     className="h-8"
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
+                                                <MoneyInput
                                                     value={item.sale_price}
-                                                    onChange={(e) => handleUpdateItem(item.id, 'sale_price', parseFloat(e.target.value))}
+                                                    onChange={(val) => handleUpdateItem(item.id, 'sale_price', parseFloat(val) || 0)}
                                                     className="h-8"
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
+                                                <MoneyInput
                                                     placeholder="0"
                                                     value={item.item_discount || ''}
-                                                    onChange={(e) => handleUpdateItem(item.id, 'item_discount', parseFloat(e.target.value))}
+                                                    onChange={(val) => handleUpdateItem(item.id, 'item_discount', parseFloat(val) || 0)}
                                                     className="h-8"
                                                 />
                                             </TableCell>

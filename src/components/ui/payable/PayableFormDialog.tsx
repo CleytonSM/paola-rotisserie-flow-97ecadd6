@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -61,10 +62,10 @@ export function PayableFormDialog({
       </div>
       <div className="space-y-2">
         <Label>Valor (R$)</Label>
-        <Input
-          type="number"
-          step="0.01"
-          {...register("value", { valueAsNumber: true })}
+        <MoneyInput
+          value={watch("value") || ""}
+          onChange={(val) => setValue("value", parseFloat(val) || 0)}
+          placeholder="0,00"
         />
         {errors.value && (
           <span className="text-xs text-destructive">{errors.value.message}</span>

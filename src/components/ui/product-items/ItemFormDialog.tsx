@@ -7,6 +7,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -137,14 +138,12 @@ export function ItemFormDialog({
                             name="weight_kg"
                             control={control}
                             render={({ field }) => (
-                                <Input
+                                <MoneyInput
                                     id="weight_kg"
-                                    type="number"
-                                    step="0.001"
-                                    placeholder="Ex: 1.250"
+                                    decimalPlaces={3}
+                                    placeholder="Ex: 1,250"
                                     value={field.value || ''}
-                                    onChange={(e) => {
-                                        const rawValue = e.target.value;
+                                    onChange={(rawValue) => {
                                         field.onChange(rawValue);
 
                                         // Calculate price if product is by weight
@@ -169,13 +168,11 @@ export function ItemFormDialog({
                             name="sale_price"
                             control={control}
                             render={({ field }) => (
-                                <Input
+                                <MoneyInput
                                     id="sale_price"
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="Ex: 57.38"
+                                    placeholder="Ex: 57,38"
                                     value={field.value || ''}
-                                    onChange={(e) => field.onChange(e.target.value)}
+                                    onChange={(val) => field.onChange(val)}
                                 />
                             )}
                         />
@@ -189,15 +186,11 @@ export function ItemFormDialog({
                         name="item_discount"
                         control={control}
                         render={({ field }) => (
-                            <Input
+                            <MoneyInput
                                 id="item_discount"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                max="1"
-                                placeholder="Ex: 0.05 (5%)"
+                                placeholder="Ex: 0,05 (5%)"
                                 value={field.value || ''}
-                                onChange={(e) => field.onChange(e.target.value)}
+                                onChange={(val) => field.onChange(val)}
                             />
                         )}
                     />

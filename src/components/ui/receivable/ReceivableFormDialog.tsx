@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -168,10 +169,10 @@ export function ReceivableFormDialog({
         </div>
         <div className="space-y-2">
           <Label>Valor Bruto (R$)</Label>
-          <Input
-            type="number"
-            step="0.01"
-            {...register("gross_value", { valueAsNumber: true })}
+          <MoneyInput
+            value={watch("gross_value") || ""}
+            onChange={(val) => setValue("gross_value", parseFloat(val) || 0)}
+            placeholder="0,00"
           />
           {errors.gross_value && (
             <span className="text-xs text-destructive">{errors.gross_value.message}</span>
@@ -342,12 +343,11 @@ export function ReceivableFormDialog({
             </div>
             <div className="space-y-2">
               <Label>Taxa (%)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                {...register("tax_rate", { valueAsNumber: true })}
-                placeholder="Ex: 2.5"
-                readOnly={!!selectedMachineId}
+              <MoneyInput
+                value={watch("tax_rate") || ""}
+                onChange={(val) => setValue("tax_rate", parseFloat(val) || 0)}
+                placeholder="0,00"
+                disabled={!!selectedMachineId}
                 className={selectedMachineId ? "bg-muted" : ""}
               />
             </div>

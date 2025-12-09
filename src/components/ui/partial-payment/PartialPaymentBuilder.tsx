@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
@@ -194,12 +195,10 @@ export function PartialPaymentBuilder({
                             </div>
                             <div className="space-y-1">
                                 <Label className="text-xs text-muted-foreground">Valor (R$)</Label>
-                                <Input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="0.00"
+                                <MoneyInput
+                                    placeholder="0,00"
                                     value={entryAmount}
-                                    onChange={(e) => setEntryAmount(e.target.value)}
+                                    onChange={(val) => setEntryAmount(val)}
                                     disabled={disabled}
                                 />
                             </div>

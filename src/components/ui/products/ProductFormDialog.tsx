@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -31,16 +32,6 @@ export function ProductFormDialog({
     loading,
 }: ProductFormDialogProps) {
     const { register, watch, setValue } = form;
-
-    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const masked = maskPrice(e.target.value);
-        setValue("base_price", masked);
-    };
-
-    const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const masked = maskDiscount(e.target.value);
-        setValue("default_discount", masked);
-    };
 
     // Effect to force 'un' unit type when product is not internal
     useEffect(() => {
@@ -163,24 +154,21 @@ export function ProductFormDialog({
                         <Label htmlFor="base_price">
                             Preço Base (R$/{watch("unit_type") === "un" ? "un" : "kg"}) <span className="text-destructive">*</span>
                         </Label>
-                        <Input
+                        <MoneyInput
                             id="base_price"
-                            type="text"
-                            placeholder="Ex: 45.90"
-                            value={watch("base_price")}
-                            onChange={handlePriceChange}
-                            required
+                            placeholder="Ex: 45,90"
+                            value={watch("base_price") || ""}
+                            onChange={(val) => setValue("base_price", val)}
                         />
                     </div>
 
                     <div className="grid gap-2">
                         <Label htmlFor="default_discount">Desconto Padrão (%)</Label>
-                        <Input
+                        <MoneyInput
                             id="default_discount"
-                            type="text"
-                            placeholder="Ex: 10.5"
-                            value={watch("default_discount")}
-                            onChange={handleDiscountChange}
+                            placeholder="Ex: 10,5"
+                            value={watch("default_discount") || ""}
+                            onChange={(val) => setValue("default_discount", val)}
                         />
                     </div>
                 </div>

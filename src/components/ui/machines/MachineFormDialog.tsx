@@ -14,6 +14,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import {
     Select,
     SelectContent,
@@ -296,11 +297,11 @@ export function MachineFormDialog({
                                                     control={form.control}
                                                     name={`flags.${index}.tax_rate`}
                                                     render={({ field }) => (
-                                                        <Input
-                                                            type="number"
-                                                            step="0.01"
+                                                        <MoneyInput
                                                             className="h-8"
-                                                            {...field}
+                                                            placeholder="0,00"
+                                                            value={field.value || ''}
+                                                            onChange={(val) => field.onChange(parseFloat(val) || 0)}
                                                         />
                                                     )}
                                                 />

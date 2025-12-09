@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PaymentEntry } from "./PartialPaymentBuilder";
@@ -68,11 +69,9 @@ export function EditablePaymentBreakdown({
             {/* Total Amount Field */}
             <div className="space-y-2">
                 <Label>Valor Bruto Total (R$)</Label>
-                <Input
-                    type="number"
-                    step="0.01"
+                <MoneyInput
                     value={totalAmount}
-                    onChange={(e) => handleTotalChange(parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleTotalChange(parseFloat(val) || 0)}
                     disabled={disabled}
                     className={!isBalanced ? "border-orange-500" : ""}
                 />
@@ -103,13 +102,11 @@ export function EditablePaymentBreakdown({
                                         </div>
                                     )}
                                 </div>
-                                <Input
-                                    type="number"
-                                    step="0.01"
+                                <MoneyInput
                                     value={entry.amount}
-                                    onChange={(e) => handleAmountChange(entry.id, parseFloat(e.target.value) || 0)}
+                                    onChange={(val) => handleAmountChange(entry.id, parseFloat(val) || 0)}
                                     disabled={disabled}
-                                    className="w-32 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-32 text-right"
                                 />
                                 <Button
                                     type="button"
