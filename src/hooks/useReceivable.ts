@@ -309,9 +309,18 @@ export function useReceivable() {
         ));
     };
 
+    // Filter accounts by status on client side
+    const filteredAccounts = useMemo(() => {
+        if (statusFilter === "all") return accounts;
+        return accounts.filter((account) => {
+            const accountStatus = getAccountStatus(account);
+            return accountStatus === statusFilter;
+        });
+    }, [accounts, statusFilter]);
+
     return {
         loading,
-        accounts, // Server side filtered
+        accounts: filteredAccounts, // Client-side filtered by status
         clients,
         searchTerm,
         setSearchTerm,

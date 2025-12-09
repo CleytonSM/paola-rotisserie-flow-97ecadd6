@@ -213,9 +213,15 @@ export function usePayable() {
         }
     };
 
+    // Filter accounts by status on client side
+    const filteredAccounts = useMemo(() => {
+        if (statusFilter === "all") return accounts;
+        return accounts.filter((account) => account.status === statusFilter);
+    }, [accounts, statusFilter]);
+
     return {
         loading,
-        accounts, // Server side filtered
+        accounts: filteredAccounts, // Client-side filtered by status
         suppliers,
         searchTerm,
         setSearchTerm,
