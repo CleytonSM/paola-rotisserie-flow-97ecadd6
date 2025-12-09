@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format";
 import { useNavigate } from "react-router-dom";
@@ -13,14 +13,29 @@ import {
 interface PDVFooterProps {
     total: number;
     hasItems: boolean;
+    onToggleProducts?: () => void;
 }
 
-export function PDVFooter({ total, hasItems }: PDVFooterProps) {
+export function PDVFooter({ total, hasItems, onToggleProducts }: PDVFooterProps) {
     const navigate = useNavigate();
     const isMobile = useIsMobile();
 
     return (
-        <div className="m-4 mt-0 bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-sidebar-border z-20">
+        <div className="m-4 mt-0 bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-sidebar-border z-20 relative">
+            {/* Mobile: Centered Products Toggle Button at Top */}
+            {isMobile && onToggleProducts && (
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2">
+                    <Button
+                        size="sm"
+                        className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg rounded-full"
+                        onClick={onToggleProducts}
+                    >
+                        <ShoppingBag className="h-4 w-4 mr-2" />
+                        Produtos
+                    </Button>
+                </div>
+            )}
+
             <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1">Subtotal</p>

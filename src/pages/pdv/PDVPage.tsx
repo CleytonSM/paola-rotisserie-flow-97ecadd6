@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ProductSidebarRight } from "@/components/pdv/ProductSidebarRight";
 import { usePDV } from "@/hooks/usePDV";
 import { PDVHeader } from "@/components/pdv/PDVHeader";
@@ -32,6 +33,9 @@ export default function PDVPage() {
         handleScannedProduct,
     } = usePDV();
 
+    // State for controlling product sidebar from footer
+    const [productSidebarOpen, setProductSidebarOpen] = useState(false);
+
     return (
         <div className="flex h-[calc(100vh-4rem)] md:h-screen bg-background overflow-hidden flex-col md:flex-row">
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
@@ -54,10 +58,18 @@ export default function PDVPage() {
 
                 <PDVCart items={items} onAddInternalItem={handleAddInternalItem} />
 
-                <PDVFooter total={total()} hasItems={items.length > 0} />
+                <PDVFooter
+                    total={total()}
+                    hasItems={items.length > 0}
+                    onToggleProducts={() => setProductSidebarOpen(prev => !prev)}
+                />
             </div>
 
-            <ProductSidebarRight onProductSelect={handleProductSelect} />
+            <ProductSidebarRight
+                onProductSelect={handleProductSelect}
+                externalOpen={productSidebarOpen}
+                onOpenChange={setProductSidebarOpen}
+            />
 
             <ScannerDialog open={isScannerOpen} onOpenChange={setIsScannerOpen} />
 

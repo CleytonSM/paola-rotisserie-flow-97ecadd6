@@ -12,9 +12,11 @@ import { motion } from "framer-motion";
 
 interface ProductSidebarRightProps {
     onProductSelect: (product: ProductCatalog) => void;
+    onOpenChange?: (open: boolean) => void;
+    externalOpen?: boolean;
 }
 
-export function ProductSidebarRight({ onProductSelect }: ProductSidebarRightProps) {
+export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpen }: ProductSidebarRightProps) {
     const isMobile = useIsMobile();
     const [isOpen, setIsOpen] = useState(!isMobile);
     const [products, setProducts] = useState<ProductCatalog[]>([]);
@@ -34,6 +36,13 @@ export function ProductSidebarRight({ onProductSelect }: ProductSidebarRightProp
             setIsOpen(true);
         }
     }, [isMobile]);
+
+    // Sync with external open state (from footer button)
+    useEffect(() => {
+        if (externalOpen !== undefined) {
+            setIsOpen(externalOpen);
+        }
+    }, [externalOpen]);
 
     const loadProducts = async () => {
         const { data } = await getProductCatalog();
@@ -70,20 +79,17 @@ export function ProductSidebarRight({ onProductSelect }: ProductSidebarRightProp
                     ? "fixed bottom-0 right-0 h-[80vh] w-full pointer-events-none" // Mobile: Bottom sheet-ish or full overlay
                     : "relative h-[calc(100%-2rem)] my-4 mr-4" // Desktop: Sidebar
             )}>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                        "absolute z-50 h-8 w-8 rounded-full shadow-sm bg-white border border-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-50 pointer-events-auto",
-                        isMobile ? "-top-10 right-4" : "-left-4"
-                    )}
-                    onClick={() => setIsOpen(!isOpen)}
-                >
-                    {isOpen
-                        ? (isMobile ? <ChevronRight className="h-4 w-4 rotate-90" /> : <ChevronRight className="h-4 w-4" />)
-                        : (isMobile ? <ChevronLeft className="h-4 w-4 rotate-90" /> : <ChevronLeft className="h-4 w-4" />)
-                    }
-                </Button>
+                {/* Desktop only toggle button - mobile uses footer button */}
+                {!isMobile && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute z-50 -left-4 h-8 w-8 rounded-full shadow-lg pointer-events-auto bg-white border border-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        {isOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    </Button>
+                )}
 
                 <motion.div
                     initial={{ width: isMobile ? "100%" : 280, height: isMobile ? 0 : "100%" }}

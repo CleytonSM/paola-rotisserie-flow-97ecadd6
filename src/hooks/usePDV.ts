@@ -176,6 +176,7 @@ export function usePDV() {
                     
                     if (!isNaN(scannedBarcode)) {
                         const itemResult = await getProductItemByBarcode(scannedBarcode);
+                        console.log("[Scanner] ✅ Found product item:", itemResult);
                         
                         if (itemResult.data) {
                             const item = itemResult.data;

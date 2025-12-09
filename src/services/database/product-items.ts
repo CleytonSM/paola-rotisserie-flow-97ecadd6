@@ -104,6 +104,7 @@ export const getProductItemByBarcode = async (
       `)
             .eq('scale_barcode', barcode)
             .eq('status', 'available')
+            .limit(1)
             .maybeSingle();
 
         if (error) throw error;
