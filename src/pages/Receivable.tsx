@@ -31,7 +31,15 @@ export default function Receivable() {
     page,
     setPage,
     pageSize,
-    totalCount
+    totalCount,
+    isPartialPayment,
+    setIsPartialPayment,
+    paymentEntries,
+    addPaymentEntry,
+    removePaymentEntry,
+    updatePaymentEntry,
+    getTotalAllocated,
+    getRemainingBalance
   } = useReceivable();
 
   return (
@@ -47,6 +55,14 @@ export default function Receivable() {
             clients={clients}
             editingId={editingId}
             onSubmit={onSubmit}
+            isPartialPayment={isPartialPayment}
+            setIsPartialPayment={setIsPartialPayment}
+            paymentEntries={paymentEntries}
+            addPaymentEntry={addPaymentEntry}
+            removePaymentEntry={removePaymentEntry}
+            updatePaymentEntry={updatePaymentEntry}
+            getTotalAllocated={getTotalAllocated}
+            getRemainingBalance={getRemainingBalance}
           />
         }
         children={<AppBreadcrumb />}

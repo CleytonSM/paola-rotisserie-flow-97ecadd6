@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CardMachine } from "@/services/database/machines";
 import { completeSale, SaleItem, SalePayment } from "@/services/database/sales";
+import type { PaymentEntry } from "@/components/ui/partial-payment/PartialPaymentBuilder";
 
 export function usePayment() {
     const navigate = useNavigate();
@@ -28,6 +29,10 @@ export function usePayment() {
 
     // Client State
     const [selectedClient, setSelectedClient] = useState<any | null>(null);
+
+    // Partial Payment State
+    const [isPartialPayment, setIsPartialPayment] = useState(false);
+    const [paymentEntries, setPaymentEntries] = useState<PaymentEntry[]>([]);
 
     useEffect(() => {
         if (items.length === 0) {
@@ -56,7 +61,6 @@ export function usePayment() {
             const machine = machines.find(m => m.id === selectedMachine);
             const flag = machine?.flags?.find(f => f.id === selectedFlag);
             if (flag) {
-                // Add fee percentage
                 currentTotal = currentTotal * (1 + flag.tax_rate / 100);
             }
         }
@@ -69,8 +73,39 @@ export function usePayment() {
         return Math.max(0, given - totalAmount);
     };
 
+    const getTotalAllocated = () => {
+        return paymentEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    };
+
+    const getRemainingBalance = () => {
+        return calculateTotalWithFees() - getTotalAllocated();
+    };
+
+    const addPaymentEntry = (entry: PaymentEntry) => {
+        setPaymentEntries([...paymentEntries, entry]);
+    };
+
+    const removePaymentEntry = (id: string) => {
+        setPaymentEntries(paymentEntries.filter(entry => entry.id !== id));
+    };
+
     const handleConfirm = async () => {
-        if (!selectedMethod) return;
+        // For partial payments, validate entries
+        if (isPartialPayment) {
+            if (paymentEntries.length === 0) {
+                toast.error("Adicione pelo menos um método de pagamento");
+                return;
+            }
+            
+            const remaining = getRemainingBalance();
+            if (Math.abs(remaining) > 0.01) {
+                toast.error("O valor alocado deve ser igual ao total da venda");
+                return;
+            }
+        } else {
+            // Single payment mode - validate as before
+            if (!selectedMethod) return;
+        }
 
         setIsProcessing(true);
         try {
@@ -79,26 +114,20 @@ export function usePayment() {
 
             // Prepare Items
             const saleItems: SaleItem[] = items.flatMap(item => {
-                // If it's a grouped internal item, we should split it into individual sales items 
-                // IF we want to track them individually (e.g. for statistics). 
-                // However, the cart item structure for internal items groups them.
-                // Our schema allows "snapshot" names.
-                
                 if (item.subItems && item.subItems.length > 0) {
                    return item.subItems.map(sub => ({
-                       product_catalog_id: item.id, // The group ID is the catalog ID
-                       product_item_id: sub.id, // Specific item ID
-                       name: `${item.name} (${sub.weight}kg)`, // Descriptive name
-                       unit_price: sub.price, // Price of this specific item
+                       product_catalog_id: item.id,
+                       product_item_id: sub.id,
+                       name: `${item.name} (${sub.weight}kg)`,
+                       unit_price: sub.price,
                        quantity: 1,
                        total_price: sub.price
                    }));
                 }
 
-                // Standard item or simple internal item
                 return [{
                     product_catalog_id: item.id,
-                    product_item_id: null, // Standard items might not have specific item IDs unless tracked. Assuming null for generic stock.
+                    product_item_id: null,
                     name: item.name,
                     unit_price: item.base_price,
                     quantity: item.quantity,
@@ -107,59 +136,79 @@ export function usePayment() {
             });
 
             // Prepare Payments
-            // Currently supporting single payment method per sale, but structure allows multiple.
-            const payment: SalePayment = {
-                amount: totalAmount, // For now, 100% of amount
-                payment_method: selectedMethod as SalePayment['payment_method'],
-                installments: 1
-            };
+            let payments: SalePayment[];
 
-            if (selectedMethod === 'pix') {
-                payment.pix_key_id = selectedPixKey;
-            } else if (selectedMethod === 'card_credit' || selectedMethod === 'card_debit') {
-                payment.machine_id = selectedMachine;
-                payment.card_flag = machines.find(m => m.id === selectedMachine)?.flags?.find(f => f.id === selectedFlag)?.brand;
+            if (isPartialPayment) {
+                // Convert payment entries to SalePayment format
+                payments = paymentEntries.map(entry => {
+                    const payment: SalePayment = {
+                        amount: entry.amount,
+                        payment_method: entry.method as SalePayment['payment_method'],
+                        installments: 1
+                    };
+
+                    if (entry.method === 'pix' && entry.details?.pixKeyId) {
+                        payment.pix_key_id = entry.details.pixKeyId;
+                    } else if ((entry.method === 'card_credit' || entry.method === 'card_debit') && entry.details?.machineId) {
+                        payment.machine_id = entry.details.machineId;
+                        payment.card_flag = entry.details.cardBrand;
+                    }
+
+                    return payment;
+                });
+            } else {
+                // Single payment mode
+                const payment: SalePayment = {
+                    amount: totalAmount,
+                    payment_method: selectedMethod as SalePayment['payment_method'],
+                    installments: 1
+                };
+
+                if (selectedMethod === 'pix') {
+                    payment.pix_key_id = selectedPixKey;
+                } else if (selectedMethod === 'card_credit' || selectedMethod === 'card_debit') {
+                    payment.machine_id = selectedMachine;
+                    payment.card_flag = machines.find(m => m.id === selectedMachine)?.flags?.find(f => f.id === selectedFlag)?.brand;
+                }
+
+                payments = [payment];
             }
 
             // Call Service
             const { data, error } = await completeSale({
                 sale: {
                     total_amount: totalAmount,
-                    client_id: selectedClient?.id,
-                    notes: notes,
+                    client_id: selectedClient?.id || null,
+                    notes: notes || null,
                     change_amount: changeAmount
                 },
                 items: saleItems,
-                payments: [payment]
+                payments: payments
             });
 
             if (error) throw error;
 
-            console.log('Complete Sale Data:', data);
+            // Calculate pixAmount and pixKey for SuccessPage (partial or single)
+            const pixEntry = isPartialPayment ? paymentEntries.find(e => e.method === 'pix') : null;
+            const pixPaymentAmount = pixEntry ? pixEntry.amount : (selectedMethod === 'pix' ? totalAmount : null);
+            const pixKeyObject = pixEntry?.details?.pixKeyId 
+                ? pixKeys.find(k => k.id === pixEntry.details.pixKeyId)
+                : (selectedMethod === 'pix' ? pixKeys.find(k => k.id === selectedPixKey) : null);
 
-            if (data?.sale_id) {
-                // Pass necessary data for Success Page (especially for Pix re-display)
-                navigate("/pdv/success", { 
-                    state: { 
-                        saleId: data.sale_id,
-                        displayId: data.display_id, 
-                        total: totalAmount, 
-                        subtotal: total(),
-                        method: selectedMethod,
-                        clientName: selectedClient?.name,
-                        items: items, // Pass items for receipt printing
-                        change: changeAmount, // Pass change amount for receipt
-                        
-                        // Pass Pix Data for modal re-opening
-                        pixKey: selectedMethod === 'pix' ? pixKeys.find(k => k.id === selectedPixKey) : null,
-                        pixAmount: totalAmount
-                    } 
-                });
-                // We do NOT clear cart here immediately if we want to allow "back"? 
-                // No, standard flow is to clear. Success page has "New Sale" button.
-                // We'll clear it here to ensure state consistency.
-                // clearCart(); // Moved to SuccessPage to prevent race condition
-            }
+            navigate('/pdv/success', {
+                state: {
+                    saleId: data?.sale_id,
+                    displayId: data?.display_id,
+                    total: totalAmount,
+                    subtotal: total(),
+                    method: isPartialPayment ? 'multiple' : selectedMethod,
+                    clientName: selectedClient?.name,
+                    items: items,
+                    change: changeAmount,
+                    pixKey: pixKeyObject,
+                    pixAmount: pixPaymentAmount
+                }
+            });
 
         } catch (error) {
             console.error(error);
@@ -193,6 +242,14 @@ export function usePayment() {
         calculateChange,
         handleConfirm,
         selectedClient,
-        setSelectedClient
+        setSelectedClient,
+        // Partial payment exports
+        isPartialPayment,
+        setIsPartialPayment,
+        paymentEntries,
+        addPaymentEntry,
+        removePaymentEntry,
+        getTotalAllocated,
+        getRemainingBalance
     };
 }

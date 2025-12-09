@@ -13,11 +13,13 @@ import {
     deleteAccountReceivable,
     updateAccountReceivableStatus,
     getClients,
+    getReceivablePayments,
 } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { receivableSchema, type ReceivableSchema } from "@/schemas/receivable.schema";
 import { getAccountStatus } from "@/components/ui/receivable/utils";
 import { PAGE_SIZE } from "@/config/constants";
+import type { PaymentEntry } from "@/components/ui/partial-payment/PartialPaymentBuilder";
 
 export function useReceivable() {
     const navigate = useNavigate();
@@ -51,6 +53,10 @@ export function useReceivable() {
             entry_date: new Date(),
         },
     });
+
+    // Partial Payment State
+    const [isPartialPayment, setIsPartialPayment] = useState(false);
+    const [paymentEntries, setPaymentEntries] = useState<PaymentEntry[]>([]);
 
     // --- Data Loading ---
 
@@ -112,24 +118,84 @@ export function useReceivable() {
 
     const onSubmit = async (data: ReceivableSchema) => {
         try {
+            // Validate partial payment if enabled
+            if (isPartialPayment && !editingId) {
+                if (paymentEntries.length === 0) {
+                    toast.error("Adicione pelo menos um método de pagamento");
+                    return false;
+                }
+                
+                const totalAllocated = paymentEntries.reduce((sum, entry) => sum + entry.amount, 0);
+                if (Math.abs(totalAllocated - data.gross_value) > 0.01) {
+                    toast.error("O valor alocado deve ser igual ao valor bruto");
+                    return false;
+                }
+            }
+
             const dataToSubmit = {
                 ...data,
+                client_id: data.client_id || null, // Convert empty string to null
                 entry_date: data.entry_date ? formatDateToYYYYMMDD(data.entry_date) : "",
             };
 
-            const { error } = editingId
-                ? await updateAccountReceivable(editingId, dataToSubmit)
-                : await createAccountReceivable(dataToSubmit);
+            if (editingId) {
+                // Edit mode
+                if (isPartialPayment && paymentEntries.length > 0) {
+                    // Update with payment breakdown
+                    const payments = paymentEntries.map(entry => ({
+                        amount: entry.amount,
+                        payment_method: entry.method,
+                        card_brand: entry.details?.cardBrand,
+                        pix_key_id: entry.details?.pixKeyId,
+                        tax_rate: 0
+                    }));
 
-            if (error) {
-                toast.error(editingId ? "Erro ao atualizar entrada" : "Erro ao criar entrada");
-                return false;
+                    const { error } = await updateAccountReceivable(editingId, dataToSubmit, payments);
+                    if (error) {
+                        toast.error("Erro ao atualizar entrada");
+                        return false;
+                    }
+                } else {
+                    // Regular update without payment changes
+                    const { error } = await updateAccountReceivable(editingId, dataToSubmit);
+                    if (error) {
+                        toast.error("Erro ao atualizar entrada");
+                        return false;
+                    }
+                }
+            } else {
+                // Create mode
+                if (isPartialPayment) {
+                    // Convert payment entries to ReceivablePayment format
+                    const payments = paymentEntries.map(entry => ({
+                        amount: entry.amount,
+                        payment_method: entry.method,
+                        card_brand: entry.details?.cardBrand,
+                        pix_key_id: entry.details?.pixKeyId,
+                        tax_rate: 0 // You can calculate based on card brand if needed
+                    }));
+
+                    const { error } = await createAccountReceivable(dataToSubmit, payments);
+                    if (error) {
+                        toast.error("Erro ao criar entrada");
+                        return false;
+                    }
+                } else {
+                    // Single payment mode
+                    const { error } = await createAccountReceivable(dataToSubmit);
+                    if (error) {
+                        toast.error("Erro ao criar entrada");
+                        return false;
+                    }
+                }
             }
 
             toast.success(editingId ? "Entrada atualizada com sucesso!" : "Entrada criada com sucesso!");
             setDialogOpen(false);
             setEditingId(null);
             form.reset();
+            setPaymentEntries([]);
+            setIsPartialPayment(false);
             loadData();
             return true;
         } catch (err) {
@@ -138,7 +204,7 @@ export function useReceivable() {
         }
     };
 
-    const handleEdit = (account: AccountReceivable) => {
+    const handleEdit = async (account: AccountReceivable) => {
         setEditingId(account.id);
         form.reset({
             client_id: account.client_id || "",
@@ -148,6 +214,27 @@ export function useReceivable() {
             tax_rate: account.tax_rate || 0,
             entry_date: account.entry_date ? new Date(account.entry_date) : new Date(),
         });
+
+        // Load existing payments if any
+        const { data: payments, error } = await getReceivablePayments(account.id);
+        if (!error && payments && payments.length > 0) {
+            // Convert to PaymentEntry format for display
+            const entries: PaymentEntry[] = payments.map((payment: any, index) => ({
+                id: `existing-${index}`,
+                method: payment.payment_method,
+                amount: payment.amount,
+                details: (payment.card_brand || payment.pix_key_id) ? {
+                    cardBrand: payment.card_brand,
+                    pixKeyId: payment.pix_key_id
+                } : undefined
+            }));
+            setPaymentEntries(entries);
+            setIsPartialPayment(true); // Mark as partial payment for display
+        } else {
+            setPaymentEntries([]);
+            setIsPartialPayment(false);
+        }
+
         setDialogOpen(true);
     };
 
@@ -189,7 +276,33 @@ export function useReceivable() {
         if (!open) {
             setEditingId(null);
             form.reset();
+            // Reset partial payment state
+            setPaymentEntries([]);
+            setIsPartialPayment(false);
         }
+    };
+
+    const getTotalAllocated = () => {
+        return paymentEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    };
+
+    const getRemainingBalance = () => {
+        const grossValue = form.watch("gross_value") || 0;
+        return grossValue - getTotalAllocated();
+    };
+
+    const addPaymentEntry = (entry: PaymentEntry) => {
+        setPaymentEntries([...paymentEntries, entry]);
+    };
+
+    const removePaymentEntry = (id: string) => {
+        setPaymentEntries(paymentEntries.filter(entry => entry.id !== id));
+    };
+
+    const updatePaymentEntry = (id: string, amount: number) => {
+        setPaymentEntries(paymentEntries.map(entry => 
+            entry.id === id ? { ...entry, amount } : entry
+        ));
     };
 
     return {
@@ -217,6 +330,15 @@ export function useReceivable() {
         page,
         setPage,
         pageSize,
-        totalCount
+        totalCount,
+        // Partial payment exports
+        isPartialPayment,
+        setIsPartialPayment,
+        paymentEntries,
+        addPaymentEntry,
+        removePaymentEntry,
+        updatePaymentEntry,
+        getTotalAllocated,
+        getRemainingBalance
     };
 }

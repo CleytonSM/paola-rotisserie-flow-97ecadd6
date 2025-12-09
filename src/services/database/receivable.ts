@@ -5,6 +5,26 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
 
+export interface ReceivablePayment {
+  amount: number;
+  payment_method: string;
+  card_brand?: string;
+  tax_rate?: number;
+  pix_key_id?: string;
+}
+
+export const getReceivablePayments = async (
+  receivableId: string
+): Promise<DatabaseResult<ReceivablePayment[]>> => {
+  const { data, error } = await supabase
+    .from('receivable_payments')
+    .select('*')
+    .eq('receivable_id', receivableId)
+    .order('created_at', { ascending: true });
+
+  return { data: data as ReceivablePayment[] | null, error };
+};
+
 export const getAccountsReceivable = async (
   page: number = 1,
   pageSize: number = 100
@@ -19,6 +39,7 @@ export const getAccountsReceivable = async (
       client:clients(id, name, cpf_cnpj)
     `, { count: 'exact' })
     .order('entry_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .range(from, to);
 
   return { data, error, count };
@@ -59,33 +80,105 @@ export const getAccountsReceivableByDateRange = async (
 
   const { data, error, count } = await query
     .order('entry_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .range(from, to);
 
   return { data, error, count };
 };
 
-export const createAccountReceivable = async (account: any): Promise<DatabaseResult<any>> => {
-  const { data, error } = await supabase
-    .from('accounts_receivable')
-    .insert(account)
-    .select()
-    .single();
+export const createAccountReceivable = async (
+  account: any,
+  payments?: ReceivablePayment[]
+): Promise<DatabaseResult<any>> => {
+  try {
+    // If payments array is provided, use partial payment logic
+    if (payments && payments.length > 0) {
+      // Start a transaction by creating the receivable first
+      const { data: receivable, error: receivableError } = await supabase
+        .from('accounts_receivable')
+        .insert(account)
+        .select()
+        .single();
 
-  return { data, error };
+      if (receivableError) throw receivableError;
+
+      // Insert all payment records
+      const paymentRecords = payments.map(payment => ({
+        receivable_id: receivable.id,
+        ...payment
+      }));
+
+      const { error: paymentsError } = await supabase
+        .from('receivable_payments')
+        .insert(paymentRecords);
+
+      if (paymentsError) {
+        // Rollback: delete the receivable if payments fail
+        await supabase.from('accounts_receivable').delete().eq('id', receivable.id);
+        throw paymentsError;
+      }
+
+      return { data: receivable, error: null };
+    } else {
+      // Legacy single payment mode
+      const { data, error } = await supabase
+        .from('accounts_receivable')
+        .insert(account)
+        .select()
+        .single();
+
+      return { data, error };
+    }
+  } catch (error: any) {
+    console.error('Error creating receivable:', error);
+    return { data: null, error };
+  }
 };
 
 export const updateAccountReceivable = async (
   id: string,
-  account: any
+  account: any,
+  payments?: ReceivablePayment[]
 ): Promise<DatabaseResult<any>> => {
-  const { data, error } = await supabase
-    .from('accounts_receivable')
-    .update(account)
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    // Update the receivable record
+    const { data, error } = await supabase
+      .from('accounts_receivable')
+      .update(account)
+      .eq('id', id)
+      .select()
+      .single();
 
-  return { data, error };
+    if (error) throw error;
+
+    // If payments array is provided, update receivable_payments
+    if (payments && payments.length > 0) {
+      // Delete existing payment records
+      const { error: deleteError } = await supabase
+        .from('receivable_payments')
+        .delete()
+        .eq('receivable_id', id);
+
+      if (deleteError) throw deleteError;
+
+      // Insert updated payment records
+      const paymentRecords = payments.map(payment => ({
+        receivable_id: id,
+        ...payment
+      }));
+
+      const { error: paymentsError } = await supabase
+        .from('receivable_payments')
+        .insert(paymentRecords);
+
+      if (paymentsError) throw paymentsError;
+    }
+
+    return { data, error: null };
+  } catch (error: any) {
+    console.error('Error updating receivable:', error);
+    return { data: null, error };
+  }
 };
 
 export const deleteAccountReceivable = async (id: string): Promise<DatabaseResult<any>> => {
@@ -156,7 +249,8 @@ export const getReceivablesForReports = async (
     .not('entry_date', 'is', null)
     .gte('entry_date', fromDateStr)  // >= fromDate 00:00:00
     .lt('entry_date', nextDayStr)     // < nextDay 00:00:00 (includes all of toDate)
-    .order('entry_date', { ascending: false });
+    .order('entry_date', { ascending: false })
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('[getReceivablesForReports] Query error:', error);

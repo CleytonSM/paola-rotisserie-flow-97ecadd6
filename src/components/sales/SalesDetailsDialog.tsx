@@ -6,8 +6,14 @@ import {
 } from "@/components/ui/dialog";
 import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
-import { Receipt, Calendar, User, Wallet } from "lucide-react";
+import { Receipt, Calendar, User, Wallet, QrCode } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { QRCodeModal } from "@/components/pdv/QRCodeModal";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getPixKeys } from "@/services/database";
 
 interface SalesDetailsDialogProps {
     open: boolean;
@@ -20,7 +26,48 @@ export function SalesDetailsDialog({
     onOpenChange,
     sale
 }: SalesDetailsDialogProps) {
+    const [showPixModal, setShowPixModal] = useState(false);
+
+    // Fetch pix keys for QR code display
+    const { data: pixKeys } = useQuery({
+        queryKey: ["pixKeys", "active"],
+        queryFn: async () => {
+            const { data, error } = await getPixKeys({ activeOnly: true });
+            if (error) throw error;
+            return data;
+        },
+        enabled: open,
+    });
+
+    // Reset state when dialog closes
+    useEffect(() => {
+        if (!open) {
+            setShowPixModal(false);
+        }
+    }, [open]);
+
     if (!sale) return null;
+
+    const hasMultiplePayments = sale.sale_payments && sale.sale_payments.length > 1;
+
+    // Check if there's a PIX payment
+    const pixPayment = sale.sale_payments?.find((p: any) => p.payment_method === 'pix');
+    const hasPixPayment = !!pixPayment;
+    const pixKey = pixPayment?.pix_key_id
+        ? pixKeys?.find((k: any) => k.id === pixPayment.pix_key_id)
+        : pixKeys?.[0];
+
+    const getPaymentMethodLabel = (method: string) => {
+        const methods: Record<string, string> = {
+            "credit_card": "Crédito",
+            "card_credit": "Crédito",
+            "debit_card": "Débito",
+            "card_debit": "Débito",
+            "pix": "Pix",
+            "cash": "Dinheiro"
+        };
+        return methods[method] || method;
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,24 +96,51 @@ export function SalesDetailsDialog({
                         </div>
                     </div>
 
-                    <div className="space-y-1 col-span-2">
-                        <span className="text-xs font-medium text-muted-foreground uppercase">Pagamento</span>
-                        <div className="flex items-center gap-2 text-sm font-medium capitalize">
-                            <Wallet className="h-4 w-4 text-muted-foreground" />
-                            {sale.sale_payments?.map((p: any) => {
-                                const methods: Record<string, string> = {
-                                    "credit_card": "Crédito",
-                                    "card_credit": "Crédito",
-                                    "debit_card": "Débito",
-                                    "card_debit": "Débito",
-                                    "pix": "Pix",
-                                    "cash": "Dinheiro"
-                                };
-                                return methods[p.payment_method] || p.payment_method;
-                            }).join(", ") || "-"}
+                    {!hasMultiplePayments && (
+                        <div className="space-y-1 col-span-2">
+                            <span className="text-xs font-medium text-muted-foreground uppercase">Pagamento</span>
+                            <div className="flex items-center gap-2 text-sm font-medium capitalize">
+                                <Wallet className="h-4 w-4 text-muted-foreground" />
+                                {sale.sale_payments?.map((p: any) => getPaymentMethodLabel(p.payment_method)).join(", ") || "-"}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
+
+                {/* Payment Breakdown for Multiple Payments */}
+                {hasMultiplePayments && (
+                    <>
+                        <Separator />
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium flex items-center gap-2">
+                                <Wallet className="h-4 w-4" />
+                                Divisão de Pagamento
+                            </Label>
+                            <div className="border rounded-lg p-3 bg-muted/20 space-y-2">
+                                {sale.sale_payments.map((payment: any, index: number) => (
+                                    <div
+                                        key={payment.id || index}
+                                        className="flex items-center justify-between bg-white border rounded-lg p-2"
+                                    >
+                                        <div className="flex-1">
+                                            <div className="font-medium text-sm">
+                                                {getPaymentMethodLabel(payment.payment_method)}
+                                            </div>
+                                            {payment.card_flag && (
+                                                <div className="text-xs text-muted-foreground">
+                                                    {payment.card_flag}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="font-medium text-sm">
+                                            {formatCurrency(payment.amount)}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 <Separator />
 
@@ -103,7 +177,32 @@ export function SalesDetailsDialog({
                         <span className="text-emerald-600">{formatCurrency(sale.total_amount)}</span>
                     </div>
                 </div>
+
+                {/* Pix QR Code Button */}
+                {hasPixPayment && pixKey && (
+                    <div className="pt-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                            onClick={() => setShowPixModal(true)}
+                        >
+                            <QrCode className="mr-2 h-4 w-4" />
+                            Ver QR Code Pix {hasMultiplePayments ? `(${formatCurrency(pixPayment.amount)})` : ''}
+                        </Button>
+                    </div>
+                )}
             </DialogContent>
+
+            {/* QR Code Modal */}
+            {hasPixPayment && pixKey && (
+                <QRCodeModal
+                    open={showPixModal}
+                    onOpenChange={setShowPixModal}
+                    pixKey={pixKey.key_value || ""}
+                    amount={pixPayment.amount}
+                />
+            )}
         </Dialog>
     );
 }

@@ -83,6 +83,9 @@ export function MachineFormDialog({
         if (open) {
             form.reset(defaultValues);
             setPreviewUrl(machine?.image_url || null);
+        } else {
+            // Reset state when dialog closes
+            setPreviewUrl(null);
         }
     }, [open, machine, form]);
 

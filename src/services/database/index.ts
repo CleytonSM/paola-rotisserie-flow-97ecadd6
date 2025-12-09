@@ -44,7 +44,9 @@ export {
     updateAccountReceivable,
     updateAccountReceivableStatus,
     deleteAccountReceivable,
+    getReceivablePayments,
 } from "./receivable";
+export type { ReceivablePayment } from "./receivable";
 
 // Analytics
 export {

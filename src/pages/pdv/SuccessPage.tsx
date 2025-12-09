@@ -14,6 +14,13 @@ export default function SuccessPage() {
     const location = useLocation();
     const { saleId, displayId: numericId, total, subtotal, method, pixKey, pixAmount, orderId, clientName, items, change } = location.state || {}; // Support both new saleId and legacy orderId
 
+    // Debug logs
+    console.log('SuccessPage - location.state:', location.state);
+    console.log('SuccessPage - method:', method);
+    console.log('SuccessPage - pixKey:', pixKey);
+    console.log('SuccessPage - pixAmount:', pixAmount);
+    console.log('SuccessPage - should show QR button:', pixKey && (method === 'pix' || method === 'multiple'));
+
     const finalDisplayId = numericId ? `#${numericId}` : (saleId || orderId)?.slice(0, 8);
     const [showPixModal, setShowPixModal] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
@@ -45,7 +52,8 @@ export default function SuccessPage() {
                 paymentMethod: method === 'card_credit' ? 'Crédito' :
                     method === 'card_debit' ? 'Débito' :
                         method === 'pix' ? 'Pix' :
-                            method === 'cash' || method === 'money' ? 'Dinheiro' : method,
+                            method === 'cash' || method === 'money' ? 'Dinheiro' :
+                                method === 'multiple' ? 'Múltiplos Métodos' : method,
                 change: change,
             });
         } catch (error) {
@@ -107,7 +115,8 @@ export default function SuccessPage() {
                             {method === 'card_credit' ? 'Crédito' :
                                 method === 'card_debit' ? 'Débito' :
                                     method === 'pix' ? 'Pix' :
-                                        method === 'cash' || method === 'money' ? 'Dinheiro' : method}
+                                        method === 'cash' || method === 'money' ? 'Dinheiro' :
+                                            method === 'multiple' ? 'Múltiplos Métodos' : method}
                         </span>
                     </div>
 
@@ -118,15 +127,15 @@ export default function SuccessPage() {
                 </div>
 
                 <div className="space-y-3">
-                    {/* Show Pix Button only if Pix Key data is present */}
-                    {method === 'pix' && pixKey && (
+                    {/* Show Pix Button if Pix Key data is present (single or multiple) */}
+                    {pixKey && (method === 'pix' || method === 'multiple') && (
                         <Button
                             variant="outline"
                             className="w-full h-12 border-primary-200 text-primary-700 hover:bg-primary-50"
                             onClick={() => setShowPixModal(true)}
                         >
                             <QrCode className="mr-2 h-4 w-4" />
-                            Ver QR Code Novamente
+                            Ver QR Code {method === 'multiple' ? 'Pix' : 'Novamente'}
                         </Button>
                     )}
 
