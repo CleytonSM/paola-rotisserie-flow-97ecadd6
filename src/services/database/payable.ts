@@ -14,19 +14,48 @@ const formatDateToYYYYMMDD = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
+export interface PayableFilters {
+  statusFilter?: 'all' | 'pending' | 'paid' | 'overdue';
+  searchTerm?: string;
+}
+
 export const getAccountsPayable = async (
   page: number = 1,
-  pageSize: number = 100
+  pageSize: number = 100,
+  filters?: PayableFilters
 ): Promise<DatabaseResult<any[]>> => {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('accounts_payable')
     .select(`
       *,
       supplier:suppliers(id, name)
-    `, { count: 'exact' })
+    `, { count: 'exact' });
+
+  // Apply status filter
+  if (filters?.statusFilter && filters.statusFilter !== 'all') {
+    if (filters.statusFilter === 'overdue') {
+      // Overdue: due_date < today AND status != 'paid'
+      const todayStr = formatDateToYYYYMMDD(new Date());
+      query = query
+        .lt('due_date', todayStr)
+        .neq('status', 'paid');
+    } else {
+      query = query.eq('status', filters.statusFilter);
+    }
+  }
+
+  // Apply search filter (search by supplier name)
+  if (filters?.searchTerm && filters.searchTerm.trim()) {
+    const sanitized = filters.searchTerm
+      .slice(0, 100)
+      .replace(/[%_]/g, '\\$&');
+    query = query.ilike('supplier.name', `%${sanitized}%`);
+  }
+
+  const { data, error, count } = await query
     .order('payment_date', { ascending: false })
     .range(from, to);
   return { data, error, count };
@@ -35,7 +64,8 @@ export const getAccountsPayable = async (
 export const getAccountsPayableByDateRange = async (
   dateRange: { from: Date; to?: Date },
   page: number = 1,
-  pageSize: number = 100
+  pageSize: number = 100,
+  filters?: PayableFilters
 ): Promise<DatabaseResult<any[]>> => {
   // Format as YYYY-MM-DD to avoid timezone issues
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
@@ -60,6 +90,26 @@ export const getAccountsPayableByDateRange = async (
     nextDay.setDate(nextDay.getDate() + 1);
     const nextDayStr = formatDateToYYYYMMDD(nextDay);
     query = query.lt('payment_date', nextDayStr);
+  }
+
+  // Apply status filter
+  if (filters?.statusFilter && filters.statusFilter !== 'all') {
+    if (filters.statusFilter === 'overdue') {
+      const todayStr = formatDateToYYYYMMDD(new Date());
+      query = query
+        .lt('due_date', todayStr)
+        .neq('status', 'paid');
+    } else {
+      query = query.eq('status', filters.statusFilter);
+    }
+  }
+
+  // Apply search filter
+  if (filters?.searchTerm && filters.searchTerm.trim()) {
+    const sanitized = filters.searchTerm
+      .slice(0, 100)
+      .replace(/[%_]/g, '\\$&');
+    query = query.ilike('supplier.name', `%${sanitized}%`);
   }
 
   const from = (page - 1) * pageSize;

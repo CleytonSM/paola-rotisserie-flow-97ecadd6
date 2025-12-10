@@ -26,7 +26,7 @@ export type FormData = {
   entry_date: Date | undefined;
 };
 
-export type StatusFilter = "all" | "pending" | "received" | "overdue";
+export type StatusFilter = "all" | "pending" | "received";
 
 export type AccountStatus = "received" | "pending" | "overdue";
 

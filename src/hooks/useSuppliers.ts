@@ -2,7 +2,7 @@ import { Supplier } from "@/components/ui/suppliers/types";
 import { SupplierSchema, supplierSchema } from "@/schemas/suppliers.schema";
 import { getCurrentSession } from "@/services/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
