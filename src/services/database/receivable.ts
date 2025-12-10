@@ -25,19 +25,40 @@ export const getReceivablePayments = async (
   return { data: data as ReceivablePayment[] | null, error };
 };
 
+export interface ReceivableFilters {
+  statusFilter?: 'all' | 'pending' | 'received';
+  searchTerm?: string;
+}
+
 export const getAccountsReceivable = async (
   page: number = 1,
-  pageSize: number = 100
+  pageSize: number = 100,
+  filters?: ReceivableFilters
 ): Promise<DatabaseResult<any[]>> => {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('accounts_receivable')
     .select(`
       *,
       client:clients(id, name, cpf_cnpj)
-    `, { count: 'exact' })
+    `, { count: 'exact' });
+
+  // Apply status filter
+  if (filters?.statusFilter && filters.statusFilter !== 'all') {
+    query = query.eq('status', filters.statusFilter);
+  }
+
+  // Apply search filter (search by client name via a text search on the joined table)
+  if (filters?.searchTerm && filters.searchTerm.trim()) {
+    const sanitized = filters.searchTerm
+      .slice(0, 100)
+      .replace(/[%_]/g, '\\$&');
+    query = query.ilike('client.name', `%${sanitized}%`);
+  }
+
+  const { data, error, count } = await query
     .order('entry_date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to);
@@ -48,7 +69,8 @@ export const getAccountsReceivable = async (
 export const getAccountsReceivableByDateRange = async (
   dateRange: { from: Date; to?: Date },
   page: number = 1,
-  pageSize: number = 100
+  pageSize: number = 100,
+  filters?: ReceivableFilters
 ): Promise<DatabaseResult<any[]>> => {
   // Format as YYYY-MM-DD to avoid timezone issues
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
@@ -73,6 +95,19 @@ export const getAccountsReceivableByDateRange = async (
     nextDay.setDate(nextDay.getDate() + 1);
     const nextDayStr = formatDateToYYYYMMDD(nextDay);
     query = query.lt('entry_date', nextDayStr);
+  }
+
+  // Apply status filter
+  if (filters?.statusFilter && filters.statusFilter !== 'all') {
+    query = query.eq('status', filters.statusFilter);
+  }
+
+  // Apply search filter
+  if (filters?.searchTerm && filters.searchTerm.trim()) {
+    const sanitized = filters.searchTerm
+      .slice(0, 100)
+      .replace(/[%_]/g, '\\$&');
+    query = query.ilike('client.name', `%${sanitized}%`);
   }
 
   const from = (page - 1) * pageSize;

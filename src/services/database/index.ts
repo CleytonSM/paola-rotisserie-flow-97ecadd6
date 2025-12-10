@@ -34,6 +34,7 @@ export {
     updateAccountPayableStatus,
     deleteAccountPayable,
 } from "./payable";
+export type { PayableFilters } from "./payable";
 
 // Accounts Receivable
 export {
@@ -46,7 +47,7 @@ export {
     deleteAccountReceivable,
     getReceivablePayments,
 } from "./receivable";
-export type { ReceivablePayment } from "./receivable";
+export type { ReceivablePayment, ReceivableFilters } from "./receivable";
 
 // Analytics
 export {

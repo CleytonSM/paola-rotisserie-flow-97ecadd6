@@ -43,14 +43,7 @@ export function ReceivableFilters({
         >
           Pendentes
         </Button>
-        <Button
-          variant={statusFilter === "overdue" ? "outline" : "ghost"}
-          size="sm"
-          onClick={() => onStatusFilterChange("overdue")}
-          className={cn(statusFilter === "overdue" && "border-destructive text-destructive")}
-        >
-          Vencidos
-        </Button>
+
         <Button
           variant={statusFilter === "received" ? "outline" : "ghost"}
           size="sm"

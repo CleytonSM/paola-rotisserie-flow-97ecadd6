@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,14 +80,15 @@ export function useReceivable() {
             }
         };
         checkAndLoad();
-    }, [dateRange, page]);
+    }, [dateRange, page, statusFilter, searchTerm]);
 
     const loadData = async () => {
         setLoading(true);
 
+        const filters = { statusFilter, searchTerm };
         const accountsResult = dateRange?.from
-            ? await getAccountsReceivableByDateRange({ from: dateRange.from, to: dateRange.to }, page, pageSize)
-            : await getAccountsReceivable(page, pageSize);
+            ? await getAccountsReceivableByDateRange({ from: dateRange.from, to: dateRange.to }, page, pageSize, filters)
+            : await getAccountsReceivable(page, pageSize, filters);
 
         const clientsResult = await getClients();
 
@@ -309,18 +310,11 @@ export function useReceivable() {
         ));
     };
 
-    // Filter accounts by status on client side
-    const filteredAccounts = useMemo(() => {
-        if (statusFilter === "all") return accounts;
-        return accounts.filter((account) => {
-            const accountStatus = getAccountStatus(account);
-            return accountStatus === statusFilter;
-        });
-    }, [accounts, statusFilter]);
+
 
     return {
         loading,
-        accounts: filteredAccounts, // Client-side filtered by status
+        accounts,
         clients,
         searchTerm,
         setSearchTerm,

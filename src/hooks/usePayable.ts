@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,14 +73,15 @@ export function usePayable() {
             }
         };
         checkAndLoad();
-    }, [dateRange, page]);
+    }, [dateRange, page, statusFilter, searchTerm]);
 
     const loadData = async () => {
         setLoading(true);
 
+        const filters = { statusFilter, searchTerm };
         const accountsResult = dateRange?.from
-            ? await getAccountsPayableByDateRange({ from: dateRange.from, to: dateRange.to }, page, pageSize)
-            : await getAccountsPayable(page, pageSize);
+            ? await getAccountsPayableByDateRange({ from: dateRange.from, to: dateRange.to }, page, pageSize, filters)
+            : await getAccountsPayable(page, pageSize, filters);
 
         const suppliersResult = await getSuppliers();
 
@@ -213,15 +214,11 @@ export function usePayable() {
         }
     };
 
-    // Filter accounts by status on client side
-    const filteredAccounts = useMemo(() => {
-        if (statusFilter === "all") return accounts;
-        return accounts.filter((account) => account.status === statusFilter);
-    }, [accounts, statusFilter]);
+
 
     return {
         loading,
-        accounts: filteredAccounts, // Client-side filtered by status
+        accounts,
         suppliers,
         searchTerm,
         setSearchTerm,

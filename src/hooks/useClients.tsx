@@ -1,5 +1,5 @@
 import { Client } from "@/components/ui/clients/types";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getClients, createClient, updateClient, deleteClient } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
@@ -111,17 +111,7 @@ export const useClients = () => {
         }
     };
 
-    const filteredClients = useMemo(() => {
-        return clients.filter((client) => {
-            const searchLower = searchTerm.toLowerCase();
-            return (
-                client.name.toLowerCase().includes(searchLower) ||
-                (client.cpf_cnpj && client.cpf_cnpj.includes(searchLower)) ||
-                (client.email && client.email.toLowerCase().includes(searchLower)) ||
-                (client.phone && client.phone.includes(searchLower))
-            );
-        });
-    }, [clients, searchTerm]);
+
 
     const [editFormData, setEditFormData] = useState<any>(null);
 
