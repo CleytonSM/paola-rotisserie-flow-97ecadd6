@@ -48,7 +48,7 @@ export const getProductCatalog = async (
     try {
         let query = supabase
             .from("product_catalog")
-            .select("*")
+            .select("*", { count: "exact" })
             .order("name", { ascending: true });
 
         if (activeOnly) {
@@ -59,12 +59,12 @@ export const getProductCatalog = async (
             query = query.ilike("name", `%${searchTerm}%`);
         }
 
-        const { data, error } = await query
+        const { data, error, count } = await query
             .range((page - 1) * pageSize, page * pageSize - 1)
             .limit(pageSize);
 
         if (error) throw error;
-        return { data, error: null };
+        return { data, error: null, count: count ?? 0 };
     } catch (error) {
         return { data: null, error: error as Error };
     }
@@ -146,6 +146,26 @@ export const hardDeleteCatalogProduct = async (
 
         if (error) throw error;
         return { data: null, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+
+/**
+ * Get all internal and active catalog products (for item creation dialogs)
+ * No pagination - returns all matching products
+ */
+export const getInternalActiveCatalogProducts = async (): Promise<DatabaseResult<ProductCatalog[]>> => {
+    try {
+        const { data, error } = await supabase
+            .from("product_catalog")
+            .select("*")
+            .eq("is_internal", true)
+            .eq("is_active", true)
+            .order("name", { ascending: true });
+
+        if (error) throw error;
+        return { data, error: null };
     } catch (error) {
         return { data: null, error: error as Error };
     }

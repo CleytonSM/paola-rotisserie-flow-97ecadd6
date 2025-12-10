@@ -1,15 +1,14 @@
 // pages/ItemProducts.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ItemFormDialog } from "@/components/ui/product-items/ItemFormDialog";
 import { DeleteItemDialog } from "@/components/ui/product-items/DeleteItemDialog";
 import { ItemsTable } from "@/components/ui/product-items/ItemsTable";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useProductItems } from "@/hooks/useProductItems";
-import { useProductCatalog } from "@/hooks/useProductCatalog";
+import { getInternalActiveCatalogProducts, ProductCatalog } from "@/services/database";
 import { useAuth } from "@/hooks/useAuth";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { DateRange } from "react-day-picker";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 import { BulkScanDialog } from "@/components/ui/product-items/BulkScanDialog";
 import { Button } from "@/components/ui/button";
@@ -21,12 +20,18 @@ export default function ItemProducts() {
     // Auth check
     useAuth(navigate);
 
-    // Data hooks
+    // Data hooks - includes all filters for server-side filtering
     const {
         items,
         loading,
         statusFilter,
         setStatusFilter,
+        searchTerm,
+        setSearchTerm,
+        productionDate,
+        setProductionDate,
+        expirationPreset,
+        setExpirationPreset,
         form,
         editingId,
         markAsSold,
@@ -46,12 +51,18 @@ export default function ItemProducts() {
         totalCount
     } = useProductItems();
 
-    const catalogProducts = useProductCatalog();
+    // Fetch internal and active catalog products for the dialogs
+    const [internalActiveProducts, setInternalActiveProducts] = useState<ProductCatalog[]>([]);
 
-    // Table state
-    const [searchTerm, setSearchTerm] = useState("");
-    const [productionDate, setProductionDate] = useState<DateRange | undefined>();
-    const [expirationPreset, setExpirationPreset] = useState<string>("all");
+    useEffect(() => {
+        const loadCatalogProducts = async () => {
+            const { data } = await getInternalActiveCatalogProducts();
+            if (data) {
+                setInternalActiveProducts(data);
+            }
+        };
+        loadCatalogProducts();
+    }, []);
 
     // Bulk Scan state
     const [bulkScanOpen, setBulkScanOpen] = useState(false);
@@ -68,7 +79,7 @@ export default function ItemProducts() {
                         form={form}
                         editingId={editingId}
                         onSubmit={handleFormSubmit}
-                        catalogProducts={catalogProducts.products}
+                        catalogProducts={internalActiveProducts}
                     />
                 }
                 children={<AppBreadcrumb />}
@@ -105,7 +116,7 @@ export default function ItemProducts() {
             <BulkScanDialog
                 open={bulkScanOpen}
                 onOpenChange={setBulkScanOpen}
-                catalogProducts={catalogProducts.products}
+                catalogProducts={internalActiveProducts}
                 onSuccess={() => {
                     refreshItems();
                 }}

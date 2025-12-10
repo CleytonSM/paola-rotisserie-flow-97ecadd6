@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { ColumnDef, GenericTable } from "@/components/ui/generic-table";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +18,7 @@ import {
     formatDateTime,
     formatExpiration,
     getExpirationVariant,
-    getStatusLabel,
-    getDaysUntilExpiration
+    getStatusLabel
 } from "@/components/ui/product-items/utils";
 import { getStatusVariant } from "@/utils/status";
 
@@ -65,66 +63,8 @@ export function ItemsTable({
     rowsPerPage,
     onPageChange,
 }: ItemsTableProps) {
-    const filteredItems = useMemo(() => {
-        let filtered = items;
-
-        // Status Filter
-        if (statusFilter && statusFilter !== "all") {
-            filtered = filtered.filter(item => item.status === statusFilter);
-        }
-
-        // Production Date Filter
-        if (productionDate?.from) {
-            filtered = filtered.filter(item => {
-                const itemDate = new Date(item.produced_at);
-                itemDate.setHours(0, 0, 0, 0);
-                const fromDate = new Date(productionDate.from!);
-                fromDate.setHours(0, 0, 0, 0);
-
-                if (productionDate.to) {
-                    const toDate = new Date(productionDate.to);
-                    toDate.setHours(23, 59, 59, 999);
-                    return itemDate >= fromDate && itemDate <= toDate;
-                } else {
-                    return itemDate >= fromDate;
-                }
-            });
-        }
-
-        // Smart Expiration Filter
-        if (expirationPreset && expirationPreset !== "all") {
-            filtered = filtered.filter(item => {
-                const days = getDaysUntilExpiration(item.expires_at);
-
-                switch (expirationPreset) {
-                    case "today":
-                        return days === 0;
-                    case "tomorrow":
-                        return days === 1;
-                    case "3days":
-                        return days >= 0 && days <= 3;
-                    case "7days":
-                        return days >= 0 && days <= 7;
-                    case "expired":
-                        return days < 0;
-                    default:
-                        return true;
-                }
-            });
-        }
-
-        // Search Filter
-        if (!searchTerm) {
-            return filtered;
-        }
-
-        const searchLower = searchTerm.toLowerCase();
-        return filtered.filter(item =>
-            item.product_catalog?.name?.toLowerCase().includes(searchLower) ||
-            item.scale_barcode.toString().includes(searchLower) ||
-            (item.product_catalog?.catalog_barcode && item.product_catalog.catalog_barcode.toString().includes(searchLower))
-        );
-    }, [items, searchTerm, statusFilter, productionDate, expirationPreset]);
+    // Note: All filtering (status, search, date, expiration) is now done server-side
+    // Items passed here are already filtered by the useProductItems hook
 
     const columns: ColumnDef<ProductItem>[] = [
         {
@@ -180,14 +120,11 @@ export function ItemsTable({
         },
         {
             header: "Validade",
-            cell: (item) => {
-                getDaysUntilExpiration(item.expires_at);
-                return (
-                    <Badge variant={getExpirationVariant(item.expires_at)}>
-                        {formatExpiration(item.expires_at)}
-                    </Badge>
-                );
-            },
+            cell: (item) => (
+                <Badge variant={getExpirationVariant(item.expires_at)}>
+                    {formatExpiration(item.expires_at)}
+                </Badge>
+            ),
         },
         {
             header: "Status",
@@ -247,7 +184,7 @@ export function ItemsTable({
     return (
         <GenericTable
             columns={columns}
-            data={filteredItems}
+            data={items}
             isLoading={loading}
             searchTerm={searchTerm}
             onSearchChange={onSearchChange}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight, Flame, Plus, Search } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -18,22 +18,35 @@ interface ProductSidebarRightProps {
 
 export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpen }: ProductSidebarRightProps) {
     const isMobile = useIsMobile();
-    const [isOpen, setIsOpen] = useState(!isMobile);
+    // null = not yet determined, then set based on device type
+    const [isOpen, setIsOpen] = useState<boolean | null>(null);
     const [products, setProducts] = useState<ProductCatalog[]>([]);
     const [search, setSearch] = useState("");
+    const hasInitialized = useRef(false);
     // Removed direct useCartStore use for adding items, relying on parent handler
     // const addItem = useCartStore((state) => state.addItem);
+
+    const loadProducts = async () => {
+        const { data } = await getProductCatalog();
+        if (data) setProducts(data);
+    };
 
     useEffect(() => {
         loadProducts();
     }, []);
 
-    // Close sidebar on mobile when mounting or switching to mobile
+    // Set initial open state once we know if it's mobile or not
+    // Mobile: starts closed, Desktop: starts open
     useEffect(() => {
-        if (isMobile) {
-            setIsOpen(false);
+        if (isMobile === undefined) return; // Wait for hook to determine
+
+        if (!hasInitialized.current) {
+            // First time: set initial state without animation
+            hasInitialized.current = true;
+            setIsOpen(!isMobile); // Desktop: open, Mobile: closed
         } else {
-            setIsOpen(true);
+            // Subsequent changes (e.g., window resize)
+            setIsOpen(!isMobile);
         }
     }, [isMobile]);
 
@@ -44,10 +57,10 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
         }
     }, [externalOpen]);
 
-    const loadProducts = async () => {
-        const { data } = await getProductCatalog();
-        if (data) setProducts(data);
-    };
+    // Don't render until we know the device type to prevent glimpse
+    if (isOpen === null) {
+        return null;
+    }
 
     const filteredProducts = products.filter((p) =>
         p.name.toLowerCase().includes(search.toLowerCase())
