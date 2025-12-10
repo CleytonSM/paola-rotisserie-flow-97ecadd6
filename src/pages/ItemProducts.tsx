@@ -9,7 +9,6 @@ import { useProductItems } from "@/hooks/useProductItems";
 import { getInternalActiveCatalogProducts, ProductCatalog } from "@/services/database";
 import { useAuth } from "@/hooks/useAuth";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { DateRange } from "react-day-picker";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 import { BulkScanDialog } from "@/components/ui/product-items/BulkScanDialog";
 import { Button } from "@/components/ui/button";
@@ -21,12 +20,18 @@ export default function ItemProducts() {
     // Auth check
     useAuth(navigate);
 
-    // Data hooks
+    // Data hooks - includes all filters for server-side filtering
     const {
         items,
         loading,
         statusFilter,
         setStatusFilter,
+        searchTerm,
+        setSearchTerm,
+        productionDate,
+        setProductionDate,
+        expirationPreset,
+        setExpirationPreset,
         form,
         editingId,
         markAsSold,
@@ -58,11 +63,6 @@ export default function ItemProducts() {
         };
         loadCatalogProducts();
     }, []);
-
-    // Table state
-    const [searchTerm, setSearchTerm] = useState("");
-    const [productionDate, setProductionDate] = useState<DateRange | undefined>();
-    const [expirationPreset, setExpirationPreset] = useState<string>("all");
 
     // Bulk Scan state
     const [bulkScanOpen, setBulkScanOpen] = useState(false);

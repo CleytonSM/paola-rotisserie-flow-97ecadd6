@@ -1,5 +1,4 @@
 // components/products/ProductsTable.tsx
-import { useMemo } from "react";
 import { ColumnDef, GenericTable } from "@/components/ui/generic-table";
 import { ChevronDown, Loader2, Package, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,15 +51,8 @@ export function ProductsTable({
     rowsPerPage,
     onPageChange,
 }: ProductsTableProps) {
-    const filteredProducts = useMemo(() => {
-        return products.filter((product) => {
-            const searchLower = searchTerm.toLowerCase();
-            return (
-                product.name.toLowerCase().includes(searchLower) ||
-                (product.catalog_barcode && product.catalog_barcode.toString().includes(searchLower))
-            );
-        });
-    }, [products, searchTerm]);
+    // Note: Search filtering is done server-side by useProductCatalog hook
+    // Products passed here are already filtered from Supabase
 
     const columns: ColumnDef<ProductCatalog>[] = [
         {
@@ -197,7 +189,7 @@ export function ProductsTable({
     return (
         <GenericTable
             columns={columns}
-            data={filteredProducts}
+            data={products}
             isLoading={loading}
             searchTerm={searchTerm}
             onSearchChange={onSearchChange}

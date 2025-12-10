@@ -13,17 +13,22 @@ import {
 } from "@/services/database";
 import { itemSchema, type ItemSchema } from "@/schemas/item.schema";
 import { PAGE_SIZE } from "@/config/constants";
+import { DateRange } from "react-day-picker";
 
 export function useProductItems() {
     const [items, setItems] = useState<ProductItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [statusFilter, setStatusFilter] = useState<ProductItemStatus | "all">("available");
     const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Filters - all managed here for server-side filtering
+    const [statusFilter, setStatusFilter] = useState<ProductItemStatus | "all">("available");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [productionDate, setProductionDate] = useState<DateRange | undefined>();
+    const [expirationPreset, setExpirationPreset] = useState<string>("all");
 
     // Pagination
     const [page, setPage] = useState(1);
     const [pageSize] = useState(PAGE_SIZE);
-
     const [totalCount, setTotalCount] = useState(0);
 
     const form = useForm<ItemSchema>({
@@ -41,7 +46,32 @@ export function useProductItems() {
 
     const loadItems = async () => {
         setLoading(true);
-        const filters = statusFilter !== "all" ? { status: statusFilter } : undefined;
+        
+        // Build filters object
+        const filters: {
+            status?: ProductItemStatus;
+            searchTerm?: string;
+            productionDateFrom?: string;
+            productionDateTo?: string;
+            expirationPreset?: 'today' | 'tomorrow' | '3days' | '7days' | 'expired' | 'all';
+        } = {};
+
+        if (statusFilter !== "all") {
+            filters.status = statusFilter;
+        }
+        if (searchTerm.trim()) {
+            filters.searchTerm = searchTerm.trim();
+        }
+        if (productionDate?.from) {
+            filters.productionDateFrom = productionDate.from.toISOString();
+            if (productionDate.to) {
+                filters.productionDateTo = productionDate.to.toISOString();
+            }
+        }
+        if (expirationPreset && expirationPreset !== "all") {
+            filters.expirationPreset = expirationPreset as 'today' | 'tomorrow' | '3days' | '7days' | 'expired';
+        }
+
         const result = await getProductItems(filters, page, pageSize);
 
         if (result.error) {
@@ -53,9 +83,15 @@ export function useProductItems() {
         setLoading(false);
     };
 
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [statusFilter, searchTerm, productionDate, expirationPreset]);
+
+    // Load items when filters or page changes
     useEffect(() => {
         loadItems();
-    }, [statusFilter, page]);
+    }, [statusFilter, searchTerm, productionDate, expirationPreset, page]);
 
     const onSubmit = async (data: ItemSchema) => {
         try {
@@ -190,8 +226,16 @@ export function useProductItems() {
     return {
         items,
         loading,
+        // Filters
         statusFilter,
         setStatusFilter,
+        searchTerm,
+        setSearchTerm,
+        productionDate,
+        setProductionDate,
+        expirationPreset,
+        setExpirationPreset,
+        // Form
         form,
         editingId,
         onSubmit: form.handleSubmit(onSubmit),
@@ -211,6 +255,7 @@ export function useProductItems() {
         handleDeleteClick,
         handleDeleteConfirm,
         handleFormSubmit,
+        // Pagination
         page,
         setPage,
         pageSize,
