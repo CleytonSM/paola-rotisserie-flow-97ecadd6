@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { clientSchema, type ClientSchema } from "@/schemas/client.schema";
 import { useEffect } from "react";
+import { checkClientExists } from "@/services/database/clients";
+import { useToast } from "@/hooks/use-toast";
 
 interface UseClientFormProps {
     editingId: string | null;
@@ -21,6 +23,8 @@ export function useClientForm({ editingId, defaultValues, onSuccess }: UseClient
         },
     });
 
+    const { toast } = useToast();
+
     // Reset form when editing changes
     useEffect(() => {
         if (defaultValues) {
@@ -36,6 +40,18 @@ export function useClientForm({ editingId, defaultValues, onSuccess }: UseClient
     }, [editingId, defaultValues, form]);
 
     const onSubmit = async (data: ClientSchema) => {
+        if (data.cpf_cnpj) {
+            const exists = await checkClientExists(data.cpf_cnpj, editingId || undefined);
+            if (exists) {
+                toast({
+                    title: "Erro ao salvar cliente",
+                    description: "CPF/CNPJ já cadastrado.",
+                    variant: "destructive",
+                });
+                return;
+            }
+        }
+
         // Clean masks before sending to API
         const cleanedData = {
             ...data,

@@ -76,3 +76,25 @@ export const deleteClient = async (id: string): Promise<DatabaseResult<any>> => 
   return { data, error };
 };
 
+
+export const checkClientExists = async (cpfCnpj: string, excludeId?: string): Promise<boolean> => {
+  const cleanedCpfCnpj = cpfCnpj.replace(/\D/g, '');
+  
+  let query = supabase
+    .from('clients')
+    .select('id')
+    .eq('cpf_cnpj', cleanedCpfCnpj);
+
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+
+  const { data, error } = await query.single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "Row not found"
+    console.error('Error checking client existence:', error);
+    return false;
+  }
+
+  return !!data;
+};
