@@ -27,6 +27,7 @@ interface GenericFormDialogProps {
     cancelText?: string;
     maxWidth?: string;
     onCancel?: () => void;
+    showTrigger?: boolean;
 }
 
 export function GenericFormDialog({
@@ -43,6 +44,7 @@ export function GenericFormDialog({
     cancelText = "Cancelar",
     maxWidth = "sm:max-w-2xl",
     onCancel,
+    showTrigger = true,
 }: GenericFormDialogProps) {
 
     const defaultSubmitText = isEditing
@@ -60,12 +62,12 @@ export function GenericFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            {triggerButton && (
+            {showTrigger && triggerButton && (
                 <DialogTrigger asChild>
                     {triggerButton}
                 </DialogTrigger>
             )}
-            {!triggerButton && !open && (
+            {showTrigger && !triggerButton && !open && (
                 <DialogTrigger asChild>
                     <Button className="shadow-md transition-transform duration-300 ease-out hover:scale-105">
                         <Plus className="mr-2 h-4 w-4" />

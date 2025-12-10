@@ -14,6 +14,7 @@ interface ClientFormDialogProps {
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   editingId: string | null;
   loading?: boolean;
+  showTrigger?: boolean;
 }
 
 export function ClientFormDialog({
@@ -23,6 +24,7 @@ export function ClientFormDialog({
   onSubmit,
   editingId,
   loading = false,
+  showTrigger = true,
 }: ClientFormDialogProps) {
   const { register, formState: { errors }, setValue, watch } = form;
 
@@ -46,6 +48,7 @@ export function ClientFormDialog({
       onSubmit={onSubmit}
       isEditing={!!editingId}
       loading={loading}
+      showTrigger={showTrigger}
       triggerButton={
         <Button className="shadow-md transition-transform duration-300 ease-out hover:scale-105">
           <Plus className="mr-2 h-4 w-4" />
