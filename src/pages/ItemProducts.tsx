@@ -1,12 +1,12 @@
 // pages/ItemProducts.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ItemFormDialog } from "@/components/ui/product-items/ItemFormDialog";
 import { DeleteItemDialog } from "@/components/ui/product-items/DeleteItemDialog";
 import { ItemsTable } from "@/components/ui/product-items/ItemsTable";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useProductItems } from "@/hooks/useProductItems";
-import { useProductCatalog } from "@/hooks/useProductCatalog";
+import { getInternalActiveCatalogProducts, ProductCatalog } from "@/services/database";
 import { useAuth } from "@/hooks/useAuth";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { DateRange } from "react-day-picker";
@@ -46,7 +46,18 @@ export default function ItemProducts() {
         totalCount
     } = useProductItems();
 
-    const catalogProducts = useProductCatalog();
+    // Fetch internal and active catalog products for the dialogs
+    const [internalActiveProducts, setInternalActiveProducts] = useState<ProductCatalog[]>([]);
+
+    useEffect(() => {
+        const loadCatalogProducts = async () => {
+            const { data } = await getInternalActiveCatalogProducts();
+            if (data) {
+                setInternalActiveProducts(data);
+            }
+        };
+        loadCatalogProducts();
+    }, []);
 
     // Table state
     const [searchTerm, setSearchTerm] = useState("");
@@ -68,7 +79,7 @@ export default function ItemProducts() {
                         form={form}
                         editingId={editingId}
                         onSubmit={handleFormSubmit}
-                        catalogProducts={catalogProducts.products}
+                        catalogProducts={internalActiveProducts}
                     />
                 }
                 children={<AppBreadcrumb />}
@@ -105,7 +116,7 @@ export default function ItemProducts() {
             <BulkScanDialog
                 open={bulkScanOpen}
                 onOpenChange={setBulkScanOpen}
-                catalogProducts={catalogProducts.products}
+                catalogProducts={internalActiveProducts}
                 onSuccess={() => {
                     refreshItems();
                 }}

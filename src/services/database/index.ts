@@ -89,6 +89,7 @@ export {
 // Product Catalog (Master Products)
 export {
     getProductCatalog,
+    getInternalActiveCatalogProducts,
     createCatalogProduct,
     updateCatalogProduct,
     deleteCatalogProduct,
