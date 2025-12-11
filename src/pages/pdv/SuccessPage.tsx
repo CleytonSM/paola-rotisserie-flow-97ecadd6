@@ -6,20 +6,16 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format";
 import { motion } from "framer-motion";
 import { QRCodeModal } from "@/components/pdv/QRCodeModal";
+import { ReceiptSummary } from "@/components/pdv/success/ReceiptSummary";
 import { printerService } from "@/services/printer/PrinterService";
 import { Printer } from "lucide-react";
 
 export default function SuccessPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { saleId, displayId: numericId, total, subtotal, method, pixKey, pixAmount, orderId, clientName, items, change } = location.state || {}; // Support both new saleId and legacy orderId
+    const { saleId, displayId: numericId, total, subtotal, method, pixKey, pixAmount, orderId, clientName, items, change } = location.state || {};
 
-    // Debug logs
-    console.log('SuccessPage - location.state:', location.state);
-    console.log('SuccessPage - method:', method);
-    console.log('SuccessPage - pixKey:', pixKey);
-    console.log('SuccessPage - pixAmount:', pixAmount);
-    console.log('SuccessPage - should show QR button:', pixKey && (method === 'pix' || method === 'multiple'));
+
 
     const finalDisplayId = numericId ? `#${numericId}` : (saleId || orderId)?.slice(0, 8);
     const [showPixModal, setShowPixModal] = useState(false);
@@ -96,38 +92,14 @@ export default function SuccessPage() {
                     Tudo certo, o pedido foi registrado.
                 </p>
 
-                <div className="bg-stone-50/80 rounded-2xl p-6 mb-8 space-y-4 text-left border border-stone-100/50">
-                    <div className="flex justify-between items-center pb-3 border-b border-stone-100">
-                        <span className="text-stone-500 text-sm font-medium">Venda</span>
-                        <span className="font-mono font-bold text-xl text-stone-700 tracking-tight">{finalDisplayId}</span>
-                    </div>
-
-                    {clientName && (
-                        <div className="flex justify-between items-center">
-                            <span className="text-stone-500 text-sm font-medium">Cliente</span>
-                            <span className="font-semibold text-stone-700">{clientName}</span>
-                        </div>
-                    )}
-
-                    <div className="flex justify-between items-center">
-                        <span className="text-stone-500 text-sm font-medium">Pagamento</span>
-                        <span className="capitalize font-semibold text-stone-700 bg-white px-3 py-1 rounded-full border border-stone-100 shadow-sm text-sm">
-                            {method === 'card_credit' ? 'Crédito' :
-                                method === 'card_debit' ? 'Débito' :
-                                    method === 'pix' ? 'Pix' :
-                                        method === 'cash' || method === 'money' ? 'Dinheiro' :
-                                            method === 'multiple' ? 'Múltiplos Métodos' : method}
-                        </span>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-3 border-t border-stone-200/50">
-                        <span className="text-stone-500 text-sm font-medium">Valor Total</span>
-                        <span className="font-bold text-2xl text-emerald-600">{formatCurrency(total || 0)}</span>
-                    </div>
-                </div>
+                <ReceiptSummary
+                    displayId={finalDisplayId}
+                    clientName={clientName}
+                    paymentMethod={method}
+                    total={total}
+                />
 
                 <div className="space-y-3">
-                    {/* Show Pix Button if Pix Key data is present (single or multiple) */}
                     {pixKey && (method === 'pix' || method === 'multiple') && (
                         <Button
                             variant="outline"
@@ -160,7 +132,6 @@ export default function SuccessPage() {
                 </div>
             </motion.div>
 
-            {/* Re-use QRCodeModal for post-checkout viewing */}
             {pixKey && (
                 <QRCodeModal
                     open={showPixModal}

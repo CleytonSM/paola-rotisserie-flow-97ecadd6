@@ -42,16 +42,13 @@ export function PDVSearch({
     const [isAnimating, setIsAnimating] = useState(false);
 
     const handleScan = useCallback(async (barcode: string) => {
-        console.log("Scanned barcode:", barcode);
         // Animate
         setIsAnimating(true);
         setTimeout(() => setIsAnimating(false), 2000);
 
-        // Smart parse check
         const parsed = parseBarcode(barcode);
 
         if (parsed.type === 'scale') {
-            // STRICT MATCH: Search for this specific item in DB
             const { data: item, error } = await getProductItemByBarcode(Number(barcode));
 
             if (item && handleInternalItemSelect) {
@@ -69,17 +66,14 @@ export function PDVSearch({
                     return;
                 }
 
-                // Found specific item -> Add it directly
                 handleInternalItemSelect(item);
                 setIsAnimating(false);
             } else {
-                // Not found or Error
                 toast.error("Item não encontrado no sistema (Código EAN específico).");
-                setSearchQuery(barcode); // Just show the code
+                setSearchQuery(barcode);
                 setIsAnimating(false);
             }
         } else {
-            // Generic product -> Standard search
             setSearchQuery(barcode);
             performSearch(barcode);
         }
@@ -96,12 +90,10 @@ export function PDVSearch({
             // Check if we just scanned a scale barcode
             const parsed = parseBarcode(searchQuery);
 
-            // Standard exact match logic or Smart Match
             let match = searchResults.find(p =>
                 p.name.toLowerCase() === searchQuery.toLowerCase()
             );
 
-            // If not direct match, check for scale ID match
             if (!match && parsed.type === 'scale') {
                 // Check if any result confirms the ID match (by catalog_barcode)
                 match = searchResults.find(p => String(p.catalog_barcode).padStart(7, '0') === parsed.productId.padStart(7, '0') || String(p.catalog_barcode) === parsed.productId);
@@ -168,7 +160,6 @@ export function PDVSearch({
                                         <div className="flex flex-col gap-1">
                                             <span className="font-medium text-gray-800">{product.name}</span>
                                             <span className="text-xs text-gray-500 flex gap-2">
-                                                {/* Barcode display if exists */}
                                                 {product.catalog_barcode && (
                                                     <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-mono">
                                                         {product.catalog_barcode}

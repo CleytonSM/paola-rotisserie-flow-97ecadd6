@@ -14,7 +14,6 @@ export function usePDV() {
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
     
-    // Internal Product Selection State
     const [selectionOpen, setSelectionOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<ProductCatalog | null>(null);
 
@@ -23,7 +22,6 @@ export function usePDV() {
     const isMobile = useIsMobile();
     const searchContainerRef = useRef<HTMLDivElement>(null);
 
-    // Close preview when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
@@ -48,7 +46,6 @@ export function usePDV() {
         }
     }, []);
 
-    // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
             performSearch(searchQuery);
@@ -66,9 +63,10 @@ export function usePDV() {
             return;
         }
 
-        // Validate Quantity for non-internal products
         if (product.quantity !== undefined && product.quantity !== null) {
-            const currentInCart = items.find(i => i.id === product.id)?.quantity || 0;
+            // Use getState() to check current items without adding dependency
+            const currentItems = useCartStore.getState().items;
+            const currentInCart = currentItems.find(i => i.id === product.id)?.quantity || 0;
             if (currentInCart + 1 > product.quantity) {
                 toast.error(`Estoque insuficiente! Apenas ${product.quantity} unidades disponíveis.`);
                 return;
@@ -83,7 +81,7 @@ export function usePDV() {
         setSearchResults([]);
         setShowPreview(false);
         toast.success(`Produto adicionado: ${product.name}`);
-    }, [addItem, items]);
+    }, [addItem]);
 
     const handleInternalItemSelect = useCallback((item: ProductItem) => {
         // Fallback for catalog data: use selectedProduct state OR item.product_catalog join
@@ -96,7 +94,10 @@ export function usePDV() {
 
         // Check for duplicate manually (Deep check including sub-items)
         const barcodeToCheck = String(item.scale_barcode);
-        const isDuplicate = items.some((cartItem: any) => {
+        // Use getState() for fresh items check
+        const currentItems = useCartStore.getState().items;
+        
+        const isDuplicate = currentItems.some((cartItem: any) => {
             // 1. Check top-level scanned_barcode (for non-grouped or first items)
             if (cartItem.scanned_barcode === barcodeToCheck) return true;
             
@@ -119,7 +120,6 @@ export function usePDV() {
             id: catalogData.id, // Use CATALOG ID as the main ID for grouping
             name: catalogData.name, // Use generic name
             base_price: item.sale_price, // This will be used as price for this sub-item
-            // Additional info for grouping logic
             is_internal: true,
             catalog_id: catalogData.id,
             sub_item_id: item.id,
@@ -136,9 +136,8 @@ export function usePDV() {
         setSelectionOpen(false);
         setSelectedProduct(null);
         toast.success(`Item adicionado: ${catalogData.name}`);
-    }, [selectedProduct, addItem, items]);
+    }, [selectedProduct, addItem]);
 
-    // Scanner logic
     useEffect(() => {
         if (isScannerOpen && !scannerRef.current) {
             const initScanner = async () => {
@@ -161,26 +160,15 @@ export function usePDV() {
                 };
                 
                 const onScanSuccess = async (decodedText: string) => {
-                    // Prevent rapid-fire scanning (cooldown of 2 seconds)
                     const now = Date.now();
                     if (now - lastScanTimeRef.current < 2000) {
-                        console.log("[Scanner] ⏳ Cooldown active, ignoring scan");
-                        return;
-                    }
-                    lastScanTimeRef.current = now;
-                    
-                    console.log("[Scanner] ✅ Barcode detected:", decodedText);
                     
                     // First, try to find a product_item by scale_barcode (available items only)
                     const scannedBarcode = parseInt(decodedText, 10);
                     
                     if (!isNaN(scannedBarcode)) {
                         const itemResult = await getProductItemByBarcode(scannedBarcode);
-                        console.log("[Scanner] ✅ Found product item:", itemResult);
-                        
-                        if (itemResult.data) {
                             const item = itemResult.data;
-                            console.log("[Scanner] ✅ Found product item:", item);
                             
                             // Add the item using the internal item select handler
                             handleInternalItemSelect(item);
@@ -200,14 +188,13 @@ export function usePDV() {
                             return; // Success - don't search catalog
                         }
                         
-                        console.log("[Scanner] ℹ️ No product item found, trying catalog...");
+                        
                     }
                     
                     // Fallback: try searching product catalog by catalog_barcode or name
                     const { data } = await searchProductCatalog(decodedText);
                     if (data && data.length > 0) {
                         const product = data[0];
-                        console.log("[Scanner] ✅ Found product catalog:", product);
                         handleProductSelect(product);
                         
                         // Close scanner dialog first
@@ -252,7 +239,7 @@ export function usePDV() {
                             onScanError
                         );
                         cameraStarted = true;
-                        console.log("Camera started successfully with constraints:", constraints);
+                        cameraStarted = true;
                         break; // Success, exit the loop
                     } catch (err: any) {
                         console.warn("Failed to start camera with constraints:", constraints, err);
@@ -357,7 +344,8 @@ export function usePDV() {
              // If manual price override exists (scale barcode), we trust the scan
              if (overridePrice !== undefined) {
                  // Check for duplicate scan of the same specific item
-                 const isDuplicate = rawBarcode && items.some((i: any) => {
+                 const currentItems = useCartStore.getState().items;
+                 const isDuplicate = rawBarcode && currentItems.some((i: any) => {
                      if (i.scanned_barcode === rawBarcode) return true;
                      if (i.subItems && i.subItems.some((sub: any) => String(sub.barcode) === rawBarcode)) return true;
                      return false;
@@ -400,7 +388,7 @@ export function usePDV() {
 
              // If no override, treat as normal select
              handleProductSelect(product);
-        }, [addItem, handleProductSelect, items]),
+        }, [addItem, handleProductSelect]),
         // Expose helper to open selection dialog from cart
         handleAddInternalItem: useCallback(async (catalogId: string) => {
              // We need to set selectedProduct to open the dialog.

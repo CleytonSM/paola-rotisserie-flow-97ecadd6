@@ -1,6 +1,4 @@
-/**
- * Accounts Receivable database operations
- */
+
 
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
@@ -45,12 +43,12 @@ export const getAccountsReceivable = async (
       client:clients(id, name, cpf_cnpj)
     `, { count: 'exact' });
 
-  // Apply status filter
+
   if (filters?.statusFilter && filters.statusFilter !== 'all') {
     query = query.eq('status', filters.statusFilter);
   }
 
-  // Apply search filter (search by client name via a text search on the joined table)
+
   if (filters?.searchTerm && filters.searchTerm.trim()) {
     const sanitized = filters.searchTerm
       .slice(0, 100)
@@ -72,7 +70,7 @@ export const getAccountsReceivableByDateRange = async (
   pageSize: number = 100,
   filters?: ReceivableFilters
 ): Promise<DatabaseResult<any[]>> => {
-  // Format as YYYY-MM-DD to avoid timezone issues
+
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
 
   let query = supabase
@@ -239,9 +237,7 @@ export const updateAccountReceivableStatus = async (
   return { data, error };
 };
 
-/**
- * Helper function to format date as YYYY-MM-DD in local timezone
- */
+
 const formatDateToYYYYMMDD = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -249,11 +245,6 @@ const formatDateToYYYYMMDD = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-/**
- * Get accounts receivable filtered for reports
- * Filters by entry_date in the specified date range (inclusive on both ends)
- * Uses date-only comparison to avoid timezone issues
- */
 export const getReceivablesForReports = async (
   dateRange: { from: Date; to: Date }
 ): Promise<DatabaseResult<any[]>> => {
@@ -261,12 +252,7 @@ export const getReceivablesForReports = async (
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
   const toDateStr = formatDateToYYYYMMDD(dateRange.to);
 
-  console.log('[getReceivablesForReports] Query parameters:', {
-    fromDateStr,
-    toDateStr,
-    fromDateLocal: dateRange.from.toLocaleDateString('pt-BR'),
-    toDateLocal: dateRange.to.toLocaleDateString('pt-BR'),
-  });
+
 
   // Add one day to toDateStr for exclusive upper bound since we're comparing timestamps
   const toDate = new Date(dateRange.to);
@@ -278,8 +264,10 @@ export const getReceivablesForReports = async (
   const { data, error } = await supabase
     .from('accounts_receivable')
     .select(`
-      *,
-      client:clients(id, name, cpf_cnpj)
+      id,
+      net_value,
+      entry_date,
+      client:clients(name)
     `)
     .not('entry_date', 'is', null)
     .gte('entry_date', fromDateStr)  // >= fromDate 00:00:00
@@ -288,17 +276,8 @@ export const getReceivablesForReports = async (
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('[getReceivablesForReports] Query error:', error);
-  } else {
-    console.log('[getReceivablesForReports] Query successful, returned', data?.length || 0, 'records');
     if (data && data.length > 0) {
-      console.log('[getReceivablesForReports] Sample entry_dates:',
-        data.slice(0, 3).map(r => ({
-          id: r.id,
-          entry_date: r.entry_date,
-          net_value: r.net_value,
-        }))
-      );
+      // Data loaded
     }
   }
 

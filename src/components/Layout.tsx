@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "./AppSidebar";
 import { Outlet } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Layout() {
     return (
@@ -20,9 +21,9 @@ export default function Layout() {
                     </header>
 
                     {/* Page Content */}
-                    <div className="flex-1 overflow-y-auto p-0">
+                    <ScrollArea className="flex-1">
                         <Outlet />
-                    </div>
+                    </ScrollArea>
                 </main>
             </div>
         </SidebarProvider>

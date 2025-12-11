@@ -1,13 +1,9 @@
-/**
- * Dashboard Analytics database operations
- */
+
 
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
 
-/**
- * Helper function to format date as YYYY-MM-DD in local timezone
- */
+
 const formatDateToYYYYMMDD = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -23,14 +19,9 @@ export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
   const weekAgoStr = formatDateToYYYYMMDD(weekAgo);
   const tomorrowStr = formatDateToYYYYMMDD(tomorrow);
 
-  console.log('[getWeeklyBalance] Date range:', {
-    weekAgo: weekAgoStr,
-    tomorrow: tomorrowStr,
-    weekAgoLocal: weekAgo.toLocaleDateString('pt-BR'),
-    todayLocal: today.toLocaleDateString('pt-BR'),
-  });
 
-  // Buscar entradas (últimos 7 dias, incluindo hoje)
+
+
   const { data: receivables, error: recError } = await supabase
     .from('accounts_receivable')
     .select('net_value')
@@ -40,7 +31,7 @@ export const getWeeklyBalance = async (): Promise<DatabaseResult<any>> => {
 
   if (recError) return { data: null, error: recError };
 
-  // Buscar saídas (últimos 7 dias, incluindo hoje)
+
   const { data: payables, error: payError } = await supabase
     .from('accounts_payable')
     .select('value')
@@ -201,7 +192,6 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
 
     if (payablesError) throw payablesError;
 
-    // Agrupar por mês
     const monthlyData = new Map<string, { receivable: number; payable: number }>();
 
     receivables?.forEach((r) => {
@@ -218,7 +208,6 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
       monthlyData.set(month, current);
     });
 
-    // Converter para array e ordenar
     const historical = Array.from(monthlyData.entries())
       .map(([month, data]) => ({
         month,
@@ -227,13 +216,11 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
       }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // Calcular projeção simples (média dos últimos 3 meses)
     const lastThreeMonths = historical.slice(-3);
     const avgProfit = lastThreeMonths.length > 0
       ? lastThreeMonths.reduce((sum, m) => sum + m.profit, 0) / lastThreeMonths.length
       : 0;
 
-    // Gerar 3 meses de projeção
     const projected = [];
     const now = new Date();
     for (let i = 1; i <= 3; i++) {
