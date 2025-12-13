@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { maskCnpj, maskPhone } from "./utils";
 import type { UseFormReturn } from "react-hook-form";
 import type { SupplierSchema } from "@/schemas/suppliers.schema";
-import { GenericFormDialog } from "@/components/common/generic-form-dialog";
+import { GenericFormDialog } from "@/components/ui/common/generic-form-dialog";
 
 interface SupplierFormDialogProps {
   open: boolean;

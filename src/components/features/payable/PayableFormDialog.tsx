@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/common/money-input";
+import { MoneyInput } from "@/components/ui/common/money-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 import type { Supplier } from "./types";
 import type { UseFormReturn } from "react-hook-form";
 import type { PayableSchema } from "@/schemas/payable.schema";
-import { GenericFormDialog } from "@/components/common/generic-form-dialog";
+import { GenericFormDialog } from "@/components/ui/common/generic-form-dialog";
 
 interface PayableFormDialogProps {
   open: boolean;

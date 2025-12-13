@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ItemFormDialog } from "@/components/features/product-items/ItemFormDialog";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/common/ConfirmDialog";
 import { ItemsTable } from "@/components/features/product-items/ItemsTable";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useProductItems } from "@/hooks/useProductItems";

@@ -1,4 +1,4 @@
-import { GenericAlertDialog } from "@/components/common/GenericAlertDialog";
+import { GenericAlertDialog } from "@/components/ui/common/GenericAlertDialog";
 
 interface ConfirmDialogProps {
     open: boolean;

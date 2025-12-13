@@ -1,4 +1,4 @@
-import { ColumnDef, GenericTable } from "@/components/common/generic-table";
+import { ColumnDef, GenericTable } from "@/components/ui/common/generic-table";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, CheckCircle } from "lucide-react";

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ColumnDef } from "@/components/common/generic-table";
+import { ColumnDef } from "@/components/ui/common/generic-table";
 import { formatCurrency } from "@/utils/format";
 import { PAGE_SIZE } from "@/config/constants";
 import { printerService } from "@/services/printer/PrinterService";

@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/common/money-input";
+import { MoneyInput } from "@/components/ui/common/money-input";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PaymentEntry } from "./PartialPaymentBuilder";

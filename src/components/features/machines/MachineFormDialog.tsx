@@ -14,7 +14,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/common/money-input";
+import { MoneyInput } from "@/components/ui/common/money-input";
 import {
     Select,
     SelectContent,
@@ -39,7 +39,7 @@ import {
     deleteFlag,
 } from "@/services/database";
 import { machineSchema, type MachineSchema } from "@/schemas/machine.schema";
-import { GenericFormDialog } from "@/components/common/generic-form-dialog";
+import { GenericFormDialog } from "@/components/ui/common/generic-form-dialog";
 
 interface MachineFormDialogProps {
     open: boolean;

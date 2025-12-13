@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { usePixKeys } from "@/hooks/usePixKeys";
-import { GenericAlertDialog } from "@/components/common/GenericAlertDialog";
+import { GenericAlertDialog } from "@/components/ui/common/GenericAlertDialog";
 import { PixKeysGrid } from "@/components/features/pix-keys/PixKeysGrid";
 import { Plus } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";

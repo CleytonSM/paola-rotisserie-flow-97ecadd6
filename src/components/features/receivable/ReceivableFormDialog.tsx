@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/common/money-input";
+import { MoneyInput } from "@/components/ui/common/money-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -14,7 +14,7 @@ import { getMachines, getPixKeys } from "@/services/database";
 import { useState, useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { ReceivableSchema } from "@/schemas/receivable.schema";
-import { GenericFormDialog } from "@/components/common/generic-form-dialog";
+import { GenericFormDialog } from "@/components/ui/common/generic-form-dialog";
 import { PartialPaymentBuilder, PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
 

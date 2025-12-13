@@ -1,6 +1,6 @@
 import { ReceivableFormDialog } from "@/components/features/receivable/ReceivableFormDialog";
 import { ReceivableTable } from "@/components/features/receivable/ReceivableTable";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/common/ConfirmDialog";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useReceivable } from "@/hooks/useReceivable";

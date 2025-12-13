@@ -1,7 +1,7 @@
 // pages/Products.tsx
 import { useMemo, useState } from "react";
 import { ProductFormDialog } from "@/components/features/products/ProductFormDialog";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/common/ConfirmDialog";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { ProductsTable } from "@/components/features/products/ProductsTable";
 import { useProductCatalog } from "@/hooks/useProductCatalog";

@@ -1,6 +1,6 @@
 import { SupplierFormDialog } from "@/components/features/suppliers/SupplierFormDialog";
 import { SupplierTable } from "@/components/features/suppliers/SupplierTable";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/common/ConfirmDialog";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useSuppliers } from "@/hooks/useSuppliers";

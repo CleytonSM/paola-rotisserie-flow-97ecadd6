@@ -1,4 +1,4 @@
-import { GenericTable, ColumnDef } from "@/components/common/generic-table";
+import { GenericTable, ColumnDef } from "@/components/ui/common/generic-table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import type { Supplier } from "./types";

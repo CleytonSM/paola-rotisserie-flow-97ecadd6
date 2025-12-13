@@ -30,7 +30,7 @@ import {
     updatePixKey,
     PixKeyType,
 } from "@/services/database";
-import { GenericFormDialog } from "@/components/common/generic-form-dialog";
+import { GenericFormDialog } from "@/components/ui/common/generic-form-dialog";
 
 const formSchema = z.object({
     type: z.enum(['aleatoria', 'telefone', 'cpf', 'cnpj', 'email']),
