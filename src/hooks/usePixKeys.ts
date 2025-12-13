@@ -38,7 +38,6 @@ export function usePixKeys() {
             toast.success("Chave Pix excluída com sucesso!");
             queryClient.invalidateQueries({ queryKey: ["pixKeys"] });
         } catch (error) {
-            console.error(error);
             toast.error("Erro ao excluir chave Pix");
         } finally {
             setDeletingKey(null);

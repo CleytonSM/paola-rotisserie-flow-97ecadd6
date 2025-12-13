@@ -2,10 +2,14 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { createPixKey, PixKeyType, updatePixKey, } from "@/services/database";
+import { createPixKey, PixKey, PixKeyType, updatePixKey } from "@/services/database";
 import { PixKeySchema, pixKeySchema } from "@/schemas/pixKey.schema";
 
-export const usePixKeyFormDialog = (pixKey: any, onSuccess: () => void, onOpenChange: (open: boolean) => void) => {
+export const usePixKeyFormDialog = (
+    pixKey: PixKey | null, 
+    onSuccess: () => void, 
+    onOpenChange: (open: boolean) => void
+) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<PixKeySchema>({
@@ -47,7 +51,6 @@ export const usePixKeyFormDialog = (pixKey: any, onSuccess: () => void, onOpenCh
             onSuccess();
             onOpenChange(false);
         } catch (error) {
-            console.error(error);
             toast.error("Erro ao salvar chave Pix");
         } finally {
             setIsLoading(false);

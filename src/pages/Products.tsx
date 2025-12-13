@@ -1,13 +1,13 @@
 // pages/Products.tsx
 import { useMemo, useState } from "react";
-import { ProductFormDialog } from "@/components/ui/products/ProductFormDialog";
-import { DeleteProductDialog } from "@/components/ui/products/DeleteProductDialog";
+import { ProductFormDialog } from "@/components/features/products/ProductFormDialog";
+import { ConfirmDialog } from "@/components/ui/common/ConfirmDialog";
 import { PageHeader } from "@/components/ui/common/PageHeader";
-import { ProductsTable } from "@/components/ui/products/ProductsTable";
+import { ProductsTable } from "@/components/features/products/ProductsTable";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useProductForm } from "@/hooks/useProductForm";
 import { useProductStock } from "@/hooks/useProductStock";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export const Products = () => {
@@ -70,10 +70,11 @@ export const Products = () => {
                 rowsPerPage={pageSize}
                 onPageChange={setPage}
             />
-            <DeleteProductDialog
+            <ConfirmDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={handleDeleteConfirm}
+                entityName="produto"
             />
         </Scaffolding>
     );

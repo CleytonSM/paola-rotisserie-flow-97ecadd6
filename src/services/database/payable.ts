@@ -1,12 +1,8 @@
-/**
- * Accounts Payable database operations
- */
+
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
 
-/**
- * Helper function to format date as YYYY-MM-DD in local timezone
- */
+
 const formatDateToYYYYMMDD = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -67,7 +63,7 @@ export const getAccountsPayableByDateRange = async (
   pageSize: number = 100,
   filters?: PayableFilters
 ): Promise<DatabaseResult<any[]>> => {
-  // Format as YYYY-MM-DD to avoid timezone issues
+
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
 
   let query = supabase
@@ -164,11 +160,6 @@ export const deleteAccountPayable = async (id: string): Promise<DatabaseResult<a
   return { data, error };
 };
 
-/**
- * Get accounts payable filtered for reports
- * Filters by payment_date in the specified date range (inclusive on both ends)
- * Uses date-only comparison to avoid timezone issues
- */
 export const getPayablesForReports = async (
   dateRange: { from: Date; to: Date }
 ): Promise<DatabaseResult<any[]>> => {
@@ -176,12 +167,7 @@ export const getPayablesForReports = async (
   const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
   const toDateStr = formatDateToYYYYMMDD(dateRange.to);
 
-  console.log('[getPayablesForReports] Query parameters:', {
-    fromDateStr,
-    toDateStr,
-    fromDateLocal: dateRange.from.toLocaleDateString('pt-BR'),
-    toDateLocal: dateRange.to.toLocaleDateString('pt-BR'),
-  });
+
 
   // Add one day to toDateStr for exclusive upper bound since we're comparing timestamps
   const toDate = new Date(dateRange.to);
@@ -193,8 +179,10 @@ export const getPayablesForReports = async (
   const { data, error } = await supabase
     .from('accounts_payable')
     .select(`
-      *,
-      supplier:suppliers(id, name)
+      id,
+      value,
+      payment_date,
+      supplier:suppliers(name)
     `)
     .not('payment_date', 'is', null)
     .gte('payment_date', fromDateStr)  // >= fromDate 00:00:00
@@ -202,17 +190,8 @@ export const getPayablesForReports = async (
     .order('payment_date', { ascending: false });
 
   if (error) {
-    console.error('[getPayablesForReports] Query error:', error);
-  } else {
-    console.log('[getPayablesForReports] Query successful, returned', data?.length || 0, 'records');
     if (data && data.length > 0) {
-      console.log('[getPayablesForReports] Sample payment_dates:',
-        data.slice(0, 3).map(p => ({
-          id: p.id,
-          payment_date: p.payment_date,
-          value: p.value,
-        }))
-      );
+      // Data loaded
     }
   }
 

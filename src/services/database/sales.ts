@@ -1,5 +1,4 @@
-
-import { DatabaseQuery, DatabaseMutation } from './types';
+import { DatabaseResult } from './types';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SalePayment {
@@ -23,7 +22,7 @@ export interface SaleItem {
 export interface SaleData {
     total_amount: number;
     client_id?: string | null;
-    notes?: string;
+    notes?: string | null;
     change_amount?: number;
 }
 
@@ -33,7 +32,14 @@ export interface CompleteSaleParams {
     payments: SalePayment[];
 }
 
-export const completeSale = async (params: CompleteSaleParams): Promise<{ data: { sale_id: string, display_id: number } | null, error: Error | null }> => {
+export interface CompleteSaleResult {
+    sale_id: string;
+    display_id: number;
+}
+
+export const completeSale = async (
+    params: CompleteSaleParams
+): Promise<DatabaseResult<CompleteSaleResult>> => {
     try {
         const { data, error } = await supabase.rpc('complete_sale', {
             p_sale_data: params.sale,
@@ -43,9 +49,8 @@ export const completeSale = async (params: CompleteSaleParams): Promise<{ data: 
 
         if (error) throw error;
 
-        return { data: data as any, error: null };
-    } catch (error: any) {
-        console.error('Error completing sale:', error);
-        return { data: null, error: error };
+        return { data: data as CompleteSaleResult, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
     }
 };

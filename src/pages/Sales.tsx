@@ -1,8 +1,8 @@
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { Scaffolding } from "@/components/ui/Scaffolding";
-import { GenericTable } from "@/components/ui/generic-table";
-import { SalesDetailsDialog } from "@/components/sales/SalesDetailsDialog";
+import { GenericTable } from "@/components/ui/common/generic-table";
+import { SalesDetailsDialog } from "@/components/features/sales/SalesDetailsDialog";
 import { useSales } from "@/hooks/useSales";
 
 export default function Sales() {
@@ -16,6 +16,7 @@ export default function Sales() {
         setDetailsOpen,
         columns,
         handleViewDetails,
+        handlePrint,
         page,
         setPage,
         pageSize,
@@ -37,6 +38,7 @@ export default function Sales() {
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 onViewDetails={handleViewDetails}
+                onPrint={handlePrint}
                 searchPlaceholder="Buscar por número do pedido..."
                 emptyStateMessage="Nenhuma venda encontrada."
                 page={page}

@@ -1,7 +1,7 @@
-import { SupplierFormDialog } from "@/components/ui/suppliers/SupplierFormDialog";
-import { SupplierTable } from "@/components/ui/suppliers/SupplierTable";
-import { DeleteSupplierDialog } from "@/components/ui/suppliers/DeleteSupplierDialog";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { SupplierFormDialog } from "@/components/features/suppliers/SupplierFormDialog";
+import { SupplierTable } from "@/components/features/suppliers/SupplierTable";
+import { ConfirmDialog } from "@/components/ui/common/ConfirmDialog";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { Scaffolding } from "@/components/ui/Scaffolding";
@@ -57,10 +57,11 @@ export default function Suppliers() {
         count={totalCount}
         onPageChange={setPage}
       />
-      <DeleteSupplierDialog
+      <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
+        entityName="fornecedor"
       />
     </Scaffolding>
   );

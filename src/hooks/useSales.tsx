@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ColumnDef } from "@/components/ui/generic-table";
+import { ColumnDef } from "@/components/ui/common/generic-table";
 import { formatCurrency } from "@/utils/format";
 import { PAGE_SIZE } from "@/config/constants";
+import { printerService } from "@/services/printer/PrinterService";
 
 export function useSales() {
     const [loading, setLoading] = useState(true);
@@ -31,22 +32,19 @@ export function useSales() {
             let query = supabase
                 .from("sales")
                 .select(`
-                    *,
+                    id,
+                    display_id,
+                    created_at,
+                    total_amount,
                     clients ( name ),
                     sale_items ( * ),
-                    sale_payments ( * )
+                    sale_payments ( payment_method, amount )
                 `, { count: 'exact' })
                 .order("created_at", { ascending: false });
 
             if (searchTerm) {
-                // If search term looks like a number, try searching by display_id
                 if (!isNaN(Number(searchTerm))) {
                     query = query.eq("display_id", searchTerm);
-                } else {
-                    // Otherwise search by client name is tricky with joined tables in simple filters, 
-                    // but we can try or maybe just filter locally for now if list is small, 
-                    // OR rely on exact ID match for now to keep it simple and performant.
-                    // Let's rely on ID search primarily as requested "Show sequential ID".
                 }
             }
 
@@ -61,7 +59,6 @@ export function useSales() {
             setSales(data || []);
             setTotalCount(count || 0);
         } catch (error) {
-            console.error("Error fetching sales:", error);
             toast.error("Erro ao carregar vendas");
         } finally {
             setLoading(false);
@@ -114,6 +111,33 @@ export function useSales() {
         }
     ];
 
+    const handlePrint = async (sale: any) => {
+        try {
+            // Determine payment method string
+            const paymentMethods = sale.sale_payments?.map((p: any) => translatePaymentMethod(p.payment_method));
+            const paymentMethodStr = paymentMethods?.length > 1 ? "Múltiplos" : (paymentMethods?.[0] || "Desconhecido");
+
+            await printerService.printReceipt({
+                storeName: "Paola Gonçalves Rotisseria",
+                date: new Date(sale.created_at),
+                orderId: `#${sale.display_id}`,
+                clientName: sale.clients?.name,
+                items: sale.sale_items.map((item: any) => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.unit_price,
+                    total: item.total_price
+                })),
+                subtotal: sale.total_amount, // Assuming no extra discounts/fees logic separate from total for now in this view
+                total: sale.total_amount,
+                paymentMethod: paymentMethodStr,
+                change: sale.change_amount || 0
+            });
+        } catch (error) {
+            toast.error("Erro ao imprimir");
+        }
+    };
+
     return {
         loading,
         sales,
@@ -127,6 +151,7 @@ export function useSales() {
         detailsOpen,
         setDetailsOpen,
         handleViewDetails,
+        handlePrint,
         refreshSales: fetchSales,
         columns
     };

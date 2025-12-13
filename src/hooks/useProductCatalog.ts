@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
     getProductCatalog,
+    getProductCatalogList,
+    getProductCatalogById,
     createCatalogProduct,
     updateCatalogProduct,
     deleteCatalogProduct,
@@ -60,7 +62,7 @@ export const useProductCatalog = () => {
         // But let's proceed with hook assuming valid service, and I'll double check service later.
         // Actually, let's fix the service in the next step if I realized I broke it.
         
-        const result = await getProductCatalog(showInactive, searchTerm, page, pageSize);
+        const result = await getProductCatalogList(showInactive, searchTerm, page, pageSize);
         if (result.error) {
             toast.error("Erro ao carregar produtos");
         } else if (result.data) {
@@ -144,6 +146,18 @@ export const useProductCatalog = () => {
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     // --- Delete Handlers ---
+
+    const handleEditSafe = async (product: ProductCatalog) => {
+        // Fetch full fresh data before editing to ensure form has all fields
+        const { data, error } = await getProductCatalogById(product.id);
+        if (error || !data) {
+            toast.error("Erro ao carregar detalhes do produto para edição.");
+            return;
+        }
+        handleEdit(data); 
+    };
+
+
 
     const handleDeleteClick = (id: string) => {
         setDeletingId(id);

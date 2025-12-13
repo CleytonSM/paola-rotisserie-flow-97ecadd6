@@ -1,7 +1,7 @@
-import { ReceivableFormDialog } from "@/components/ui/receivable/ReceivableFormDialog";
-import { ReceivableTable } from "@/components/ui/receivable/ReceivableTable";
-import { DeleteReceivableDialog } from "@/components/ui/receivable/DeleteReceivableDialog";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { ReceivableFormDialog } from "@/components/features/receivable/ReceivableFormDialog";
+import { ReceivableTable } from "@/components/features/receivable/ReceivableTable";
+import { ConfirmDialog } from "@/components/ui/common/ConfirmDialog";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useReceivable } from "@/hooks/useReceivable";
 import { Scaffolding } from "@/components/ui/Scaffolding";
@@ -85,10 +85,11 @@ export default function Receivable() {
         rowsPerPage={pageSize}
         onPageChange={setPage}
       />
-      <DeleteReceivableDialog
+      <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
+        entityName="conta a receber"
       />
     </Scaffolding>
   );

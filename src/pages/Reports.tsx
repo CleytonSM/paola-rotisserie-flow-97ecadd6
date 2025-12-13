@@ -1,12 +1,12 @@
 
 import { useNavigate } from "react-router-dom";
-import { ReportsFilters } from "@/components/ui/reports/ReportsFilters";
-import { ReportsKPIs } from "@/components/ui/reports/ReportsKPIs";
-import { ReportsBarChart } from "@/components/ui/reports/ReportsBarChart";
-import { ReportsPieChart } from "@/components/ui/reports/ReportsPieChart";
-import { TopClientsList } from "@/components/ui/reports/TopClientsList";
-import { TopSuppliersList } from "@/components/ui/reports/TopSuppliersList";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { ReportsFilters } from "@/components/features/reports/ReportsFilters";
+import { ReportsKPIs } from "@/components/features/reports/ReportsKPIs";
+import { ReportsBarChart } from "@/components/features/reports/ReportsBarChart";
+import { ReportsPieChart } from "@/components/features/reports/ReportsPieChart";
+import { TopClientsList } from "@/components/features/reports/TopClientsList";
+import { TopSuppliersList } from "@/components/features/reports/TopSuppliersList";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useReports } from "@/hooks/useReports";
 import { Scaffolding } from "@/components/ui/Scaffolding";

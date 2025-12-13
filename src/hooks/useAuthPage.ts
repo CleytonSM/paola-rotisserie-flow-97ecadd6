@@ -19,7 +19,6 @@ export function useAuthPage() {
     });
 
     useEffect(() => {
-        // Verificar se já está logado
         getCurrentSession().then(({ session }) => {
             if (session) {
                 navigate("/");
@@ -45,7 +44,6 @@ export function useAuthPage() {
                 navigate("/");
             }
         } catch (err) {
-            console.error(err);
             toast.error("Ocorreu um erro inesperado");
         } finally {
             setLoading(false);

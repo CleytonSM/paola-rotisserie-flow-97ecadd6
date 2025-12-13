@@ -1,9 +1,3 @@
-/**
- * Camada de abstração para autenticação
- * Isola implementação do Supabase para facilitar migração futura
- * Inclui gerenciamento de refresh tokens
- */
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AuthResult {
@@ -12,7 +6,6 @@ export interface AuthResult {
   error: Error | null;
 }
 
-// Função auxiliar para criar hash do token (simulado, já que crypto não está disponível no browser)
 const hashToken = (token: string): string => {
   // Usar uma função simples de hash para o browser
   let hash = 0;
@@ -24,13 +17,12 @@ const hashToken = (token: string): string => {
   return hash.toString(36);
 };
 
-// Salvar refresh token no banco (opcional, para auditoria)
 const saveRefreshToken = async (userId: string, refreshToken: string, expiresIn: number): Promise<void> => {
   try {
     const tokenHash = hashToken(refreshToken);
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
     
-    const { error } = await supabase
+    await supabase
       .from('refresh_tokens')
       .insert({
         user_id: userId,
@@ -38,31 +30,20 @@ const saveRefreshToken = async (userId: string, refreshToken: string, expiresIn:
         expires_at: expiresAt.toISOString(),
         device_info: navigator.userAgent,
       });
-    
-    // Não bloquear o fluxo se houver erro ao salvar (pode ser erro de permissão RLS)
-    if (error && !error.message.includes('permission denied')) {
-      console.error('Error saving refresh token:', error);
-    }
   } catch (err) {
-    // Não bloquear o fluxo se houver erro
-    console.error('Error saving refresh token:', err);
+    // Silently fail - don't block auth flow
   }
 };
 
-// Revogar todos os refresh tokens do usuário
 const revokeUserRefreshTokens = async (userId: string): Promise<void> => {
   try {
-    const { error } = await supabase
+    await supabase
       .from('refresh_tokens')
       .update({ revoked_at: new Date().toISOString() })
       .eq('user_id', userId)
       .is('revoked_at', null);
-    
-    if (error) {
-      console.error('Error revoking refresh tokens:', error);
-    }
   } catch (err) {
-    console.error('Error revoking refresh tokens:', err);
+    // Silently fail
   }
 };
 

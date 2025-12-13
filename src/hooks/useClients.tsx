@@ -1,14 +1,14 @@
-import { Client } from "@/components/ui/clients/types";
+import { Client } from "@/components/features/clients/types";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getClients, createClient, updateClient, deleteClient } from "@/services/database";
+import { getClientsList, getClientById, createClient, updateClient, deleteClient } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
-import { maskCpfCnpj, maskPhone } from "@/components/ui/clients/utils";
+import { maskCpfCnpj, maskPhone } from "@/components/features/clients/utils";
 import { useClientForm } from "./useClientForm";
 import { Pencil, Trash2 } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";
-import { ColumnDef } from "@/components/ui/generic-table";
+import { ColumnDef } from "@/components/ui/common/generic-table";
 import { PAGE_SIZE } from "@/config/constants";
 
 export const useClients = () => {
@@ -43,7 +43,7 @@ export const useClients = () => {
 
     const loadData = async () => {
         setLoading(true);
-        const result = await getClients(searchTerm, page, pageSize);
+        const result = await getClientsList(searchTerm, page, pageSize);
         if (result.error) {
             toast.error("Erro ao carregar clientes");
         } else if (result.data) {
@@ -53,15 +53,23 @@ export const useClients = () => {
         setLoading(false);
     };
 
-    const handleEdit = (client: Client) => {
-        setEditingId(client.id);
-        setDialogOpen(true);
-        return {
-            name: client.name,
-            cpf_cnpj: client.cpf_cnpj ? maskCpfCnpj(client.cpf_cnpj) : "",
-            email: client.email || "",
-            phone: client.phone ? maskPhone(client.phone) : "",
+    const handleEditSafe = async (client: Client) => {
+        const { data, error } = await getClientById(client.id);
+
+        if (error || !data) {
+            toast.error("Erro ao carregar detalhes do cliente");
+            return null;
+        }
+
+        setEditingId(data.id);
+        const formData = {
+            name: data.name,
+            cpf_cnpj: data.cpf_cnpj ? maskCpfCnpj(data.cpf_cnpj) : "",
+            email: data.email || "",
+            phone: data.phone ? maskPhone(data.phone) : "",
         };
+        setDialogOpen(true);
+        return formData;
     };
 
     const handleDeleteClick = (id: string) => {
@@ -132,9 +140,11 @@ export const useClients = () => {
         },
     });
 
-    const handleEditClick = (client: Client) => {
-        const formData = handleEdit(client);
-        setEditFormData(formData);
+    const handleEditClick = async (client: Client) => {
+        const formData = await handleEditSafe(client);
+        if (formData) {
+            setEditFormData(formData);
+        }
     };
 
     const handleDialogOpenChange = (open: boolean) => {
@@ -207,7 +217,7 @@ export const useClients = () => {
         editingId,
         deleteDialogOpen,
         setDeleteDialogOpen,
-        handleEdit,
+        handleEdit: handleEditSafe,
         handleDeleteClick,
         handleDeleteConfirm,
         handleCreate,

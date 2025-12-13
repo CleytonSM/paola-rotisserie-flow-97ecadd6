@@ -35,22 +35,23 @@ export interface CreateFlagDTO {
   tax_rate: number;
 }
 
+interface MachineUpdatePayload {
+  name?: string;
+  image_url?: string;
+}
+
 const BUCKET_NAME = 'machine-images';
 
 export const getMachines = async (): Promise<DatabaseResult<CardMachine[]>> => {
   try {
     const { data, error } = await supabase
       .from('card_machines')
-      .select(`
-        *,
-        flags:card_flags(*)
-      `)
+      .select(`*, flags:card_flags(*)`)
       .order('name');
 
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching machines:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -62,56 +63,50 @@ export const createMachine = async (data: CreateMachineDTO): Promise<DatabaseRes
     if (data.image) {
       const fileExt = data.image.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(filePath, data.image);
+        .upload(fileName, data.image);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from(BUCKET_NAME)
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       image_url = publicUrl;
     }
 
     const { data: machine, error } = await supabase
       .from('card_machines')
-      .insert({
-        name: data.name,
-        image_url
-      })
+      .insert({ name: data.name, image_url })
       .select()
       .single();
 
     if (error) throw error;
     return { data: machine, error: null };
   } catch (error) {
-    console.error('Error creating machine:', error);
     return { data: null, error: error as Error };
   }
 };
 
 export const updateMachine = async (id: string, data: UpdateMachineDTO): Promise<DatabaseResult<CardMachine>> => {
   try {
-    const updates: any = { name: data.name };
+    const updates: MachineUpdatePayload = { name: data.name };
 
     if (data.image) {
       const fileExt = data.image.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(filePath, data.image);
+        .upload(fileName, data.image);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from(BUCKET_NAME)
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       updates.image_url = publicUrl;
     }
@@ -126,7 +121,6 @@ export const updateMachine = async (id: string, data: UpdateMachineDTO): Promise
     if (error) throw error;
     return { data: machine, error: null };
   } catch (error) {
-    console.error('Error updating machine:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -141,7 +135,6 @@ export const deleteMachine = async (id: string): Promise<DatabaseResult<void>> =
     if (error) throw error;
     return { data: null, error: null };
   } catch (error) {
-    console.error('Error deleting machine:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -157,7 +150,6 @@ export const addFlag = async (data: CreateFlagDTO): Promise<DatabaseResult<CardF
     if (error) throw error;
     return { data: flag, error: null };
   } catch (error) {
-    console.error('Error adding flag:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -172,7 +164,6 @@ export const deleteFlag = async (id: string): Promise<DatabaseResult<void>> => {
     if (error) throw error;
     return { data: null, error: null };
   } catch (error) {
-    console.error('Error deleting flag:', error);
     return { data: null, error: error as Error };
   }
 };

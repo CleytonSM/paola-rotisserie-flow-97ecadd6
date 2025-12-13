@@ -11,6 +11,8 @@ export type { PixKey, PixKeyType } from "./pix_keys";
 // Suppliers
 export {
     getSuppliers,
+    getSuppliersList,
+    getSupplierById,
     createSupplier,
     updateSupplier,
     deleteSupplier,
@@ -19,6 +21,8 @@ export {
 // Clients
 export {
     getClients,
+    getClientsList,
+    getClientById,
     createClient,
     updateClient,
     deleteClient,
@@ -90,6 +94,8 @@ export {
 // Product Catalog (Master Products)
 export {
     getProductCatalog,
+    getProductCatalogList,
+    getProductCatalogById,
     getInternalActiveCatalogProducts,
     createCatalogProduct,
     updateCatalogProduct,

@@ -5,32 +5,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CardMachine } from "@/services/database/machines";
 import { completeSale, SaleItem, SalePayment } from "@/services/database/sales";
-import type { PaymentEntry } from "@/components/ui/partial-payment/PartialPaymentBuilder";
+import type { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
+import type { PixKey } from "@/services/database/pix_keys";
 
 export function usePayment() {
     const navigate = useNavigate();
-    const { items, total, clearCart } = useCartStore();
+    const { items, total } = useCartStore();
     const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
     const [notes, setNotes] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [showPixModal, setShowPixModal] = useState(false);
 
-    // Data from DB
-    const [pixKeys, setPixKeys] = useState<any[]>([]);
+    const [pixKeys, setPixKeys] = useState<PixKey[]>([]);
     const [machines, setMachines] = useState<CardMachine[]>([]);
     
-    // Selection State
     const [selectedPixKey, setSelectedPixKey] = useState<string>("");
     const [selectedMachine, setSelectedMachine] = useState<string>("");
     const [selectedFlag, setSelectedFlag] = useState<string>("");
     
-    // Cash State
     const [amountGiven, setAmountGiven] = useState<string>("");
 
-    // Client State
-    const [selectedClient, setSelectedClient] = useState<any | null>(null);
+    const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
 
-    // Partial Payment State
     const [isPartialPayment, setIsPartialPayment] = useState(false);
     const [paymentEntries, setPaymentEntries] = useState<PaymentEntry[]>([]);
 
@@ -43,14 +39,11 @@ export function usePayment() {
 
     const loadPaymentData = async () => {
         const { data: keys } = await supabase.from("pix_keys").select("*").eq("active", true);
-        if (keys) setPixKeys(keys);
+        if (keys) setPixKeys(keys as unknown as PixKey[]);
 
         const { data: machs } = await supabase
             .from("card_machines")
-            .select(`
-                *,
-                flags:card_flags(*)
-            `);
+            .select(`*, flags:card_flags(*)`);
         
         if (machs) setMachines(machs);
     };
@@ -90,7 +83,6 @@ export function usePayment() {
     };
 
     const handleConfirm = async () => {
-        // For partial payments, validate entries
         if (isPartialPayment) {
             if (paymentEntries.length === 0) {
                 toast.error("Adicione pelo menos um método de pagamento");
@@ -98,15 +90,13 @@ export function usePayment() {
             }
             
             const remaining = getRemainingBalance();
-            // Allow negative remaining if cash was overpaid (for change/troco)
             const hasCashOverpayment = remaining < -0.01 && paymentEntries.some(e => e.method === 'cash');
-            // Must be fully allocated (remaining ~0) OR overpaid with cash
+            
             if (remaining > 0.01 || (remaining < -0.01 && !hasCashOverpayment)) {
                 toast.error("O valor alocado deve ser igual ou maior que o total (com dinheiro para troco)");
                 return;
             }
         } else {
-            // Single payment mode - validate as before
             if (!selectedMethod) return;
         }
 
@@ -114,10 +104,8 @@ export function usePayment() {
         try {
             const totalAmount = calculateTotalWithFees();
             
-            // Calculate change: for single payment use amountGiven, for partial use cash overpayment
             let changeAmount = 0;
             if (isPartialPayment) {
-                // For partial payments, change comes from cash overpayment
                 const remaining = getRemainingBalance();
                 if (remaining < 0 && paymentEntries.some(e => e.method === 'cash')) {
                     changeAmount = Math.abs(remaining);
@@ -126,7 +114,6 @@ export function usePayment() {
                 changeAmount = calculateChange();
             }
 
-            // Prepare Items
             const saleItems: SaleItem[] = items.flatMap(item => {
                 if (item.subItems && item.subItems.length > 0) {
                    return item.subItems.map(sub => ({
@@ -149,11 +136,9 @@ export function usePayment() {
                 }];
             });
 
-            // Prepare Payments
             let payments: SalePayment[];
 
             if (isPartialPayment) {
-                // Convert payment entries to SalePayment format
                 payments = paymentEntries.map(entry => {
                     const payment: SalePayment = {
                         amount: entry.amount,
@@ -171,7 +156,6 @@ export function usePayment() {
                     return payment;
                 });
             } else {
-                // Single payment mode
                 const payment: SalePayment = {
                     amount: totalAmount,
                     payment_method: selectedMethod as SalePayment['payment_method'],
@@ -188,7 +172,6 @@ export function usePayment() {
                 payments = [payment];
             }
 
-            // Call Service
             const { data, error } = await completeSale({
                 sale: {
                     total_amount: totalAmount,
@@ -202,11 +185,10 @@ export function usePayment() {
 
             if (error) throw error;
 
-            // Calculate pixAmount and pixKey for SuccessPage (partial or single)
             const pixEntry = isPartialPayment ? paymentEntries.find(e => e.method === 'pix') : null;
             const pixPaymentAmount = pixEntry ? pixEntry.amount : (selectedMethod === 'pix' ? totalAmount : null);
             const pixKeyObject = pixEntry?.details?.pixKeyId 
-                ? pixKeys.find(k => k.id === pixEntry.details.pixKeyId)
+                ? pixKeys.find(k => k.id === pixEntry.details?.pixKeyId)
                 : (selectedMethod === 'pix' ? pixKeys.find(k => k.id === selectedPixKey) : null);
 
             navigate('/pdv/success', {
@@ -225,7 +207,6 @@ export function usePayment() {
             });
 
         } catch (error) {
-            console.error(error);
             toast.error("Erro ao processar venda");
         } finally {
             setIsProcessing(false);
@@ -257,7 +238,6 @@ export function usePayment() {
         handleConfirm,
         selectedClient,
         setSelectedClient,
-        // Partial payment exports
         isPartialPayment,
         setIsPartialPayment,
         paymentEntries,

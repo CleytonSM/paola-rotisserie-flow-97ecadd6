@@ -7,14 +7,14 @@ import type {
   BarChartData,
   PieChartData,
   TopItem,
-} from "@/components/ui/reports/types";
+} from "@/components/features/reports/types";
 import { getReceivablesForReports, getPayablesForReports } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { getStartDateFromFilter } from "@/components/ui/reports/utils";
+import { getStartDateFromFilter } from "@/components/features/reports/utils";
 
 export const useReports = () => {
     const navigate = useNavigate();
@@ -24,13 +24,11 @@ export const useReports = () => {
   const [filter, setFilter] = useState<ReportsFilter>("monthly");
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
 
-  // Compute date range based on filter and customDateRange
   const dateRange = useMemo(() => {
     let startDate: Date;
     let endDate: Date;
 
     if (filter === "custom" && customDateRange?.from) {
-      // Use custom date range - create new date objects to avoid mutations
       startDate = new Date(customDateRange.from.getFullYear(), customDateRange.from.getMonth(), customDateRange.from.getDate());
       if (customDateRange.to) {
         endDate = new Date(customDateRange.to.getFullYear(), customDateRange.to.getMonth(), customDateRange.to.getDate());
@@ -39,23 +37,12 @@ export const useReports = () => {
         endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       }
     } else {
-      // Use pre-defined filter - get the date from filter and reconstruct it in local timezone
       const filterStartDate = getStartDateFromFilter(filter);
       startDate = new Date(filterStartDate.getFullYear(), filterStartDate.getMonth(), filterStartDate.getDate());
 
       const today = new Date();
       endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     }
-
-    console.log('[Reports] Date range calculated:', {
-      filter,
-      startDate: startDate.toLocaleDateString('pt-BR'),
-      endDate: endDate.toLocaleDateString('pt-BR'),
-      startDateISO: startDate.toISOString(),
-      endDateISO: endDate.toISOString(),
-      startDateComponents: { year: startDate.getFullYear(), month: startDate.getMonth() + 1, day: startDate.getDate() },
-      endDateComponents: { year: endDate.getFullYear(), month: endDate.getMonth() + 1, day: endDate.getDate() },
-    });
 
     return { from: startDate, to: endDate };
   }, [filter, customDateRange]);
@@ -67,17 +54,14 @@ export const useReports = () => {
         navigate("/auth");
         return;
       }
-      // Only load data if dateRange is ready
       if (dateRange.from && dateRange.to) {
         loadData();
       }
     };
     checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   useEffect(() => {
-    // Reload data when filter or customDateRange changes (only if authenticated)
     const loadWhenReady = async () => {
       const { session } = await getCurrentSession();
       if (session && dateRange.from && dateRange.to) {
@@ -85,18 +69,10 @@ export const useReports = () => {
       }
     };
     loadWhenReady();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange.from, dateRange.to]);
 
   const loadData = async () => {
     if (!dateRange.from || !dateRange.to) return;
-
-    console.log('[Reports] loadData called with dateRange:', {
-      from: dateRange.from.toLocaleDateString('pt-BR'),
-      to: dateRange.to.toLocaleDateString('pt-BR'),
-      fromISO: dateRange.from.toISOString(),
-      toISO: dateRange.to.toISOString(),
-    });
 
     setLoading(true);
     const [recResult, payResult] = await Promise.all([
@@ -105,30 +81,16 @@ export const useReports = () => {
     ]);
 
     if (recResult.error) {
-      console.error('[Reports] Error loading receivables:', recResult.error);
       toast.error("Erro ao carregar entradas");
       setReceivables([]);
     } else if (recResult.data) {
-      console.log('[Reports] Receivables loaded:', recResult.data.length, 'records');
-      console.log('[Reports] Sample receivables:', recResult.data.slice(0, 3).map((r: AccountReceivable) => ({
-        id: r.id,
-        entry_date: r.entry_date,
-        net_value: r.net_value,
-      })));
       setReceivables(recResult.data as AccountReceivable[]);
     }
 
     if (payResult.error) {
-      console.error('[Reports] Error loading payables:', payResult.error);
       toast.error("Erro ao carregar saídas");
       setPayables([]);
     } else if (payResult.data) {
-      console.log('[Reports] Payables loaded:', payResult.data.length, 'records');
-      console.log('[Reports] Sample payables:', payResult.data.slice(0, 3).map((p: AccountPayable) => ({
-        id: p.id,
-        payment_date: p.payment_date,
-        value: p.value,
-      })));
       setPayables(payResult.data as AccountPayable[]);
     }
 
@@ -149,20 +111,17 @@ export const useReports = () => {
     const formatType = filter === "weekly" || filter === "monthly" ? "dd/MM" : "MMM/yy";
     const locale = ptBR;
 
-    // Map to store data grouped by formatted date
     const dataMap: Map<
       string,
       { name: string; Entradas: number; Saídas: number; date: Date }
     > = new Map();
 
     receivables.forEach((r) => {
-      // Use entry_date for grouping (already filtered by database)
       if (!r.entry_date) return;
       const entryDate = parseISO(r.entry_date);
       const name = format(entryDate, formatType, { locale });
       const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: entryDate };
       entry.Entradas += Number(r.net_value);
-      // Keep earliest date for sorting
       if (entryDate < entry.date) {
         entry.date = entryDate;
       }
@@ -170,23 +129,20 @@ export const useReports = () => {
     });
 
     payables.forEach((p) => {
-      // Use payment_date for grouping (already filtered by database)
       if (!p.payment_date) return;
       const paymentDate = parseISO(p.payment_date);
       const name = format(paymentDate, formatType, { locale });
       const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: paymentDate };
       entry.Saídas += Number(p.value);
-      // Keep earliest date for sorting
       if (paymentDate < entry.date) {
         entry.date = paymentDate;
       }
       dataMap.set(name, entry);
     });
 
-    // Convert to array and sort chronologically
     return Array.from(dataMap.values())
       .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .map(({ date, ...rest }) => rest); // Remove date property before returning
+      .map(({ date, ...rest }) => rest);
   }, [receivables, payables, filter]);
 
   const pieChartData = useMemo((): PieChartData[] => {

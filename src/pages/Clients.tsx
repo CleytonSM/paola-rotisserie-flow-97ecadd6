@@ -1,11 +1,11 @@
-import { ClientFormDialog } from "@/components/ui/clients/ClientFormDialog";
-import { DeleteClientDialog } from "@/components/ui/clients/DeleteClientDialog";
+import { ClientFormDialog } from "@/components/features/clients/ClientFormDialog";
+import { DeleteClientDialog } from "@/components/features/clients/DeleteClientDialog";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useClients } from "@/hooks/useClients";
 import { Scaffolding } from "@/components/ui/Scaffolding";
-import { GenericTable } from "@/components/ui/generic-table";
+import { GenericTable } from "@/components/ui/common/generic-table";
 
 export default function Clients() {
   const {

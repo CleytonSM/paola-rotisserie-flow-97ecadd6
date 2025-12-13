@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
-import type { AccountReceivable, Client, StatusFilter } from "@/components/ui/receivable/types";
+import type { AccountReceivable, Client, StatusFilter } from "@/components/features/receivable/types";
 import {
     getAccountsReceivable,
     getAccountsReceivableByDateRange,
@@ -17,9 +17,9 @@ import {
 } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { receivableSchema, type ReceivableSchema } from "@/schemas/receivable.schema";
-import { getAccountStatus } from "@/components/ui/receivable/utils";
+import { getAccountStatus } from "@/components/features/receivable/utils";
 import { PAGE_SIZE } from "@/config/constants";
-import type { PaymentEntry } from "@/components/ui/partial-payment/PartialPaymentBuilder";
+import type { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 
 export function useReceivable() {
     const navigate = useNavigate();
@@ -31,7 +31,6 @@ export function useReceivable() {
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
     const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
-    // Pagination
     const [page, setPage] = useState(1);
     const [pageSize] = useState(PAGE_SIZE);
 
@@ -54,11 +53,8 @@ export function useReceivable() {
         },
     });
 
-    // Partial Payment State
     const [isPartialPayment, setIsPartialPayment] = useState(false);
     const [paymentEntries, setPaymentEntries] = useState<PaymentEntry[]>([]);
-
-    // --- Data Loading ---
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -108,8 +104,6 @@ export function useReceivable() {
         setLoading(false);
     };
 
-    // --- CRUD Handlers ---
-
     const formatDateToYYYYMMDD = (date: Date): string => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -119,7 +113,6 @@ export function useReceivable() {
 
     const onSubmit = async (data: ReceivableSchema) => {
         try {
-            // Validate partial payment if enabled
             if (isPartialPayment && !editingId) {
                 if (paymentEntries.length === 0) {
                     toast.error("Adicione pelo menos um método de pagamento");
@@ -128,9 +121,8 @@ export function useReceivable() {
                 
                 const totalAllocated = paymentEntries.reduce((sum, entry) => sum + entry.amount, 0);
                 const remaining = data.gross_value - totalAllocated;
-                // Allow negative remaining if cash was overpaid (for change/troco)
                 const hasCashOverpayment = remaining < -0.01 && paymentEntries.some(e => e.method === 'cash');
-                // Must be fully allocated OR overpaid with cash
+                
                 if (remaining > 0.01 || (remaining < -0.01 && !hasCashOverpayment)) {
                     toast.error("O valor alocado deve ser igual ou maior que o valor bruto (com dinheiro para troco)");
                     return false;
@@ -139,14 +131,12 @@ export function useReceivable() {
 
             const dataToSubmit = {
                 ...data,
-                client_id: data.client_id || null, // Convert empty string to null
+                client_id: data.client_id || null, 
                 entry_date: data.entry_date ? formatDateToYYYYMMDD(data.entry_date) : "",
             };
 
             if (editingId) {
-                // Edit mode
                 if (isPartialPayment && paymentEntries.length > 0) {
-                    // Update with payment breakdown
                     const payments = paymentEntries.map(entry => ({
                         amount: entry.amount,
                         payment_method: entry.method,
@@ -161,7 +151,6 @@ export function useReceivable() {
                         return false;
                     }
                 } else {
-                    // Regular update without payment changes
                     const { error } = await updateAccountReceivable(editingId, dataToSubmit);
                     if (error) {
                         toast.error("Erro ao atualizar entrada");
@@ -169,15 +158,13 @@ export function useReceivable() {
                     }
                 }
             } else {
-                // Create mode
                 if (isPartialPayment) {
-                    // Convert payment entries to ReceivablePayment format
                     const payments = paymentEntries.map(entry => ({
                         amount: entry.amount,
                         payment_method: entry.method,
                         card_brand: entry.details?.cardBrand,
                         pix_key_id: entry.details?.pixKeyId,
-                        tax_rate: 0 // You can calculate based on card brand if needed
+                        tax_rate: 0
                     }));
 
                     const { error } = await createAccountReceivable(dataToSubmit, payments);
@@ -186,7 +173,6 @@ export function useReceivable() {
                         return false;
                     }
                 } else {
-                    // Single payment mode
                     const { error } = await createAccountReceivable(dataToSubmit);
                     if (error) {
                         toast.error("Erro ao criar entrada");
@@ -220,10 +206,8 @@ export function useReceivable() {
             entry_date: account.entry_date ? new Date(account.entry_date) : new Date(),
         });
 
-        // Load existing payments if any
         const { data: payments, error } = await getReceivablePayments(account.id);
         if (!error && payments && payments.length > 0) {
-            // Convert to PaymentEntry format for display
             const entries: PaymentEntry[] = payments.map((payment: any, index) => ({
                 id: `existing-${index}`,
                 method: payment.payment_method,
@@ -234,7 +218,7 @@ export function useReceivable() {
                 } : undefined
             }));
             setPaymentEntries(entries);
-            setIsPartialPayment(true); // Mark as partial payment for display
+            setIsPartialPayment(true);
         } else {
             setPaymentEntries([]);
             setIsPartialPayment(false);
@@ -281,7 +265,6 @@ export function useReceivable() {
         if (!open) {
             setEditingId(null);
             form.reset();
-            // Reset partial payment state
             setPaymentEntries([]);
             setIsPartialPayment(false);
         }
@@ -310,8 +293,6 @@ export function useReceivable() {
         ));
     };
 
-
-
     return {
         loading,
         accounts,
@@ -338,7 +319,6 @@ export function useReceivable() {
         setPage,
         pageSize,
         totalCount,
-        // Partial payment exports
         isPartialPayment,
         setIsPartialPayment,
         paymentEntries,

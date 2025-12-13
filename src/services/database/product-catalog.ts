@@ -9,11 +9,10 @@ import type { DatabaseResult } from "./types";
 export interface ProductCatalog {
     id: string;
     name: string;
-    base_price: number;  // price per kg or per unit
-    // internal_code removed
+    base_price: number;
     catalog_barcode?: number | null;
     shelf_life_days?: number | null;
-    default_discount?: number | null;  // 0-1 range
+    default_discount?: number | null;
     unit_type: 'kg' | 'un';
     is_internal: boolean;
     quantity?: number | null;
@@ -25,7 +24,6 @@ export interface ProductCatalog {
 export interface ProductCatalogInput {
     name: string;
     base_price: number;
-    // internal_code removed
     catalog_barcode?: number | null;
     shelf_life_days: number;
     default_discount?: number | null;
@@ -35,10 +33,6 @@ export interface ProductCatalogInput {
     is_active?: boolean;
 }
 
-/**
- * Get all product catalog items
- * @param activeOnly - If true, only return active products (default: true)
- */
 export const getProductCatalog = async (
     activeOnly: boolean = true,
     searchTerm: string = "",
@@ -70,9 +64,65 @@ export const getProductCatalog = async (
     }
 };
 
-/**
- * Create a new product catalog item
- */
+export const getProductCatalogList = async (
+    activeOnly: boolean = true,
+    searchTerm: string = "",
+    page: number = 1,
+    pageSize: number = 100
+): Promise<DatabaseResult<ProductCatalog[]>> => {
+    try {
+        let query = supabase
+            .from("product_catalog")
+            .select(`
+                id,
+                name,
+                base_price,
+                unit_type,
+                is_internal,
+                is_active,
+                quantity,
+                catalog_barcode,
+                shelf_life_days,
+                default_discount,
+                created_at,
+                updated_at
+            `, { count: "exact" })
+            .order("name", { ascending: true });
+
+        if (activeOnly) {
+            query = query.eq("is_active", true);
+        }
+
+        if (searchTerm) {
+            query = query.ilike("name", `%${searchTerm}%`);
+        }
+
+        const { data, error, count } = await query
+            .range((page - 1) * pageSize, page * pageSize - 1)
+            .limit(pageSize);
+
+        if (error) throw error;
+        return { data, error: null, count: count ?? 0 };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+
+export const getProductCatalogById = async (id: string): Promise<DatabaseResult<ProductCatalog>> => {
+    try {
+        const { data, error } = await supabase
+            .from("product_catalog")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+        if (error) throw error;
+        return { data, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+
 export const createCatalogProduct = async (
     product: ProductCatalogInput
 ): Promise<DatabaseResult<ProductCatalog>> => {
@@ -90,9 +140,6 @@ export const createCatalogProduct = async (
     }
 };
 
-/**
- * Update an existing product catalog item
- */
 export const updateCatalogProduct = async (
     id: string,
     product: ProductCatalogInput
@@ -112,9 +159,6 @@ export const updateCatalogProduct = async (
     }
 };
 
-/**
- * Soft delete a product catalog item (set is_active = false)
- */
 export const deleteCatalogProduct = async (
     id: string
 ): Promise<DatabaseResult<void>> => {
@@ -131,10 +175,6 @@ export const deleteCatalogProduct = async (
     }
 };
 
-/**
- * Hard delete a product catalog item (permanent deletion)
- * Use with caution - this will fail if there are related product_items
- */
 export const hardDeleteCatalogProduct = async (
     id: string
 ): Promise<DatabaseResult<void>> => {
@@ -151,10 +191,6 @@ export const hardDeleteCatalogProduct = async (
     }
 };
 
-/**
- * Get all internal and active catalog products (for item creation dialogs)
- * No pagination - returns all matching products
- */
 export const getInternalActiveCatalogProducts = async (): Promise<DatabaseResult<ProductCatalog[]>> => {
     try {
         const { data, error } = await supabase
@@ -171,17 +207,10 @@ export const getInternalActiveCatalogProducts = async (): Promise<DatabaseResult
     }
 };
 
-/**
- * Search product catalog by code (barcode or internal) or name
- */
 export const searchProductCatalog = async (
     query: string
 ): Promise<DatabaseResult<ProductCatalog[]>> => {
     try {
-        // If query is short, don't search
-        if (query.length < 3) return { data: [], error: null };
-
-        // Check if query is numeric (potential barcode)
         const isNumeric = /^\d+$/.test(query);
 
         let dbQuery = supabase
@@ -190,10 +219,8 @@ export const searchProductCatalog = async (
             .eq("is_active", true);
 
         if (isNumeric) {
-            // Search by barcode
             dbQuery = dbQuery.eq('catalog_barcode', query);
         } else {
-            // Search by name (case insensitive)
             dbQuery = dbQuery.ilike('name', `%${query}%`);
         }
 

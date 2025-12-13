@@ -1,4 +1,4 @@
-import { validateCnpj } from "@/components/ui/suppliers/utils";
+import { validateCnpj } from "@/components/features/suppliers/utils";
 import z from "zod";
 
 export const supplierSchema = z.object({
