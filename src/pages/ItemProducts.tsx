@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ItemFormDialog } from "@/components/ui/product-items/ItemFormDialog";
-import { DeleteItemDialog } from "@/components/ui/product-items/DeleteItemDialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ItemsTable } from "@/components/ui/product-items/ItemsTable";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useProductItems } from "@/hooks/useProductItems";
@@ -107,10 +107,11 @@ export default function ItemProducts() {
                 onPageChange={setPage}
             />
 
-            <DeleteItemDialog
+            <ConfirmDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={handleDeleteConfirm}
+                entityName="item de produto"
             />
 
             <BulkScanDialog

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useMachines } from "@/hooks/useMachines";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { MachinesGrid } from "@/components/ui/machines/MachinesGrid";
-import { DeleteMachineDialog } from "@/components/ui/machines/DeleteMachineDialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function Machines() {
@@ -50,10 +50,12 @@ export default function Machines() {
                 onCreate={handleCreate}
             />
 
-            <DeleteMachineDialog
-                machine={deletingMachine}
-                onClose={handleDeleteDialogClose}
+            <ConfirmDialog
+                open={!!deletingMachine}
+                onOpenChange={handleDeleteDialogClose}
                 onConfirm={handleDelete}
+                title="Excluir Maquininha?"
+                description={`Tem certeza que deseja excluir a maquininha "${deletingMachine?.name}"? Esta ação não pode ser desfeita.`}
             />
         </Scaffolding>
     );
