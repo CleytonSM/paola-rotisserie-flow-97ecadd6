@@ -1,4 +1,4 @@
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 import { GenericTable } from "@/components/ui/generic-table";

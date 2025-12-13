@@ -1,10 +1,10 @@
 import { MachineFormDialog } from "../components/ui/machines/MachineFormDialog";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useMachines } from "@/hooks/useMachines";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { MachinesGrid } from "@/components/ui/machines/MachinesGrid";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function Machines() {

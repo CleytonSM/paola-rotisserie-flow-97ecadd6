@@ -1,4 +1,4 @@
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useDashboard } from "@/hooks/useDashboard";
 import { StatsGrid } from "@/components/ui/dashboard/StatsGrid";

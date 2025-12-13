@@ -2,13 +2,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ItemFormDialog } from "@/components/ui/product-items/ItemFormDialog";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ItemsTable } from "@/components/ui/product-items/ItemsTable";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useProductItems } from "@/hooks/useProductItems";
 import { getInternalActiveCatalogProducts, ProductCatalog } from "@/services/database";
 import { useAuth } from "@/hooks/useAuth";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 import { BulkScanDialog } from "@/components/ui/product-items/BulkScanDialog";
 import { Button } from "@/components/ui/button";

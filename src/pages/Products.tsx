@@ -1,13 +1,13 @@
 // pages/Products.tsx
 import { useMemo, useState } from "react";
 import { ProductFormDialog } from "@/components/ui/products/ProductFormDialog";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { ProductsTable } from "@/components/ui/products/ProductsTable";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useProductForm } from "@/hooks/useProductForm";
 import { useProductStock } from "@/hooks/useProductStock";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export const Products = () => {

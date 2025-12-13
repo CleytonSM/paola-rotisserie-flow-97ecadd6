@@ -6,7 +6,7 @@ import { ReportsBarChart } from "@/components/ui/reports/ReportsBarChart";
 import { ReportsPieChart } from "@/components/ui/reports/ReportsPieChart";
 import { TopClientsList } from "@/components/ui/reports/TopClientsList";
 import { TopSuppliersList } from "@/components/ui/reports/TopSuppliersList";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useReports } from "@/hooks/useReports";
 import { Scaffolding } from "@/components/ui/Scaffolding";

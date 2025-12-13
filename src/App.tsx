@@ -13,7 +13,7 @@ import Clients from "./pages/Clients";
 import Machines from "./pages/Machines";
 import PixKeys from "./pages/PixKeys";
 import NotFound from "./pages/NotFound";
-import Layout from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 import { Products } from "./pages/Products";
 import ItemProducts from "./pages/ItemProducts";
 import PDVPage from "./pages/pdv/PDVPage";

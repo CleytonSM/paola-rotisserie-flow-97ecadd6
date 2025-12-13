@@ -1,4 +1,4 @@
-import { GenericAlertDialog } from "@/components/GenericAlertDialog";
+import { GenericAlertDialog } from "@/components/common/GenericAlertDialog";
 import {
   AlertDialog,
   AlertDialogAction,

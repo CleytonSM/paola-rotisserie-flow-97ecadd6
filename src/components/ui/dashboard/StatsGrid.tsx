@@ -1,4 +1,4 @@
-import { StatsCard } from "@/components/StatsCard";
+import { StatsCard } from "@/components/common/StatsCard";
 import { TrendingUp, TrendingDown, AlertCircle, DollarSign } from "lucide-react";
 import { CombinedPayablesCard } from "./CombinedPayablesCard";
 import { LoadingSkeleton } from "./LoadingSkeleton";
