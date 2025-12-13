@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye } from "lucide-react";
+import { Eye, Printer } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { PAGE_SIZE } from "@/config/constants";
 import { ColumnDef, GenericTableProps } from "./types";
@@ -27,6 +27,7 @@ export function GenericTable<T extends { id: string }>({
     filterControls,
     emptyStateMessage,
     onViewDetails,
+    onPrint,
     emptyStateSearchMessage = "Nenhum resultado encontrado.",
     count,
     page = 1,
@@ -45,16 +46,27 @@ export function GenericTable<T extends { id: string }>({
             headerClassName: "text-right",
             cellClassName: "text-right",
             cell: (row) => (
-                <DataTableAction
-                    tooltip="Ver detalhes"
-                    onClick={() => onViewDetails(row)}
-                    icon={Eye}
-                />
+                <div className="flex justify-end gap-2">
+                    {onPrint && (
+                        <DataTableAction
+                            tooltip="Imprimir comprovante"
+                            onClick={() => onPrint(row)}
+                            icon={Printer}
+                        />
+                    )}
+                    {onViewDetails && (
+                        <DataTableAction
+                            tooltip="Ver detalhes"
+                            onClick={() => onViewDetails(row)}
+                            icon={Eye}
+                        />
+                    )}
+                </div>
             )
         };
 
         return [...columns, actionsColumn];
-    }, [columns, onViewDetails]);
+    }, [columns, onViewDetails, onPrint]);
 
     const isMobile = useIsMobile();
 

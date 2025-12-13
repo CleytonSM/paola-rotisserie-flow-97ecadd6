@@ -16,6 +16,7 @@ export default function Sales() {
         setDetailsOpen,
         columns,
         handleViewDetails,
+        handlePrint,
         page,
         setPage,
         pageSize,
@@ -37,6 +38,7 @@ export default function Sales() {
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 onViewDetails={handleViewDetails}
+                onPrint={handlePrint}
                 searchPlaceholder="Buscar por número do pedido..."
                 emptyStateMessage="Nenhuma venda encontrada."
                 page={page}

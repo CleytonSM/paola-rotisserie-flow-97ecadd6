@@ -1,49 +1,57 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCartStore } from "@/stores/cartStore";
-import { CheckCircle2, ArrowRight, QrCode } from "lucide-react";
+import { CheckCircle2, ArrowRight, QrCode, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/utils/format";
 import { motion } from "framer-motion";
 import { QRCodeModal } from "@/components/pdv/QRCodeModal";
 import { ReceiptSummary } from "@/components/pdv/success/ReceiptSummary";
 import { printerService } from "@/services/printer/PrinterService";
-import { Printer } from "lucide-react";
+
+interface SuccessPageState {
+    saleId?: string;
+    displayId?: string;
+    orderId?: string;
+    total: number;
+    subtotal: number;
+    method: string;
+    pixKey?: { key: string; key_value?: string };
+    pixAmount?: number;
+    clientName?: string;
+    items?: any[];
+    change?: number;
+}
 
 export default function SuccessPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { saleId, displayId: numericId, total, subtotal, method, pixKey, pixAmount, orderId, clientName, items, change } = location.state || {};
-
-
+    const state = location.state as SuccessPageState || {};
+    const {
+        saleId, displayId: numericId, total, subtotal, method,
+        pixKey, pixAmount, orderId, clientName, items, change
+    } = state;
 
     const finalDisplayId = numericId ? `#${numericId}` : (saleId || orderId)?.slice(0, 8);
     const [showPixModal, setShowPixModal] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
 
     const handlePrint = async () => {
-        if (!items || items.length === 0) {
-            console.warn("No items to print");
-            return;
-        }
+        if (!items || items.length === 0) return;
 
         setIsPrinting(true);
         try {
             await printerService.printReceipt({
                 storeName: "Paola Gonçalves Rotisseria",
-                // storeAddress: "Rua Exemplo, 123", // Add if available
-                // storePhone: "(11) 99999-9999", // Add if available
                 date: new Date(),
                 orderId: finalDisplayId,
                 clientName: clientName,
                 items: items.map((item: any) => ({
                     name: item.name,
                     quantity: item.quantity,
-                    price: item.price || item.base_price || 0, // Handle different item structures
+                    price: item.price || item.base_price || 0,
                     total: (item.price || item.base_price || 0) * item.quantity
                 })),
                 subtotal: subtotal || 0,
-                // discount: 0, 
                 total: total || 0,
                 paymentMethod: method === 'card_credit' ? 'Crédito' :
                     method === 'card_debit' ? 'Débito' :
@@ -53,7 +61,7 @@ export default function SuccessPage() {
                 change: change,
             });
         } catch (error) {
-            console.error("Failed to print", error);
+            // Silently fail or minimal feedback, logic mainly depends on printer service
         } finally {
             setIsPrinting(false);
         }
@@ -136,7 +144,7 @@ export default function SuccessPage() {
                 <QRCodeModal
                     open={showPixModal}
                     onOpenChange={setShowPixModal}
-                    pixKey={pixKey.key_value || pixKey.key} // Handle potentially different field names depending on object source
+                    pixKey={pixKey.key_value || pixKey.key}
                     amount={pixAmount || total}
                 />
             )}

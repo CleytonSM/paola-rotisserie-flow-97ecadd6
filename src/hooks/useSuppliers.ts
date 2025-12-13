@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { createSupplier, deleteSupplier, getSuppliers, updateSupplier } from "@/services/database";
+import { createSupplier, deleteSupplier, getSuppliersList, getSupplierById, updateSupplier } from "@/services/database";
 import { FormData } from "@/components/ui/suppliers/types";
 import { PAGE_SIZE } from "@/config/constants";
 
@@ -40,7 +40,7 @@ export const useSuppliers = () => {
 
     const loadData = async () => {
         setLoading(true);
-        const result = await getSuppliers(searchTerm, page, pageSize);
+        const result = await getSuppliersList(searchTerm, page, pageSize);
 
         if (result.error) {
             toast.error("Erro ao carregar fornecedores");
@@ -95,13 +95,19 @@ export const useSuppliers = () => {
         }
     };
 
-    const handleEdit = (supplier: Supplier) => {
-        setEditingId(supplier.id);
+    const handleEditSafe = async (supplier: Supplier) => {
+        const { data, error } = await getSupplierById(supplier.id);
+        if (error || !data) {
+            toast.error("Erro ao carregar detalhes do fornecedor.");
+            return;
+        }
+        
+        setEditingId(data.id);
         form.reset({
-            name: supplier.name,
-            cnpj: supplier.cnpj || "",
-            email: supplier.email || "",
-            phone: supplier.phone || "",
+            name: data.name,
+            cnpj: data.cnpj || "",
+            email: data.email || "",
+            phone: data.phone || "",
         });
         setDialogOpen(true);
     };
@@ -145,7 +151,7 @@ export const useSuppliers = () => {
         deletingId,
         form,
         onSubmit: form.handleSubmit(onSubmit),
-        handleEdit,
+        handleEdit: handleEditSafe,
         handleDeleteClick,
         handleDeleteConfirm,
         page,

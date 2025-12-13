@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ColumnDef } from "@/components/ui/generic-table";
 import { formatCurrency } from "@/utils/format";
 import { PAGE_SIZE } from "@/config/constants";
+import { printerService } from "@/services/printer/PrinterService";
 
 export function useSales() {
     const [loading, setLoading] = useState(true);
@@ -31,10 +32,13 @@ export function useSales() {
             let query = supabase
                 .from("sales")
                 .select(`
-                    *,
+                    id,
+                    display_id,
+                    created_at,
+                    total_amount,
                     clients ( name ),
                     sale_items ( * ),
-                    sale_payments ( * )
+                    sale_payments ( payment_method, amount )
                 `, { count: 'exact' })
                 .order("created_at", { ascending: false });
 
@@ -114,6 +118,34 @@ export function useSales() {
         }
     ];
 
+    const handlePrint = async (sale: any) => {
+        try {
+            // Determine payment method string
+            const paymentMethods = sale.sale_payments?.map((p: any) => translatePaymentMethod(p.payment_method));
+            const paymentMethodStr = paymentMethods?.length > 1 ? "Múltiplos" : (paymentMethods?.[0] || "Desconhecido");
+
+            await printerService.printReceipt({
+                storeName: "Paola Gonçalves Rotisseria",
+                date: new Date(sale.created_at),
+                orderId: `#${sale.display_id}`,
+                clientName: sale.clients?.name,
+                items: sale.sale_items.map((item: any) => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.unit_price,
+                    total: item.total_price
+                })),
+                subtotal: sale.total_amount, // Assuming no extra discounts/fees logic separate from total for now in this view
+                total: sale.total_amount,
+                paymentMethod: paymentMethodStr,
+                change: sale.change_amount || 0
+            });
+        } catch (error) {
+            console.error("Print error:", error);
+            toast.error("Erro ao imprimir");
+        }
+    };
+
     return {
         loading,
         sales,
@@ -127,6 +159,7 @@ export function useSales() {
         detailsOpen,
         setDetailsOpen,
         handleViewDetails,
+        handlePrint,
         refreshSales: fetchSales,
         columns
     };

@@ -29,6 +29,7 @@ export interface GenericTableProps<T> {
 
     // Ações
     onViewDetails?: (item: T) => void;
+    onPrint?: (item: T) => void;
 
     // Paginação
     count?: number;

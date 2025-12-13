@@ -33,7 +33,6 @@ export default function PDVPage() {
         handleScannedProduct,
     } = usePDV();
 
-    // State for controlling product sidebar from footer
     const [productSidebarOpen, setProductSidebarOpen] = useState(false);
 
     return (
@@ -71,7 +70,12 @@ export default function PDVPage() {
                 onOpenChange={setProductSidebarOpen}
             />
 
-            <ScannerDialog open={isScannerOpen} onOpenChange={setIsScannerOpen} />
+            <ScannerDialog
+                open={isScannerOpen}
+                onOpenChange={setIsScannerOpen}
+                onProductFound={handleProductSelect}
+                onInternalItemFound={handleInternalItemSelect}
+            />
 
             <ProductItemSelectionDialog
                 open={selectionOpen}

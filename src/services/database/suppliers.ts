@@ -27,6 +27,38 @@ export const getSuppliers = async (
   return { data, error, count };
 };
 
+export const getSuppliersList = async (
+  searchTerm?: string,
+  page: number = 1,
+  pageSize: number = 100
+): Promise<DatabaseResult<any[]>> => {
+  let query = supabase.from('suppliers').select('id, name, cnpj, email, phone', { count: 'exact' });
+
+  if (searchTerm) {
+    const sanitized = searchTerm.slice(0, 100).replace(/[%_]/g, '\\$&');
+    query = query.or(`name.ilike.%${sanitized}%,email.ilike.%${sanitized}%`);
+  }
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await query
+    .order('name')
+    .range(from, to);
+
+  return { data, error, count };
+};
+
+export const getSupplierById = async (id: string): Promise<DatabaseResult<any>> => {
+  const { data, error } = await supabase
+    .from('suppliers')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  return { data, error };
+};
+
 export const createSupplier = async (supplier: any): Promise<DatabaseResult<any>> => {
   // Remove formatação do CNPJ (apenas números)
   // Telefone é mantido formatado para exibição
