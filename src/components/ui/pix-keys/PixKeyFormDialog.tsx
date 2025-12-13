@@ -103,7 +103,6 @@ export function PixKeyFormDialog({
             onSuccess();
             onOpenChange(false);
         } catch (error) {
-            console.error(error);
             toast.error("Erro ao salvar chave Pix");
         } finally {
             setIsLoading(false);

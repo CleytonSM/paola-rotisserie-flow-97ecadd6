@@ -43,7 +43,6 @@ export function ProductItemSelectionDialog({
 
         if (error) {
             toast.error("Erro ao carregar itens do produto");
-            console.error(error);
         } else {
             const allItems = data || [];
             if (excludedItemIds.length > 0) {

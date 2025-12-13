@@ -88,14 +88,12 @@ export function useScanner({ onInternalItemFound, onProductFound, onClose }: Use
                     toast.error("Produto não encontrado");
                 }
             } catch (err) {
-                console.error("Scan processing error:", err);
+                // Silently handle scan processing errors
             }
         };
 
         const onScanError = (errorMessage: string) => {
-            if (!errorMessage.includes("NotFoundException")) {
-                console.warn("[Scanner] Scan error:", errorMessage);
-            }
+            // Silently handle scan errors (e.g., NotFoundException)
         };
 
         const startCamera = async () => {

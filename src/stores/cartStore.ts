@@ -22,7 +22,7 @@ export interface CartItem {
     subItems?: SubItem[];
 }
 
-interface AddItemPayload {
+export interface AddItemPayload {
     id: string;
     name: string;
     base_price: number;
@@ -36,7 +36,7 @@ interface AddItemPayload {
     quantity?: number;
 }
 
-interface CartState {
+export interface CartState {
     items: CartItem[];
     customerName?: string;
     addItem: (product: AddItemPayload) => void;

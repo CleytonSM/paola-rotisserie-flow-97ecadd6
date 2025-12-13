@@ -85,7 +85,6 @@ export function MachineFormDialog({
             form.reset(defaultValues);
             setPreviewUrl(machine?.image_url || null);
         } else {
-            // Reset state when dialog closes
             setPreviewUrl(null);
         }
     }, [open, machine, form]);
@@ -151,7 +150,6 @@ export function MachineFormDialog({
             onSuccess();
             onOpenChange(false);
         } catch (error) {
-            console.error(error);
             toast.error("Erro ao salvar maquininha");
         } finally {
             setIsLoading(false);

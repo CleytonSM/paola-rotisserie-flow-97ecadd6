@@ -59,7 +59,6 @@ export const useReports = () => {
       }
     };
     checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ export const useReports = () => {
       }
     };
     loadWhenReady();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange.from, dateRange.to]);
 
   const loadData = async () => {
@@ -83,7 +81,6 @@ export const useReports = () => {
     ]);
 
     if (recResult.error) {
-      console.error('[Reports] Error loading receivables:', recResult.error);
       toast.error("Erro ao carregar entradas");
       setReceivables([]);
     } else if (recResult.data) {
@@ -91,7 +88,6 @@ export const useReports = () => {
     }
 
     if (payResult.error) {
-      console.error('[Reports] Error loading payables:', payResult.error);
       toast.error("Erro ao carregar saídas");
       setPayables([]);
     } else if (payResult.data) {

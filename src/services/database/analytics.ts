@@ -237,7 +237,6 @@ export const getProfitHistory = async (): Promise<DatabaseResult<{
       error: null,
     };
   } catch (error) {
-    console.error('Error getting profit history:', error);
     return {
       data: null,
       error: error as Error,

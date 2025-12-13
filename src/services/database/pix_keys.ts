@@ -39,7 +39,6 @@ export const getPixKeys = async (options?: { activeOnly?: boolean }): Promise<Da
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching pix keys:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -55,7 +54,6 @@ export const createPixKey = async (data: CreatePixKeyDTO): Promise<DatabaseResul
     if (error) throw error;
     return { data: pixKey, error: null };
   } catch (error) {
-    console.error('Error creating pix key:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -72,7 +70,6 @@ export const updatePixKey = async (id: string, data: UpdatePixKeyDTO): Promise<D
     if (error) throw error;
     return { data: pixKey, error: null };
   } catch (error) {
-    console.error('Error updating pix key:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -87,7 +84,6 @@ export const deletePixKey = async (id: string): Promise<DatabaseResult<void>> =>
     if (error) throw error;
     return { data: null, error: null };
   } catch (error) {
-    console.error('Error deleting pix key:', error);
     return { data: null, error: error as Error };
   }
 };

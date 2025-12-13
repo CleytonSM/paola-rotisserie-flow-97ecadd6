@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useCartStore } from "@/stores/cartStore";
+import { useCartStore, CartItem, AddItemPayload } from "@/stores/cartStore";
 import { searchProductCatalog, ProductCatalog } from "@/services/database/product-catalog";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -19,6 +19,14 @@ export function usePDV() {
     const [selectedProduct, setSelectedProduct] = useState<ProductCatalog | null>(null);
 
     const isMobile = useIsMobile();
+
+    const checkDuplicate = useCallback((barcodeToCheck: string, currentItems: CartItem[]): boolean => {
+        return currentItems.some(cartItem => {
+            if (cartItem.scanned_barcode === barcodeToCheck) return true;
+            if (cartItem.subItems?.some(sub => String(sub.barcode) === barcodeToCheck)) return true;
+            return false;
+        });
+    }, []);
 
     const handleProductSelect = useCallback((product: ProductCatalog) => {
         if (product.is_internal) {
@@ -53,15 +61,7 @@ export function usePDV() {
         const barcodeToCheck = String(item.scale_barcode);
         const currentItems = useCartStore.getState().items;
         
-        const isDuplicate = currentItems.some((cartItem: any) => {
-            if (cartItem.scanned_barcode === barcodeToCheck) return true;
-            if (cartItem.subItems && cartItem.subItems.some((sub: any) => String(sub.barcode) === barcodeToCheck)) {
-                return true;
-            }
-            return false;
-        });
-
-        if (isDuplicate) {
+        if (checkDuplicate(barcodeToCheck, currentItems)) {
             toast.warning("Este item já foi adicionado ao pedido!");
             setIsScannerOpen(false);
             setSelectionOpen(false);
@@ -69,7 +69,7 @@ export function usePDV() {
             return;
         }
 
-        addItem({
+        const payload: AddItemPayload = {
             id: catalogData.id,
             name: catalogData.name,
             base_price: item.sale_price,
@@ -80,87 +80,83 @@ export function usePDV() {
             catalog_barcode: item.scale_barcode,
             scanned_barcode: barcodeToCheck,
             unit_type: 'un',
-        } as any);
+        };
 
+        addItem(payload);
         setSelectionOpen(false);
         setSelectedProduct(null);
         toast.success(`Item adicionado: ${catalogData.name}`);
-    }, [selectedProduct, addItem]);
+    }, [selectedProduct, addItem, checkDuplicate]);
 
-    const handleScannedProduct = useCallback(async (product: ProductCatalog, overridePrice?: number, rawBarcode?: string) => {
-        // ... (logic from original usePDV) ...
-        // Wait, I should make this cleaner.
-        // If overridePrice is set, it means it's a "Scale Barcode" scan result passed manually? 
-        // No, `handleScannedProduct` was used by `PDVSearch` component when parsing input manually?
-        // Let's keep it for compatibility if `PDVSearch` relies on it.
-        
-         if (overridePrice !== undefined) {
-             const currentItems = useCartStore.getState().items;
-             const isDuplicate = rawBarcode && currentItems.some((i: any) => {
-                 if (i.scanned_barcode === rawBarcode) return true;
-                 if (i.subItems && i.subItems.some((sub: any) => String(sub.barcode) === rawBarcode)) return true;
-                 return false;
-             });
-
-             if (isDuplicate) {
+    const handleScannedProduct = useCallback(async (
+        product: ProductCatalog, 
+        overridePrice?: number, 
+        rawBarcode?: string
+    ) => {
+        if (overridePrice !== undefined) {
+            const currentItems = useCartStore.getState().items;
+            
+            if (rawBarcode && checkDuplicate(rawBarcode, currentItems)) {
                 toast.warning("Este item já foi adicionado ao pedido!");
                 setIsScannerOpen(false);
                 clearSearch();
                 return;
-             }
+            }
 
-             addItem({
-                 id: product.id,
-                 name: product.name,
-                 base_price: overridePrice,
-                 is_internal: true,
-                 catalog_id: product.id,
-                 sub_item_id: null,
-                 weight: product.unit_type === 'kg' && product.base_price > 0 
+            const payload: AddItemPayload = {
+                id: product.id,
+                name: product.name,
+                base_price: overridePrice,
+                is_internal: true,
+                catalog_id: product.id,
+                sub_item_id: undefined,
+                weight: product.unit_type === 'kg' && product.base_price > 0 
                     ? Number((overridePrice / product.base_price).toFixed(3)) 
                     : 1,
-                 catalog_barcode: product.catalog_barcode,
-                 scanned_barcode: rawBarcode,
-                 unit_type: product.unit_type,
-             } as any);
-             
-             clearSearch();
-             toast.success(`Item adicionado: ${product.name} (R$ ${overridePrice.toFixed(2)})`);
-             return;
-         }
+                catalog_barcode: product.catalog_barcode ?? undefined,
+                scanned_barcode: rawBarcode,
+                unit_type: product.unit_type,
+            };
 
-         handleProductSelect(product);
-    }, [addItem, handleProductSelect, clearSearch]);
+            addItem(payload);
+            clearSearch();
+            toast.success(`Item adicionado: ${product.name} (R$ ${overridePrice.toFixed(2)})`);
+            return;
+        }
+
+        handleProductSelect(product);
+    }, [addItem, handleProductSelect, clearSearch, checkDuplicate]);
 
     const handleAddInternalItem = useCallback(async (catalogId: string) => {
-         const cartItem = items.find(i => i.id === catalogId);
-         if (cartItem) {
-             const productCatalogForSelection = {
-                 id: cartItem.id,
-                 name: cartItem.name,
-                 base_price: cartItem.base_price,
-                 unit_type: cartItem.unit_type,
-                 is_active: true,
-                 is_internal: true,
-                 catalog_barcode: (cartItem as any).catalog_barcode
-             } as ProductCatalog;
-             
-             setSelectedProduct(productCatalogForSelection);
-             setSelectionOpen(true);
-         } else {
-             const { data } = await searchProductCatalog(catalogId);
-             if (data && data.length > 0) {
-                 setSelectedProduct(data[0]);
-                 setSelectionOpen(true);
-             }
-         }
+        const cartItem = items.find(i => i.id === catalogId);
+        
+        if (cartItem) {
+            const productCatalogForSelection: ProductCatalog = {
+                id: cartItem.id,
+                name: cartItem.name,
+                base_price: cartItem.base_price,
+                unit_type: cartItem.unit_type as 'kg' | 'un',
+                is_active: true,
+                is_internal: true,
+                catalog_barcode: cartItem.subItems?.[0]?.barcode
+            };
+            
+            setSelectedProduct(productCatalogForSelection);
+            setSelectionOpen(true);
+        } else {
+            const { data } = await searchProductCatalog(catalogId);
+            if (data && data.length > 0) {
+                setSelectedProduct(data[0]);
+                setSelectionOpen(true);
+            }
+        }
     }, [items]);
 
     const handleButtonClick = useCallback(() => {
         if (isMobile) {
             setIsScannerOpen(true);
         } else {
-             if (searchResults.length === 0) performSearch(searchQuery);
+            if (searchResults.length === 0) performSearch(searchQuery);
         }
     }, [isMobile, searchResults, performSearch, searchQuery]);
 

@@ -1,7 +1,3 @@
-/**
- * Clients database operations
- */
-
 import { supabase } from "@/integrations/supabase/client";
 import type { DatabaseResult } from "./types";
 
@@ -127,8 +123,7 @@ export const checkClientExists = async (cpfCnpj: string, excludeId?: string): Pr
 
   const { data, error } = await query.single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 is "Row not found"
-    console.error('Error checking client existence:', error);
+  if (error && error.code !== 'PGRST116') {
     return false;
   }
 

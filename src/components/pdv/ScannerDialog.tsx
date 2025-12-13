@@ -89,7 +89,7 @@ export function ScannerDialog({ open, onOpenChange, onProductFound, onInternalIt
                     // Don't close on not found - let user try again or close manually
                 }
             } catch (err) {
-                console.error("Scan processing error:", err);
+                // Silently handle scan processing errors
             }
         };
 

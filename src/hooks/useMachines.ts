@@ -38,7 +38,6 @@ export function useMachines() {
             toast.success("Maquininha excluída com sucesso!");
             queryClient.invalidateQueries({ queryKey: ["machines"] });
         } catch (error) {
-            console.error(error);
             toast.error("Erro ao excluir maquininha");
         } finally {
             setDeletingMachine(null);

@@ -34,20 +34,17 @@ export function PixKeyCard({ pixKey, onEdit, onDelete, onToggleStatus }: PixKeyC
     };
 
     const handleToggle = async (checked: boolean) => {
-        // Optimistic update
         setIsActive(checked);
 
         try {
             const { error } = await togglePixKeyStatus(pixKey.id, checked);
             if (error) {
-                // Revert on error
                 setIsActive(!checked);
                 throw error;
             }
             onToggleStatus(pixKey);
             toast.success(`Chave ${checked ? "ativada" : "desativada"}!`);
         } catch (error) {
-            console.error(error);
             toast.error("Erro ao alterar status da chave");
         }
     };

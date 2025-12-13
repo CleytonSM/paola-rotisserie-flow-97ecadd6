@@ -153,7 +153,6 @@ export function BulkScanDialog({ open, onOpenChange, catalogProducts, onSuccess 
 
             const { error } = await createProductItem(payload);
             if (error) {
-                console.error("Error creating item", error);
                 errorCount++;
             } else {
                 successCount++;

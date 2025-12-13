@@ -43,14 +43,8 @@ export function useSales() {
                 .order("created_at", { ascending: false });
 
             if (searchTerm) {
-                // If search term looks like a number, try searching by display_id
                 if (!isNaN(Number(searchTerm))) {
                     query = query.eq("display_id", searchTerm);
-                } else {
-                    // Otherwise search by client name is tricky with joined tables in simple filters, 
-                    // but we can try or maybe just filter locally for now if list is small, 
-                    // OR rely on exact ID match for now to keep it simple and performant.
-                    // Let's rely on ID search primarily as requested "Show sequential ID".
                 }
             }
 
@@ -65,7 +59,6 @@ export function useSales() {
             setSales(data || []);
             setTotalCount(count || 0);
         } catch (error) {
-            console.error("Error fetching sales:", error);
             toast.error("Erro ao carregar vendas");
         } finally {
             setLoading(false);
@@ -141,7 +134,6 @@ export function useSales() {
                 change: sale.change_amount || 0
             });
         } catch (error) {
-            console.error("Print error:", error);
             toast.error("Erro ao imprimir");
         }
     };
