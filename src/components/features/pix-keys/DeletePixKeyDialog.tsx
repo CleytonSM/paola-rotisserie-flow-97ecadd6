@@ -8,11 +8,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-interface PixKey {
-    id: string;
-    key_value: string;
-}
+import type { PixKey } from "@/services/database/pix_keys";
 
 interface DeletePixKeyDialogProps {
     pixKey: PixKey | null;

@@ -10,7 +10,7 @@ import { Receipt, Calendar, User, Wallet, QrCode } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { QRCodeModal } from "@/components/pdv/QRCodeModal";
+import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPixKeys } from "@/services/database";

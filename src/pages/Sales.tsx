@@ -2,7 +2,7 @@ import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 import { GenericTable } from "@/components/common/generic-table";
-import { SalesDetailsDialog } from "@/components/sales/SalesDetailsDialog";
+import { SalesDetailsDialog } from "@/components/features/sales/SalesDetailsDialog";
 import { useSales } from "@/hooks/useSales";
 
 export default function Sales() {

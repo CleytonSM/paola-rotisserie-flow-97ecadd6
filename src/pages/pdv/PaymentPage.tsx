@@ -1,10 +1,10 @@
 import { usePayment } from "@/hooks/usePayment";
-import { QRCodeModal } from "@/components/pdv/QRCodeModal";
-import { PaymentHeader } from "@/components/pdv/payment/PaymentHeader";
-import { PaymentSummary } from "@/components/pdv/payment/PaymentSummary";
-import { PaymentSelectionContainer } from "@/components/pdv/payment/PaymentSelectionContainer";
-import { ClientSearch } from "@/components/pdv/payment/ClientSearch";
+import { PaymentHeader } from "@/components/features/pdv/payment/PaymentHeader";
+import { PaymentSummary } from "@/components/features/pdv/payment/PaymentSummary";
+import { PaymentSelectionContainer } from "@/components/features/pdv/payment/PaymentSelectionContainer";
+import { ClientSearch } from "@/components/features/pdv/payment/ClientSearch";
 import { QrCode } from "lucide-react";
+import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
 
 export default function PaymentPage() {
     const paymentState = usePayment();

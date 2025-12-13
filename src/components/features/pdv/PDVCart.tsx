@@ -1,5 +1,5 @@
-import { CartItem } from "@/components/pdv/CartItem";
-import { EmptyCartState } from "@/components/pdv/EmptyCartState";
+import { CartItem } from "@/components/features/pdv/CartItem";
+import { EmptyCartState } from "@/components/features/pdv/EmptyCartState";
 import { CartItem as CartItemType } from "@/stores/cartStore";
 import { AnimatePresence } from "framer-motion";
 import { ShoppingBasket } from "lucide-react";

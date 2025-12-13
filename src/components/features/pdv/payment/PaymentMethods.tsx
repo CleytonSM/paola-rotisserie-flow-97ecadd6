@@ -1,4 +1,4 @@
-import { PaymentMethodCard } from "@/components/pdv/PaymentMethodCard";
+import { PaymentMethodCard } from "@/components/features/pdv/PaymentMethodCard";
 import { Banknote, CreditCard, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MethodPix } from "./methods/MethodPix";

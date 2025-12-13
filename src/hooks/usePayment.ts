@@ -6,13 +6,7 @@ import { toast } from "sonner";
 import { CardMachine } from "@/services/database/machines";
 import { completeSale, SaleItem, SalePayment } from "@/services/database/sales";
 import type { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
-
-interface PixKey {
-    id: string;
-    key: string;
-    key_type: string;
-    active: boolean;
-}
+import type { PixKey } from "@/services/database/pix_keys";
 
 export function usePayment() {
     const navigate = useNavigate();

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2, Plus } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
 import { formatPixKey } from "@/lib/masks";
+import type { PixKey } from "@/services/database/pix_keys";
 
 export interface PaymentEntry {
     id: string;
@@ -18,12 +19,6 @@ export interface PaymentEntry {
         flagId?: string;
         cardBrand?: string;
     };
-}
-
-interface PixKey {
-    id: string;
-    type: string;
-    key_value: string;
 }
 
 interface PartialPaymentBuilderProps {

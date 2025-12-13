@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ProductSidebarRight } from "@/components/pdv/ProductSidebarRight";
+import { ProductSidebarRight } from "@/components/features/pdv/ProductSidebarRight";
 import { usePDV } from "@/hooks/usePDV";
-import { PDVHeader } from "@/components/pdv/PDVHeader";
-import { PDVSearch } from "@/components/pdv/PDVSearch";
-import { PDVCart } from "@/components/pdv/PDVCart";
-import { PDVFooter } from "@/components/pdv/PDVFooter";
-import { ScannerDialog } from "@/components/pdv/ScannerDialog";
-import { ProductItemSelectionDialog } from "@/components/pdv/ProductItemSelectionDialog";
+import { PDVHeader } from "@/components/features/pdv/PDVHeader";
+import { PDVSearch } from "@/components/features/pdv/PDVSearch";
+import { PDVCart } from "@/components/features/pdv/PDVCart";
+import { PDVFooter } from "@/components/features/pdv/PDVFooter";
+import { ScannerDialog } from "@/components/features/pdv/ScannerDialog";
+import { ProductItemSelectionDialog } from "@/components/features/pdv/ProductItemSelectionDialog";
 
 export default function PDVPage() {
     const {

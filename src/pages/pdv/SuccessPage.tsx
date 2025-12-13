@@ -4,8 +4,8 @@ import { useCartStore } from "@/stores/cartStore";
 import { CheckCircle2, ArrowRight, QrCode, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { QRCodeModal } from "@/components/pdv/QRCodeModal";
-import { ReceiptSummary } from "@/components/pdv/success/ReceiptSummary";
+import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
+import { ReceiptSummary } from "@/components/features/pdv/success/ReceiptSummary";
 import { printerService } from "@/services/printer/PrinterService";
 
 interface SuccessPageState {
