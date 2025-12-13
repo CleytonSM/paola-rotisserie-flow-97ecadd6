@@ -1,14 +1,4 @@
-// types.ts
-export interface NavItem {
-    title: string;
-    url: string;
-    icon?: React.ElementType;
-    disabled?: boolean;
-}
-
-export interface NavGroupProps {
-    title: string;
-    icon: React.ElementType;
-    items: NavItem[];
-    isActive: (url: string) => boolean;
-}
+/**
+ * Navigation types - re-exported from central types
+ */
+export type { NavItem, NavGroupProps } from '@/types/navigation';

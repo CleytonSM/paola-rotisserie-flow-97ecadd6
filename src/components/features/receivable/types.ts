@@ -1,23 +1,10 @@
-export type Client = {
-  id: string;
-  name: string;
-  cpf_cnpj?: string;
-};
+/**
+ * Receivable types - re-exported from central types
+ */
+export type { Client, AccountReceivable } from '@/types/entities';
+export type { StatusFilter, AccountStatus } from '@/types/filters';
 
-export type AccountReceivable = {
-  id: string;
-  client_id?: string;
-  gross_value: number;
-  net_value: number;
-  payment_method: string;
-  card_brand?: string;
-  tax_rate?: number;
-  entry_date: string;
-  status: "pending" | "received";
-  client?: Client;
-};
-
-export type FormData = {
+export type ReceivableFormData = {
   client_id: string;
   gross_value: string;
   payment_method: string;
@@ -25,8 +12,3 @@ export type FormData = {
   tax_rate: string;
   entry_date: Date | undefined;
 };
-
-export type StatusFilter = "all" | "pending" | "received";
-
-export type AccountStatus = "received" | "pending" | "overdue";
-

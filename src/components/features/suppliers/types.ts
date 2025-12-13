@@ -1,15 +1,11 @@
-export type Supplier = {
-  id: string;
-  name: string;
-  cnpj?: string;
-  email?: string;
-  phone?: string;
-};
+/**
+ * Supplier types - re-exported from central types
+ */
+export type { Supplier } from '@/types/entities';
 
-export type FormData = {
+export type SupplierFormData = {
   name: string;
   cnpj: string;
   email: string;
   phone: string;
 };
-

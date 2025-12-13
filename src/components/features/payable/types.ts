@@ -1,21 +1,10 @@
-export type Supplier = {
-  id: string;
-  name: string;
-};
+/**
+ * Payable types - re-exported from central types
+ */
+export type { Supplier, AccountPayable } from '@/types/entities';
+export type { StatusFilter, AccountStatus } from '@/types/filters';
 
-export type AccountPayable = {
-  id: string;
-  supplier_id: string;
-  value: number;
-  payment_method: string;
-  notes?: string;
-  due_date?: string;
-  payment_date?: string;
-  status: "pending" | "paid" | "overdue";
-  supplier?: Supplier;
-};
-
-export type FormData = {
+export type PayableFormData = {
   supplier_id: string;
   value: string;
   payment_method: string;
@@ -24,8 +13,3 @@ export type FormData = {
   payment_date: Date | undefined;
   status: string;
 };
-
-export type StatusFilter = "all" | "pending" | "paid" | "overdue";
-
-export type AccountStatus = "paid" | "pending" | "overdue";
-
