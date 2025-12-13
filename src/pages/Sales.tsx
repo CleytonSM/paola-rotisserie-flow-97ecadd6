@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui/common/PageHeader";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 import { GenericTable } from "@/components/ui/common/generic-table";
 import { SalesDetailsDialog } from "@/components/features/sales/SalesDetailsDialog";
+import { SalesFilters } from "@/components/features/sales/SalesFilters";
 import { useSales } from "@/hooks/useSales";
 
 export default function Sales() {
@@ -11,6 +12,8 @@ export default function Sales() {
         sales,
         searchTerm,
         setSearchTerm,
+        dateRange,
+        setDateRange,
         selectedSale,
         detailsOpen,
         setDetailsOpen,
@@ -45,6 +48,12 @@ export default function Sales() {
                 rowsPerPage={pageSize}
                 count={totalCount}
                 onPageChange={setPage}
+                filterControls={
+                    <SalesFilters
+                        dateRange={dateRange}
+                        onDateRangeChange={setDateRange}
+                    />
+                }
             />
 
             <SalesDetailsDialog

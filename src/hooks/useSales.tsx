@@ -6,11 +6,23 @@ import { ColumnDef } from "@/components/ui/common/generic-table";
 import { formatCurrency } from "@/utils/format";
 import { PAGE_SIZE } from "@/config/constants";
 import { printerService } from "@/services/printer/PrinterService";
+import { DateRange } from "react-day-picker";
+
+// Helper to format date as YYYY-MM-DD
+const formatDateToYYYYMMDD = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 export function useSales() {
     const [loading, setLoading] = useState(true);
     const [sales, setSales] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
+
+    // Date range filter
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
     // Pagination / Filtering state
     const [page, setPage] = useState(1);
@@ -23,7 +35,7 @@ export function useSales() {
 
     useEffect(() => {
         fetchSales();
-    }, [page, searchTerm]);
+    }, [page, searchTerm, dateRange]);
 
     const fetchSales = async () => {
         try {
@@ -42,6 +54,21 @@ export function useSales() {
                 `, { count: 'exact' })
                 .order("created_at", { ascending: false });
 
+            // Apply date range filter
+            if (dateRange?.from) {
+                const fromDateStr = formatDateToYYYYMMDD(dateRange.from);
+                query = query.gte("created_at", fromDateStr);
+
+                if (dateRange.to) {
+                    // Add one day to include all of the end date
+                    const toDate = new Date(dateRange.to);
+                    toDate.setDate(toDate.getDate() + 1);
+                    const toDateStr = formatDateToYYYYMMDD(toDate);
+                    query = query.lt("created_at", toDateStr);
+                }
+            }
+
+            // Apply search filter
             if (searchTerm) {
                 if (!isNaN(Number(searchTerm))) {
                     query = query.eq("display_id", searchTerm);
@@ -143,6 +170,8 @@ export function useSales() {
         sales,
         searchTerm,
         setSearchTerm,
+        dateRange,
+        setDateRange,
         page,
         setPage,
         pageSize,
