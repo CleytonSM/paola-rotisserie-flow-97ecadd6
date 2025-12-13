@@ -8,7 +8,7 @@ import { maskCpfCnpj, maskPhone } from "@/components/features/clients/utils";
 import { useClientForm } from "./useClientForm";
 import { Pencil, Trash2 } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";
-import { ColumnDef } from "@/components/ui/generic-table";
+import { ColumnDef } from "@/components/common/generic-table";
 import { PAGE_SIZE } from "@/config/constants";
 
 export const useClients = () => {

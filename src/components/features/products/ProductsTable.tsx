@@ -1,5 +1,5 @@
 // components/products/ProductsTable.tsx
-import { ColumnDef, GenericTable } from "@/components/ui/generic-table";
+import { ColumnDef, GenericTable } from "@/components/common/generic-table";
 import { ChevronDown, Loader2, Package, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

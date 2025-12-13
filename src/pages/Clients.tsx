@@ -5,7 +5,7 @@ import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useClients } from "@/hooks/useClients";
 import { Scaffolding } from "@/components/ui/Scaffolding";
-import { GenericTable } from "@/components/ui/generic-table";
+import { GenericTable } from "@/components/common/generic-table";
 
 export default function Clients() {
   const {

@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { ClientSchema } from "@/schemas/client.schema";
 import { applyCpfCnpjMask, applyPhoneMask } from "./utils";
-import { GenericFormDialog } from "@/components/ui/generic-form-dialog";
+import { GenericFormDialog } from "@/components/common/generic-form-dialog";
 
 interface ClientFormDialogProps {
   open: boolean;

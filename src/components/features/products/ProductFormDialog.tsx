@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/ui/money-input";
+import { MoneyInput } from "@/components/common/money-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { maskPrice, maskDiscount } from "./utils";
 import { ProductFormValues } from "@/hooks/useProductForm";
-import { GenericFormDialog } from "@/components/ui/generic-form-dialog";
+import { GenericFormDialog } from "@/components/common/generic-form-dialog";
 
 
 interface ProductFormDialogProps {

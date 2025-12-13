@@ -7,7 +7,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/ui/money-input";
+import { MoneyInput } from "@/components/common/money-input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -16,7 +16,7 @@ import type { ProductItemStatus } from "./types";
 import type { ProductCatalog } from "../products/types";
 import { getStatusLabel } from "./utils";
 import type { ItemSchema } from "@/schemas/item.schema";
-import { GenericFormDialog } from "@/components/ui/generic-form-dialog";
+import { GenericFormDialog } from "@/components/common/generic-form-dialog";
 
 interface ItemFormDialogProps {
     open: boolean;

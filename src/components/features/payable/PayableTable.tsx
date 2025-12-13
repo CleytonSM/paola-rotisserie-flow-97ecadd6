@@ -1,4 +1,4 @@
-import { GenericTable, ColumnDef } from "@/components/ui/generic-table";
+import { GenericTable, ColumnDef } from "@/components/common/generic-table";
 import type { DateRange } from "react-day-picker";
 import type { AccountPayable, StatusFilter, AccountStatus } from "./types";
 import { PayableFilters } from "./PayableFilters";
