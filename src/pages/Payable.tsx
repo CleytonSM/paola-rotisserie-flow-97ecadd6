@@ -1,5 +1,5 @@
-import { PayableFormDialog } from "@/components/ui/payable/PayableFormDialog";
-import { PayableTable } from "@/components/ui/payable/PayableTable";
+import { PayableFormDialog } from "@/components/features/payable/PayableFormDialog";
+import { PayableTable } from "@/components/features/payable/PayableTable";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";

@@ -1,9 +1,9 @@
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useDashboard } from "@/hooks/useDashboard";
-import { StatsGrid } from "@/components/ui/dashboard/StatsGrid";
-import { QuickActions } from "@/components/ui/dashboard/QuickActions";
-import { Summary } from "@/components/ui/dashboard/Summary";
+import { StatsGrid } from "@/components/features/dashboard/StatsGrid";
+import { QuickActions } from "@/components/features/dashboard/QuickActions";
+import { Summary } from "@/components/features/dashboard/Summary";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function Dashboard() {

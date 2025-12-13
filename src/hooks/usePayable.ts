@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
-import type { AccountPayable, Supplier, StatusFilter } from "@/components/ui/payable/types";
 import {
     getAccountsPayable,
     getAccountsPayableByDateRange,
@@ -16,6 +15,7 @@ import {
 import { getCurrentSession } from "@/services/auth";
 import { payableSchema, type PayableSchema } from "@/schemas/payable.schema";
 import { PAGE_SIZE } from "@/config/constants";
+import { AccountPayable, StatusFilter, Supplier } from "@/components/features/payable/types";
 
 export function usePayable() {
     const navigate = useNavigate();

@@ -1,6 +1,6 @@
 
 import { PaymentMethods } from "./PaymentMethods";
-import { PartialPaymentBuilder } from "@/components/ui/partial-payment/PartialPaymentBuilder";
+import { PartialPaymentBuilder } from "@/components/features/partial-payment/PartialPaymentBuilder";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

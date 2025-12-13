@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CardMachine } from "@/services/database/machines";
 import { completeSale, SaleItem, SalePayment } from "@/services/database/sales";
-import type { PaymentEntry } from "@/components/ui/partial-payment/PartialPaymentBuilder";
+import type { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 
 interface PixKey {
     id: string;

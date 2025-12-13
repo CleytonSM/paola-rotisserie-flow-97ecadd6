@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
-import type { AccountReceivable, Client, StatusFilter } from "@/components/ui/receivable/types";
+import type { AccountReceivable, Client, StatusFilter } from "@/components/features/receivable/types";
 import {
     getAccountsReceivable,
     getAccountsReceivableByDateRange,
@@ -17,9 +17,9 @@ import {
 } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { receivableSchema, type ReceivableSchema } from "@/schemas/receivable.schema";
-import { getAccountStatus } from "@/components/ui/receivable/utils";
+import { getAccountStatus } from "@/components/features/receivable/utils";
 import { PAGE_SIZE } from "@/config/constants";
-import type { PaymentEntry } from "@/components/ui/partial-payment/PartialPaymentBuilder";
+import type { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 
 export function useReceivable() {
     const navigate = useNavigate();

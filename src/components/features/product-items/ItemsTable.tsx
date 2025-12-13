@@ -2,7 +2,7 @@ import { ColumnDef, GenericTable } from "@/components/ui/generic-table";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, CheckCircle } from "lucide-react";
-import type { ProductItem, ProductItemStatus } from "@/components/ui/product-items/types";
+import type { ProductItem, ProductItemStatus } from "@/components/features/product-items/types";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 import {
@@ -19,7 +19,7 @@ import {
     formatExpiration,
     getExpirationVariant,
     getStatusLabel
-} from "@/components/ui/product-items/utils";
+} from "@/components/features/product-items/utils";
 import { getStatusVariant } from "@/utils/status";
 
 interface ItemsTableProps {

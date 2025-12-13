@@ -1,4 +1,4 @@
-import { Supplier } from "@/components/ui/suppliers/types";
+import { Supplier } from "@/components/features/suppliers/types";
 import { SupplierSchema, supplierSchema } from "@/schemas/suppliers.schema";
 import { getCurrentSession } from "@/services/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,11 +7,10 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { createSupplier, deleteSupplier, getSuppliersList, getSupplierById, updateSupplier } from "@/services/database";
-import { FormData } from "@/components/ui/suppliers/types";
 import { PAGE_SIZE } from "@/config/constants";
 
 export const useSuppliers = () => {
-    const navigate = useNavigate();
+    const navigate = useNavigate(); 
     const [loading, setLoading] = useState(true);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 

@@ -1,5 +1,5 @@
-import { ClientFormDialog } from "@/components/ui/clients/ClientFormDialog";
-import { DeleteClientDialog } from "@/components/ui/clients/DeleteClientDialog";
+import { ClientFormDialog } from "@/components/features/clients/ClientFormDialog";
+import { DeleteClientDialog } from "@/components/features/clients/DeleteClientDialog";
 
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";

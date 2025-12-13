@@ -11,12 +11,12 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import type { ProductCatalog } from "@/components/ui/products/types";
+import type { ProductCatalog } from "@/components/features/products/types";
 import {
     formatPrice,
     formatShelfLife,
     formatDiscount,
-} from "@/components/ui/products/utils";
+} from "@/components/features/products/utils";
 import { getStatusVariant } from "@/utils/status";
 import { StockSummary } from "@/services/database";
 

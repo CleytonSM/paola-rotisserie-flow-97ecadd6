@@ -15,7 +15,7 @@ import { useState, useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { ReceivableSchema } from "@/schemas/receivable.schema";
 import { GenericFormDialog } from "@/components/ui/generic-form-dialog";
-import { PartialPaymentBuilder, PaymentEntry } from "@/components/ui/partial-payment/PartialPaymentBuilder";
+import { PartialPaymentBuilder, PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 import { QRCodeModal } from "@/components/pdv/QRCodeModal";
 
 interface ReceivableFormDialogProps {

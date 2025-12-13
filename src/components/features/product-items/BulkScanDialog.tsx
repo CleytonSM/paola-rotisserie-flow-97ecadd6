@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2, ScanBarcode, Plus } from "lucide-react";
-import { ProductCatalog } from "@/components/ui/products/types";
+import { ProductCatalog } from "@/components/features/products/types";
 import { parseBarcode } from "@/utils/barcode";
 import { toast } from "sonner";
 import { createProductItem } from "@/services/database";

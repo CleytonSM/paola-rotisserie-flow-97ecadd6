@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
 import { catalogSchema, type CatalogSchemaType } from "@/schemas";
-import type { ProductCatalog } from "@/components/ui/products/types";
-import { percentToDecimal, decimalToPercent } from "@/components/ui/products/utils";
+import type { ProductCatalog } from "@/components/features/products/types";
+import { percentToDecimal, decimalToPercent } from "@/components/features/products/utils";
 
 /**
  * Form schema for react-hook-form

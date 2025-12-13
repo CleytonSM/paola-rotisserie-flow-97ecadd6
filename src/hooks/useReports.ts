@@ -7,14 +7,14 @@ import type {
   BarChartData,
   PieChartData,
   TopItem,
-} from "@/components/ui/reports/types";
+} from "@/components/features/reports/types";
 import { getReceivablesForReports, getPayablesForReports } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { getStartDateFromFilter } from "@/components/ui/reports/utils";
+import { getStartDateFromFilter } from "@/components/features/reports/utils";
 
 export const useReports = () => {
     const navigate = useNavigate();

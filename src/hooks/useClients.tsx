@@ -1,10 +1,10 @@
-import { Client } from "@/components/ui/clients/types";
+import { Client } from "@/components/features/clients/types";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getClientsList, getClientById, createClient, updateClient, deleteClient } from "@/services/database";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
-import { maskCpfCnpj, maskPhone } from "@/components/ui/clients/utils";
+import { maskCpfCnpj, maskPhone } from "@/components/features/clients/utils";
 import { useClientForm } from "./useClientForm";
 import { Pencil, Trash2 } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";

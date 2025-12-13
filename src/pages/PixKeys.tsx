@@ -3,11 +3,11 @@ import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { usePixKeys } from "@/hooks/usePixKeys";
 import { GenericAlertDialog } from "@/components/common/GenericAlertDialog";
-import { PixKeysGrid } from "@/components/ui/pix-keys/PixKeysGrid";
+import { PixKeysGrid } from "@/components/features/pix-keys/PixKeysGrid";
 import { Plus } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { PixKeyFormDialog } from "@/components/ui/pix-keys/PixKeyFormDialog";
-import { PixKeyCard } from "@/components/ui/pix-keys/PixKeyCard";
+import { PixKeyFormDialog } from "@/components/features/pix-keys/PixKeyFormDialog";
+import { PixKeyCard } from "@/components/features/pix-keys/PixKeyCard";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 
 export default function PixKeys() {

@@ -1,4 +1,4 @@
-import { validateCpfCnpj } from "@/components/ui/clients/utils";
+import { validateCpfCnpj } from "@/components/features/clients/utils";
 import { z } from "zod";
 
 export const clientSchema = z.object({
