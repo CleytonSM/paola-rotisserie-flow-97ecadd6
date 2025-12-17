@@ -42,11 +42,18 @@ export function DateRangePicker({ className, date, setDate }: DateRangePickerPro
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y", { locale: ptBR })} -{" "}
-                  {format(date.to, "LLL dd, y", { locale: ptBR })}
+                  {format(date.from, "LLL dd, y", { locale: ptBR })
+                    .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+                    .replace(/\bDe\b/g, "de")}{" "}
+                  -{" "}
+                  {format(date.to, "LLL dd, y", { locale: ptBR })
+                    .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+                    .replace(/\bDe\b/g, "de")}
                 </>
               ) : (
                 format(date.from, "LLL dd, y", { locale: ptBR })
+                  .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+                  .replace(/\bDe\b/g, "de")
               )
             ) : (
               <span>Selecione um período</span>

@@ -95,7 +95,13 @@ export function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, showTime ? "PPP HH:mm" : "PPP", { locale: ptBR }) : <span>{placeholder}</span>}
+          {date ? (
+            format(date, showTime ? "PPP HH:mm" : "PPP", { locale: ptBR })
+              .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+              .replace(/\bDe\b/g, "de")
+          ) : (
+            <span>{placeholder}</span>
+          )}
           {date && !disabled && (
             <X
               className="absolute right-2 h-4 w-4 text-muted-foreground hover:text-foreground"
