@@ -5,6 +5,7 @@ import { PaymentSelectionContainer } from "@/components/features/pdv/payment/Pay
 import { ClientSearch } from "@/components/features/pdv/payment/ClientSearch";
 import { QrCode } from "lucide-react";
 import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
+import { ScheduledPickupPicker } from "@/components/features/orders/ScheduledPickupPicker";
 
 export default function PaymentPage() {
     const paymentState = usePayment();
@@ -21,7 +22,9 @@ export default function PaymentPage() {
         pixKeys,
         selectedPixKey,
         showPixModal,
-        setShowPixModal
+        setShowPixModal,
+        scheduledPickup,
+        setScheduledPickup
     } = paymentState;
 
     return (
@@ -34,6 +37,10 @@ export default function PaymentPage() {
                     <ClientSearch
                         selectedClient={selectedClient}
                         onSelectClient={setSelectedClient}
+                    />
+                    <ScheduledPickupPicker
+                        value={scheduledPickup}
+                        onChange={setScheduledPickup}
                     />
                     <PaymentSummary
                         items={items}
@@ -66,3 +73,4 @@ export default function PaymentPage() {
         </div>
     );
 }
+

@@ -124,3 +124,13 @@ export type {
 // Product Stock
 export { getProductCatalogStock, getAllCatalogStocks } from "./product-stock";
 export type { StockSummary } from "./product-stock";
+
+// Orders
+export {
+    getOrders,
+    getUpcomingOrders,
+    updateOrderStatus,
+    ORDER_STATUS_LABELS,
+    ORDER_STATUS_COLORS,
+} from "./orders";
+export type { Order, OrderFilters, OrderStatus } from "./orders";

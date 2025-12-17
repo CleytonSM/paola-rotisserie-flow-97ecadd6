@@ -36,11 +36,19 @@ export function usePDV() {
             return;
         }
 
+        // Stock validation for non-internal products
         if (product.quantity !== undefined && product.quantity !== null) {
             const currentItems = useCartStore.getState().items;
             const currentInCart = currentItems.find(i => i.id === product.id)?.quantity || 0;
+            const availableStock = product.quantity - currentInCart;
+            
+            if (availableStock <= 0) {
+                toast.error(`Produto sem estoque disponível!`);
+                return;
+            }
+            
             if (currentInCart + 1 > product.quantity) {
-                toast.error(`Estoque insuficiente! Apenas ${product.quantity} unidades disponíveis.`);
+                toast.error(`Estoque insuficiente! Apenas ${availableStock} unidade(s) disponível(is).`);
                 return;
             }
         }

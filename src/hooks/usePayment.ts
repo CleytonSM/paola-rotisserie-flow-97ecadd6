@@ -30,6 +30,8 @@ export function usePayment() {
     const [isPartialPayment, setIsPartialPayment] = useState(false);
     const [paymentEntries, setPaymentEntries] = useState<PaymentEntry[]>([]);
 
+    const [scheduledPickup, setScheduledPickup] = useState<Date | null>(null);
+
     useEffect(() => {
         if (items.length === 0) {
             navigate("/pdv");
@@ -177,7 +179,8 @@ export function usePayment() {
                     total_amount: totalAmount,
                     client_id: selectedClient?.id || null,
                     notes: notes || null,
-                    change_amount: changeAmount
+                    change_amount: changeAmount,
+                    scheduled_pickup: scheduledPickup?.toISOString() || null
                 },
                 items: saleItems,
                 payments: payments
@@ -244,6 +247,8 @@ export function usePayment() {
         addPaymentEntry,
         removePaymentEntry,
         getTotalAllocated,
-        getRemainingBalance
+        getRemainingBalance,
+        scheduledPickup,
+        setScheduledPickup
     };
 }

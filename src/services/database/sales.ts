@@ -24,6 +24,7 @@ export interface SaleData {
     client_id?: string | null;
     notes?: string | null;
     change_amount?: number;
+    scheduled_pickup?: string | null;
 }
 
 export interface CompleteSaleParams {

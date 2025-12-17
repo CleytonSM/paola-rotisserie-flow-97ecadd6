@@ -15,6 +15,7 @@ import {
     Box,
     Tag,
     ShoppingCart,
+    Clock,
 } from "lucide-react";
 import { NavItem } from "./types";
 import { PixIcon } from "./components/icons/PixIcon";
@@ -27,6 +28,11 @@ export const navigationGroups = {
                 title: "Dashboard",
                 url: "/",
                 icon: LayoutDashboard,
+            },
+            {
+                title: "Pedidos",
+                url: "/orders",
+                icon: Clock,
             },
             {
                 title: "PDV",
