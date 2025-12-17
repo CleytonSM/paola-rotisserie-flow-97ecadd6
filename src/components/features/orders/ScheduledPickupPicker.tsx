@@ -39,12 +39,20 @@ export function ScheduledPickupPicker({ value, onChange }: ScheduledPickupPicker
             setSelectedTime("12:00");
             onChange(null);
         } else {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(12, 0, 0, 0);
-            setSelectedDate(tomorrow);
-            setSelectedTime("12:00");
-            onChange(tomorrow);
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const remainder = minutes % 5;
+
+            if (remainder !== 0) {
+                now.setMinutes(minutes + (5 - remainder));
+            }
+            now.setSeconds(0);
+            now.setMilliseconds(0);
+
+            setSelectedDate(now);
+            const formattedTime = format(now, "HH:mm");
+            setSelectedTime(formattedTime);
+            onChange(now);
         }
     };
 
