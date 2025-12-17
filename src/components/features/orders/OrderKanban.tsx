@@ -89,18 +89,19 @@ function DroppableColumn({
                 <div className="space-y-3 min-h-[120px]">
                     <AnimatePresence mode="popLayout">
                         {orders.length === 0 ? (
-                            <motion.div
-                                key="empty"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className={cn(
-                                    "text-center py-8 text-sm text-muted-foreground transition-all duration-200",
-                                    isDraggingOver && "py-12 text-base font-medium text-foreground"
-                                )}
-                            >
-                                {isDraggingOver ? "Solte aqui" : "Nenhum pedido"}
-                            </motion.div>
+                            isDraggingOver ? (
+                                <motion.div
+                                    key="empty"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className={cn(
+                                        "text-center py-12 text-base font-medium text-foreground transition-all duration-200"
+                                    )}
+                                >
+                                    Solte aqui
+                                </motion.div>
+                            ) : null
                         ) : (
                             orders.map(order => (
                                 <motion.div

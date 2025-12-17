@@ -46,7 +46,7 @@ export default function Orders() {
                 action={
                     <div className="flex items-center gap-3">
                         {pendingCount > 0 && (
-                            <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                            <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200">
                                 {pendingCount} pendente{pendingCount > 1 ? "s" : ""}
                             </Badge>
                         )}
@@ -67,7 +67,7 @@ export default function Orders() {
             />
 
             <OrderFilters
-                dateFilter={filters.date}
+                dateFilter={filters.date || filters.dateRange}
                 onDateChange={setDateFilter}
                 searchTerm={filters.searchTerm || ''}
                 onSearchChange={setSearchTerm}
@@ -77,14 +77,16 @@ export default function Orders() {
                 <div className="flex items-center justify-center py-16">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-            ) : orders.length === 0 ? (
-                <OrderEmptyState hasFilters={hasFilters} />
             ) : isMobile ? (
-                <OrderList
-                    orders={orders}
-                    onStatusChange={handleStatusChange}
-                    isUpdating={isUpdating}
-                />
+                orders.length === 0 ? (
+                    <OrderEmptyState hasFilters={hasFilters} />
+                ) : (
+                    <OrderList
+                        orders={orders}
+                        onStatusChange={handleStatusChange}
+                        isUpdating={isUpdating}
+                    />
+                )
             ) : (
                 <OrderKanban
                     orders={orders}

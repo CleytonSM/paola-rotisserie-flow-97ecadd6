@@ -3,13 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, isSameDay, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Search, X } from "lucide-react";
 
 interface OrderFiltersProps {
-    dateFilter?: Date;
-    onDateChange: (date: Date | undefined) => void;
+    dateFilter?: Date | { from: Date; to: Date };
+    onDateChange: (date: Date | { from: Date; to: Date } | undefined) => void;
     searchTerm: string;
     onSearchChange: (term: string) => void;
 }
@@ -20,6 +20,20 @@ export function OrderFilters({
     searchTerm,
     onSearchChange,
 }: OrderFiltersProps) {
+    const today = new Date();
+    const tomorrow = addDays(today, 1);
+
+    const isToday = dateFilter instanceof Date && isSameDay(dateFilter, today);
+    const isTomorrow = dateFilter instanceof Date && isSameDay(dateFilter, tomorrow);
+
+    // Check if next 7 days logic
+    const isNext7Days = dateFilter && !('getDate' in dateFilter) && 'from' in dateFilter
+        && isSameDay(dateFilter.from, today)
+        && isSameDay(dateFilter.to, addDays(today, 6));
+
+    // Check if a custom date is selected (not today, not tomorrow, not next 7 days)
+    const isCustomDate = dateFilter && !isToday && !isTomorrow && !isNext7Days;
+
     return (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-1">
@@ -42,47 +56,82 @@ export function OrderFilters({
                 )}
             </div>
 
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                        variant="outline"
-                        className={cn(
-                            "w-full sm:w-[200px] justify-start text-left font-normal",
-                            !dateFilter && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateFilter ? (
-                            format(dateFilter, "dd/MM/yyyy", { locale: ptBR })
-                        ) : (
-                            "Filtrar por data"
-                        )}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                    <Calendar
-                        mode="single"
-                        selected={dateFilter}
-                        onSelect={onDateChange}
-                        locale={ptBR}
-                        initialFocus
-                    />
-                    {dateFilter && (
-                        <div className="p-2 border-t">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-full"
-                                onClick={() => onDateChange(undefined)}
-                            >
-                                <X className="h-4 w-4 mr-2" />
-                                Limpar data
-                            </Button>
-                        </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+                <Button
+                    variant={isToday ? "secondary" : "outline"}
+                    size="sm"
+                    className={cn(
+                        "h-10 whitespace-nowrap",
+                        isToday && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"
                     )}
-                </PopoverContent>
-            </Popover>
+                    onClick={() => onDateChange(today)}
+                >
+                    Hoje
+                </Button>
+                <Button
+                    variant={isTomorrow ? "secondary" : "outline"}
+                    size="sm"
+                    className={cn(
+                        "h-10 whitespace-nowrap",
+                        isTomorrow && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"
+                    )}
+                    onClick={() => onDateChange(tomorrow)}
+                >
+                    Amanhã
+                </Button>
+                <Button
+                    variant={isNext7Days ? "secondary" : "outline"}
+                    size="sm"
+                    className={cn(
+                        "h-10 whitespace-nowrap",
+                        isNext7Days && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"
+                    )}
+                    onClick={() => onDateChange({ from: today, to: addDays(today, 6) })}
+                >
+                    Próximos 7 dias
+                </Button>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={isCustomDate ? "secondary" : "outline"}
+                            className={cn(
+                                "w-[180px] justify-start text-left font-normal",
+                                !dateFilter && "text-muted-foreground",
+                                isCustomDate && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"
+                            )}
+                        >
+                            <CalendarIcon className={cn("mr-2 h-4 w-4", isCustomDate && "text-primary")} />
+                            {dateFilter && dateFilter instanceof Date ? (
+                                format(dateFilter, "dd/MM/yyyy", { locale: ptBR })
+                            ) : (
+                                "Filtrar por data"
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                            mode="single"
+                            selected={dateFilter instanceof Date ? dateFilter : undefined}
+                            onSelect={(date) => onDateChange(date)}
+                            locale={ptBR}
+                            initialFocus
+                        />
+                        {dateFilter && (
+                            <div className="p-2 border-t">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => onDateChange(undefined)}
+                                >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Limpar data
+                                </Button>
+                            </div>
+                        )}
+                    </PopoverContent>
+                </Popover>
+            </div>
         </div>
     );
 }
-

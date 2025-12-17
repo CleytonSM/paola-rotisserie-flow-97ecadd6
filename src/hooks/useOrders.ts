@@ -13,6 +13,7 @@ export function useOrders() {
     const queryClient = useQueryClient();
     const [filters, setFilters] = useState<OrderFilters>({
         date: undefined,
+        dateRange: undefined,
         searchTerm: ''
     });
 
@@ -24,6 +25,7 @@ export function useOrders() {
             return data || [];
         },
         placeholderData: keepPreviousData,
+        refetchInterval: 10000,
     });
 
     const updateStatusMutation = useMutation({
@@ -45,8 +47,14 @@ export function useOrders() {
         updateStatusMutation.mutate({ saleId, status: newStatus });
     };
 
-    const setDateFilter = (date: Date | undefined) => {
-        setFilters(prev => ({ ...prev, date }));
+    const setDateFilter = (dateOrRange: Date | { from: Date; to: Date } | undefined) => {
+        if (dateOrRange instanceof Date) {
+            setFilters(prev => ({ ...prev, date: dateOrRange, dateRange: undefined }));
+        } else if (dateOrRange && 'from' in dateOrRange) {
+            setFilters(prev => ({ ...prev, date: undefined, dateRange: dateOrRange }));
+        } else {
+            setFilters(prev => ({ ...prev, date: undefined, dateRange: undefined }));
+        }
     };
 
     const setSearchTerm = (searchTerm: string) => {
@@ -75,4 +83,3 @@ export function useOrders() {
         isUpdating: updateStatusMutation.isPending,
     };
 }
-

@@ -1,8 +1,9 @@
+import { useState, useEffect } from "react";
 import { Order, OrderStatus, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/services/database";
 import { formatCurrency } from "@/utils/format";
-import { format, isToday, isTomorrow, isPast } from "date-fns";
+import { format, isToday, isTomorrow, isPast, differenceInSeconds } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, ChevronRight, AlertCircle, GripVertical } from "lucide-react";
+import { Clock, User, ChevronRight, AlertCircle, GripVertical, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,45 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
 
     const pickupDate = order.scheduled_pickup ? new Date(order.scheduled_pickup) : null;
     const isLate = pickupDate && isPast(pickupDate) && order.order_status !== 'delivered' && order.order_status !== 'cancelled';
+
+    // Badge logic:
+    // If Late AND (received OR preparing) -> Show "Atrasado" badge ONLY (replace status badge)
+    // If Late AND (ready OR delivered) -> Show standard status badge
+    const showLateBadgeInsteadOfStatus = isLate && (order.order_status === 'received' || order.order_status === 'preparing');
+
+    // Countdown logic
+    const [timeLeft, setTimeLeft] = useState<string>("");
+
+    useEffect(() => {
+        if (!pickupDate || isLate || (order.order_status !== 'received' && order.order_status !== 'preparing')) {
+            setTimeLeft("");
+            return;
+        }
+
+        const tick = () => {
+            const now = new Date();
+            const diffSecs = differenceInSeconds(pickupDate, now);
+
+            if (diffSecs <= 0) {
+                // Time up, likely will become late on next check/refresh
+                setTimeLeft("");
+                return;
+            }
+
+            const hours = Math.floor(diffSecs / 3600);
+            const minutes = Math.floor((diffSecs % 3600) / 60);
+
+            if (hours > 0) {
+                setTimeLeft(`${hours}h ${minutes}min`);
+            } else {
+                setTimeLeft(`${minutes}min`);
+            }
+        };
+
+        tick(); // Initial run
+        const timer = setInterval(tick, 60000); // Update every minute
+        return () => clearInterval(timer);
+    }, [pickupDate, isLate, order.order_status]);
 
     const formatPickupTime = () => {
         if (!pickupDate) return "Sem agendamento";
@@ -70,7 +110,10 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
         <Card
             className={cn(
                 "overflow-hidden transition-all hover:shadow-md cursor-pointer select-none",
-                isLate && "ring-2 ring-red-400 ring-offset-2"
+                // Updated Styling: 
+                // Removed ring-2 ring-red-400 ring-offset-2
+                // Added border-2 border-red-500 when late
+                isLate && "border-2 border-red-500"
             )}
             onClick={onClick}
         >
@@ -83,16 +126,18 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="font-bold text-lg">#{order.display_id}</span>
-                            <Badge
-                                variant="outline"
-                                className={cn("text-xs", ORDER_STATUS_COLORS[order.order_status])}
-                            >
-                                {ORDER_STATUS_LABELS[order.order_status]}
-                            </Badge>
-                            {isLate && (
+
+                            {showLateBadgeInsteadOfStatus ? (
                                 <Badge variant="destructive" className="text-xs">
                                     <AlertCircle className="w-3 h-3 mr-1" />
                                     Atrasado
+                                </Badge>
+                            ) : (
+                                <Badge
+                                    variant="outline"
+                                    className={cn("text-xs", ORDER_STATUS_COLORS[order.order_status])}
+                                >
+                                    {ORDER_STATUS_LABELS[order.order_status]}
                                 </Badge>
                             )}
                         </div>
@@ -134,20 +179,29 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                 )}
 
                 {nextStatus && (
-                    <Button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onStatusChange(order.id, nextStatus);
-                        }}
-                        disabled={isUpdating}
-                        className={cn(
-                            "w-full h-12 text-base font-medium",
-                            getActionButtonStyle(nextStatus)
+                    <div className="space-y-2">
+                        <Button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onStatusChange(order.id, nextStatus);
+                            }}
+                            disabled={isUpdating}
+                            className={cn(
+                                "w-full h-12 text-base font-medium",
+                                getActionButtonStyle(nextStatus)
+                            )}
+                        >
+                            {ORDER_STATUS_LABELS[nextStatus]}
+                            <ChevronRight className="w-5 h-5 ml-2" />
+                        </Button>
+
+                        {timeLeft && (
+                            <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 py-1.5 rounded-md border border-amber-100">
+                                <Timer className="w-3.5 h-3.5" />
+                                <span>Prepare em até {timeLeft}</span>
+                            </div>
                         )}
-                    >
-                        {ORDER_STATUS_LABELS[nextStatus]}
-                        <ChevronRight className="w-5 h-5 ml-2" />
-                    </Button>
+                    </div>
                 )}
             </CardContent>
         </Card>

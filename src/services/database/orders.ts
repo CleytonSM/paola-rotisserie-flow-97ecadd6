@@ -33,61 +33,128 @@ export interface Order {
 
 export interface OrderFilters {
     date?: Date;
+    dateRange?: { from: Date; to: Date };
     status?: OrderStatus | 'all';
     searchTerm?: string;
 }
 
 export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<Order[]>> => {
     try {
-        let query = supabase
-            .from('sales')
-            .select(`
-                id,
-                display_id,
-                total_amount,
-                scheduled_pickup,
-                order_status,
-                created_at,
-                notes,
-                change_amount,
-                clients ( id, name, phone ),
-                sale_items ( id, name, quantity, unit_price, total_price ),
-                sale_payments ( id, amount, payment_method )
-            `)
-            .not('order_status', 'is', null)
-            .order('scheduled_pickup', { ascending: true, nullsFirst: false })
-            .order('created_at', { ascending: false });
+        let orders: Order[] = [];
 
-        if (filters?.date) {
-            const startOfDay = new Date(filters.date);
-            startOfDay.setHours(0, 0, 0, 0);
-            const endOfDay = new Date(filters.date);
-            endOfDay.setHours(23, 59, 59, 999);
+        if (filters?.date || filters?.dateRange) {
+            // Determine date range
+            let startFilterDate: Date;
+            let endFilterDate: Date;
+
+            if (filters.dateRange) {
+                startFilterDate = new Date(filters.dateRange.from);
+                endFilterDate = new Date(filters.dateRange.to);
+            } else {
+                // Fallback to single date
+                startFilterDate = new Date(filters.date!);
+                endFilterDate = new Date(filters.date!);
+            }
+
+            startFilterDate.setHours(0, 0, 0, 0);
+            endFilterDate.setHours(23, 59, 59, 999);
+            const now = new Date();
+
+            // 1. Get orders for the specific date range
+            const dateQuery = supabase
+                .from('sales')
+                .select(`
+                    id,
+                    display_id,
+                    total_amount,
+                    scheduled_pickup,
+                    order_status,
+                    created_at,
+                    notes,
+                    change_amount,
+                    clients ( id, name, phone ),
+                    sale_items ( id, name, quantity, unit_price, total_price ),
+                    sale_payments ( id, amount, payment_method )
+                `)
+                .gte('scheduled_pickup', startFilterDate.toISOString())
+                .lte('scheduled_pickup', endFilterDate.toISOString());
+
+            // 2. Get delayed orders (scheduled < now AND not delivered/cancelled)
+            // We only want to show delayed orders if we are looking at a time range that includes "now" or is in the future.
+            // Actually, standard behavior for this app: always show backlog when looking at "current" views.
+            const delayedQuery = supabase
+                .from('sales')
+                .select(`
+                    id,
+                    display_id,
+                    total_amount,
+                    scheduled_pickup,
+                    order_status,
+                    created_at,
+                    notes,
+                    change_amount,
+                    clients ( id, name, phone ),
+                    sale_items ( id, name, quantity, unit_price, total_price ),
+                    sale_payments ( id, amount, payment_method )
+                `)
+                .lt('scheduled_pickup', now.toISOString())
+                .neq('order_status', 'delivered')
+                .neq('order_status', 'cancelled');
+
+            const [dateResult, delayedResult] = await Promise.all([dateQuery, delayedQuery]);
+
+            if (dateResult.error) throw dateResult.error;
+            if (delayedResult.error) throw delayedResult.error;
+
+            // Combine and deduplicate
+            const dateOrders = (dateResult.data as unknown as Order[]) || [];
+            const delayedOrders = (delayedResult.data as unknown as Order[]) || [];
             
-            query = query
-                .gte('scheduled_pickup', startOfDay.toISOString())
-                .lte('scheduled_pickup', endOfDay.toISOString());
+            const map = new Map<string, Order>();
+            dateOrders.forEach(o => map.set(o.id, o));
+            delayedOrders.forEach(o => map.set(o.id, o));
+            
+            orders = Array.from(map.values());
+
+        } else {
+            // Standard query without date filter
+            let query = supabase
+                .from('sales')
+                .select(`
+                    id,
+                    display_id,
+                    total_amount,
+                    scheduled_pickup,
+                    order_status,
+                    created_at,
+                    notes,
+                    change_amount,
+                    clients ( id, name, phone ),
+                    sale_items ( id, name, quantity, unit_price, total_price ),
+                    sale_payments ( id, amount, payment_method )
+                `)
+                .not('order_status', 'is', null);
+
+            const { data, error } = await query;
+            if (error) throw error;
+            orders = (data as unknown as Order[]) || [];
+            
+            // Post-processing filter for delivered orders (only show for today)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const endOfToday = new Date();
+            endOfToday.setHours(23, 59, 59, 999);
+
+            orders = orders.filter(order => {
+                if (order.order_status === 'delivered') {
+                    const createdAt = new Date(order.created_at);
+                    return createdAt >= today && createdAt <= endOfToday;
+                }
+                return true;
+            });
         }
 
-        const { data, error } = await query;
-
-        if (error) throw error;
-
-        let orders = (data as unknown as Order[]) || [];
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999);
-
-        orders = orders.filter(order => {
-            if (order.order_status === 'delivered') {
-                const createdAt = new Date(order.created_at);
-                return createdAt >= today && createdAt <= endOfToday;
-            }
-            return true;
-        });
-
+        // Apply Search Term
         if (filters?.searchTerm && filters.searchTerm.trim()) {
             const term = filters.searchTerm.toLowerCase().trim();
             orders = orders.filter(order => {
@@ -96,6 +163,18 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                 return displayIdMatch || clientNameMatch;
             });
         }
+
+        // Sort by scheduled_pickup ASC
+        orders.sort((a, b) => {
+            const dateA = a.scheduled_pickup ? new Date(a.scheduled_pickup).getTime() : 0;
+            const dateB = b.scheduled_pickup ? new Date(b.scheduled_pickup).getTime() : 0;
+            // If both have dates, sort asc
+            if (dateA && dateB) return dateA - dateB;
+            // If one missing, put at end
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return 0;
+        });
 
         return { data: orders, error: null };
     } catch (error) {
