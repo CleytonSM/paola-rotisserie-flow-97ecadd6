@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { HourSelector } from "@/components/ui/hour-selector";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -58,8 +58,7 @@ export function ScheduledPickupPicker({ value, onChange }: ScheduledPickupPicker
         }
     };
 
-    const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const time = e.target.value;
+    const handleTimeChange = (time: string) => {
         setSelectedTime(time);
         if (selectedDate && time) {
             const [hours, minutes] = time.split(":").map(Number);
@@ -123,8 +122,7 @@ export function ScheduledPickupPicker({ value, onChange }: ScheduledPickupPicker
                             </PopoverContent>
                         </Popover>
 
-                        <Input
-                            type="time"
+                        <HourSelector
                             value={selectedTime}
                             onChange={handleTimeChange}
                             className="h-10"
