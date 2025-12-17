@@ -43,3 +43,6 @@ export interface AccountPayable {
   supplier?: Supplier;
 }
 
+export type OrderStatus = 'received' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+
+

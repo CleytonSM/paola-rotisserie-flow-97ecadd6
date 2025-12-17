@@ -12,6 +12,8 @@ import { Fragment } from "react";
 const routeNameMap: Record<string, string> = {
     "": "Home",
     "dashboard": "Dashboard",
+    "orders": "Pedidos",
+    "pdv": "PDV",
     "payable": "Contas a Pagar",
     "sales": "Histórico de Vendas",
     "receivable": "Contas a Receber",
