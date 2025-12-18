@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { BrandedScrollArea } from "@/components/ui/branded-scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function TodayOrdersWidget() {
     const navigate = useNavigate();
@@ -71,7 +71,7 @@ export function TodayOrdersWidget() {
                         <p className="text-xs mt-1">para os próximos dias</p>
                     </div>
                 ) : (
-                    <BrandedScrollArea className="h-[240px]">
+                    <ScrollArea className="h-[240px] pr-4">
                         <div className="space-y-3">
                             {orders.map((order) => (
                                 <div
@@ -109,7 +109,7 @@ export function TodayOrdersWidget() {
                                 </div>
                             ))}
                         </div>
-                    </BrandedScrollArea>
+                    </ScrollArea>
                 )}
             </CardContent>
         </Card>
