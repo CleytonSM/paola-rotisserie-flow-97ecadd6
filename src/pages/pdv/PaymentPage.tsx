@@ -1,4 +1,5 @@
 import { usePayment } from "@/hooks/usePayment";
+import { useEffect } from "react";
 import { PaymentHeader } from "@/components/features/pdv/payment/PaymentHeader";
 import { PaymentSummary } from "@/components/features/pdv/payment/PaymentSummary";
 import { PaymentSelectionContainer } from "@/components/features/pdv/payment/PaymentSelectionContainer";
@@ -26,6 +27,16 @@ export default function PaymentPage() {
         scheduledPickup,
         setScheduledPickup
     } = paymentState;
+
+    useEffect(() => {
+        const hasScheduledItems = items.some(item =>
+            item.is_internal && item.subItems?.some(sub => sub.id === item.id)
+        );
+
+        if (hasScheduledItems && !scheduledPickup) {
+            setScheduledPickup(new Date());
+        }
+    }, [items, scheduledPickup, setScheduledPickup]);
 
     return (
         <div className="min-h-screen bg-background flex flex-col">

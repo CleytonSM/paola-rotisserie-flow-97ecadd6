@@ -151,7 +151,10 @@ function DroppableColumn({
 }
 
 export function OrderKanban({ orders, onStatusChange, isUpdating }: OrderKanbanProps) {
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const selectedOrder = useMemo(() =>
+        orders.find(o => o.id === selectedOrderId) || null,
+        [orders, selectedOrderId]);
     const [activeOrder, setActiveOrder] = useState<Order | null>(null);
     // Optimistic state: tracks pending status changes before backend confirms
     const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, OrderStatus>>({});
@@ -251,7 +254,7 @@ export function OrderKanban({ orders, onStatusChange, isUpdating }: OrderKanbanP
                             dropColor={dropColor}
                             orders={getOrdersByStatus(status)}
                             onStatusChange={onStatusChange}
-                            onCardClick={setSelectedOrder}
+                            onCardClick={(order) => setSelectedOrderId(order.id)}
                             isUpdating={isUpdating}
                             activeOrderId={activeOrder?.id}
                         />
@@ -279,8 +282,8 @@ export function OrderKanban({ orders, onStatusChange, isUpdating }: OrderKanbanP
 
             <OrderDetailDialog
                 order={selectedOrder}
-                open={!!selectedOrder}
-                onOpenChange={(open) => !open && setSelectedOrder(null)}
+                open={!!selectedOrderId}
+                onOpenChange={(open) => !open && setSelectedOrderId(null)}
                 onStatusChange={onStatusChange}
                 isUpdating={isUpdating}
             />

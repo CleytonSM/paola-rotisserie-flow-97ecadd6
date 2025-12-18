@@ -57,6 +57,7 @@ export function HourSelector({ value, onChange, className }: HourSelectorProps) 
             newHours = newVal;
         } else {
             newMinutes = newVal;
+            setOpen(false);
         }
 
         const formattedTime = `${newHours.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`;

@@ -120,7 +120,7 @@ export function usePayment() {
                 if (item.subItems && item.subItems.length > 0) {
                    return item.subItems.map(sub => ({
                        product_catalog_id: item.id,
-                       product_item_id: sub.id,
+                       product_item_id: sub.id === item.id ? null : sub.id,
                        name: `${item.name} (${sub.weight}kg)`,
                        unit_price: sub.price,
                        quantity: 1,

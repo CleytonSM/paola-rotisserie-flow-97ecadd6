@@ -1,14 +1,18 @@
-import { Order, OrderStatus, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/services/database";
+import { useRef, useState } from "react";
+import { Order, OrderStatus, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, checkAndSetOrderReady, linkProductItemToSaleItem } from "@/services/database/orders";
 import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight } from "lucide-react";
+import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { OrderItemLinkingFlow } from "./OrderItemLinkingFlow";
+import { ProductCatalog } from "@/services/database/product-catalog";
 
 interface OrderDetailDialogProps {
     order: Order | null;
@@ -25,6 +29,11 @@ export function OrderDetailDialog({
     onStatusChange,
     isUpdating
 }: OrderDetailDialogProps) {
+    const [selectedItem, setSelectedItem] = useState<{
+        saleItemId: string;
+        product: ProductCatalog;
+    } | null>(null);
+
     if (!order) return null;
 
     const paidAmount = order.sale_payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
@@ -65,6 +74,7 @@ export function OrderDetailDialog({
         };
         return methods[method] || method;
     };
+
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -136,7 +146,36 @@ export function OrderDetailDialog({
                                                 {item.quantity}x {formatCurrency(item.unit_price)}
                                             </p>
                                         </div>
-                                        <p className="font-semibold">{formatCurrency(item.total_price)}</p>
+                                        <div className="flex items-center gap-3">
+                                            <p className="font-semibold">{formatCurrency(item.total_price)}</p>
+
+                                            {/* Link Item Button for internal items without product_item_id */}
+                                            {!item.product_item_id && item.product_catalog?.is_internal && order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 gap-1 text-xs border-dashed border-primary/50 hover:bg-primary/5 hover:border-primary text-primary"
+                                                    onClick={() => {
+                                                        if (item.product_catalog) {
+                                                            setSelectedItem({
+                                                                saleItemId: item.id,
+                                                                product: item.product_catalog as any
+                                                            });
+                                                        } else {
+                                                            toast.error("Produto não encontrado no catálogo.");
+                                                        }
+                                                    }}
+                                                >
+                                                    <ScanBarcode className="w-3 h-3" />
+                                                    Vincular
+                                                </Button>
+                                            )}
+                                            {item.product_item_id && item.product_catalog?.is_internal && (
+                                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                    Vinculado
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -220,6 +259,19 @@ export function OrderDetailDialog({
                     </div>
                 )}
             </DialogContent>
+
+            {selectedItem && (
+                <OrderItemLinkingFlow
+                    open={!!selectedItem}
+                    onOpenChange={(open) => {
+                        if (!open) setSelectedItem(null);
+                    }}
+                    product={selectedItem.product}
+                    saleItemId={selectedItem.saleItemId}
+                    orderId={order.id}
+                    onStatusChange={onStatusChange}
+                />
+            )}
         </Dialog>
     );
 }
