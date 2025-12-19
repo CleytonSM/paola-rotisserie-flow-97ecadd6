@@ -21,6 +21,7 @@ import PaymentPage from "./pages/pdv/PaymentPage";
 import SuccessPage from "./pages/pdv/SuccessPage";
 import Sales from "./pages/Sales";
 import Orders from "./pages/Orders";
+import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/pdv/payment" element={<PaymentPage />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/pdv/success" element={<SuccessPage />} />
           </Route>
 

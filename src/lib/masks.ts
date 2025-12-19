@@ -33,6 +33,13 @@ export const formatPhone = (value: string) => {
   return value;
 };
 
+export const applyCepMask = (value: string) => {
+  return value
+    .replace(/\D/g, "")
+    .replace(/^(\d{5})(\d)/, "$1-$2")
+    .replace(/(-\d{3})\d+?$/, "$1");
+};
+
 export const formatPixKey = (type: string, value: string) => {
   switch (type) {
     case 'cpf':

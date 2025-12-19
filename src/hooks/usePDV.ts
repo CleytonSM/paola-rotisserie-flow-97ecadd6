@@ -36,7 +36,7 @@ export function usePDV() {
             return;
         }
 
-        // Stock validation for non-internal products
+        // Stock validation ONLY for external products
         if (product.quantity !== undefined && product.quantity !== null) {
             const currentItems = useCartStore.getState().items;
             const currentInCart = currentItems.find(i => i.id === product.id)?.quantity || 0;

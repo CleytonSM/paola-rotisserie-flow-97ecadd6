@@ -3,7 +3,7 @@ import { Order, OrderStatus, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, checkAndS
 import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode } from "lucide-react";
+import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode, Truck, MapPin, Printer, MessageCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { OrderItemLinkingFlow } from "./OrderItemLinkingFlow";
 import { ProductCatalog } from "@/services/database/product-catalog";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 interface OrderDetailDialogProps {
     order: Order | null;
@@ -33,6 +34,8 @@ export function OrderDetailDialog({
         saleItemId: string;
         product: ProductCatalog;
     } | null>(null);
+
+    const { settings } = useAppSettings();
 
     if (!order) return null;
 
@@ -75,6 +78,100 @@ export function OrderDetailDialog({
         return methods[method] || method;
     };
 
+    // Format addresses
+    const storeAddress = settings ?
+        `${settings.store_address_street || ''}, ${settings.store_address_number || ''}${settings.store_address_complement ? ' - ' + settings.store_address_complement : ''} - ${settings.store_address_neighborhood || ''}` :
+        "Endereço da loja não configurado";
+
+    const clientAddress = order.client_addresses ?
+        `${order.client_addresses.street}, ${order.client_addresses.number}${order.client_addresses.complement ? ' - ' + order.client_addresses.complement : ''}, ${order.client_addresses.neighborhood}, ${order.client_addresses.city} - ${order.client_addresses.zip_code}` :
+        "Endereço não disponível";
+
+    const mapsUrl = order.client_addresses ?
+        `https://maps.google.com/?q=${encodeURIComponent(`${order.client_addresses.street}, ${order.client_addresses.number}, ${order.client_addresses.city}, ${order.client_addresses.state}`)}` :
+        "#";
+
+    const handleWhatsApp = () => {
+        const message = `
+*PEDIDO #${order.display_id}*
+--------------------------------
+*Retirada:* ${storeAddress} ${settings?.store_cnpj ? `\nCNPJ: ${settings.store_cnpj}` : ''}
+--------------------------------
+*Entrega:* ${clientAddress}
+--------------------------------
+*Cliente:* ${order.clients?.name || 'Cliente'} - ${order.clients?.phone || ''}
+--------------------------------
+*Pedido:*
+${order.sale_items?.map(i => `${i.quantity}x ${i.name}`).join('\n')}
+--------------------------------
+*Valor Total:* ${formatCurrency(order.total_amount)}
+${!isPaid && remainingAmount > 0 ? `*A Cobrar:* ${formatCurrency(remainingAmount)}` : '*PAGO*'}
+${order.change_amount ? `*Troco para:* ${formatCurrency(order.change_amount)}` : ''}
+${order.notes ? `\n*Obs:* ${order.notes}` : ''}
+`.trim();
+
+        const whatsappUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
+    const handlePrint = () => {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        const content = `
+            <html>
+                <head>
+                    <title>Pedido #${order.display_id}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; max-width: 300px; margin: 0 auto; }
+                        h1 { font-size: 18px; text-align: center; border-bottom: 1px solid #000; padding-bottom: 10px; }
+                        .section { margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+                        .label { font-size: 10px; color: #666; text-transform: uppercase; }
+                        .value { font-size: 14px; font-weight: bold; margin-top: 2px; }
+                        .big-value { font-size: 16px; font-weight: bold; margin-top: 2px; }
+                        .items { font-size: 12px; margin-top: 5px; }
+                        .total { font-size: 16px; font-weight: bold; text-align: right; margin-top: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>ENTREGA - #${order.display_id}</h1>
+                    
+                    <div class="section">
+                        <div class="label">DESTINO</div>
+                        <div class="big-value">${clientAddress}</div>
+                        <div style="font-size: 12px; margin-top: 5px;">${order.clients?.name} - ${order.clients?.phone}</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="label">ORIGEM (RETIRADA)</div>
+                        <div class="value">${storeAddress}</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="label">OBSERVAÇÕES</div>
+                        <div class="value">${order.notes || "Sem observações"}</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="label">PAGAMENTO</div>
+                        <div class="items">
+                           ${!isPaid && remainingAmount > 0 ? `A COBRAR: ${formatCurrency(remainingAmount)}` : 'PAGO'}
+                           ${order.change_amount ? `<br>TROCO: ${formatCurrency(order.change_amount)}` : ''}
+                        </div>
+                    </div>
+                </body>
+            </html>
+        `;
+
+        printWindow.document.write(content);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    };
+
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,14 +179,15 @@ export function OrderDetailDialog({
                 <DialogHeader className="p-6 pb-4 bg-muted/30">
                     <div className="flex items-start justify-between">
                         <div>
-                            <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
                                 Pedido #{order.display_id}
                                 <Badge
                                     variant="outline"
-                                    className={cn("text-sm", ORDER_STATUS_COLORS[order.order_status])}
+                                    className={cn("text-xs font-normal", ORDER_STATUS_COLORS[order.order_status])}
                                 >
                                     {ORDER_STATUS_LABELS[order.order_status]}
                                 </Badge>
+
                             </DialogTitle>
                             <p className="text-sm text-muted-foreground mt-1">
                                 {format(new Date(order.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
@@ -100,19 +198,142 @@ export function OrderDetailDialog({
 
                 <ScrollArea className="max-h-[60vh]">
                     <div className="p-6 space-y-6">
-                        {/* Cliente */}
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <User className="w-5 h-5 text-primary" />
+
+                        {/* Delivery Section - Cleaned up */}
+                        {order.is_delivery && (
+                            <div className="border border-border rounded-lg overflow-hidden">
+                                <div className="bg-muted/40 px-4 py-3 border-b border-border flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <Truck className="w-4 h-4 text-muted-foreground" />
+                                        <h3 className="font-semibold text-sm">Entrega</h3>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-primary"
+                                        asChild
+                                    >
+                                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                                            <MapPin className="w-3.5 h-3.5" />
+                                            Abrir Mapa
+                                        </a>
+                                    </Button>
+                                </div>
+                                <div className="p-4 space-y-5 bg-card">
+
+                                    {/* Timeline-ish Address View */}
+                                    <div className="relative pl-2">
+                                        {/* Connecting Line */}
+                                        <div className="absolute left-[7px] top-3 bottom-6 w-0.5 bg-border/50" />
+
+                                        {/* Store Address */}
+                                        <div className="relative pl-8 mb-6">
+                                            {/* Store Dot Animation */}
+                                            <div className={cn(
+                                                "absolute left-[-1px] top-1 w-4 h-4 rounded-full border-2 ring-4 ring-background transition-all duration-500 z-10",
+                                                "border-muted bg-background",
+
+                                                // Received: Blue pulse (or red if late)
+                                                order.order_status === 'received' && "border-blue-600 bg-blue-50 shadow-[0_0_10px_rgba(37,99,235,0.3)] animate-pulse",
+
+                                                // Preparing: Amber pulse
+                                                order.order_status === 'preparing' && "border-amber-500 bg-amber-50 shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse",
+
+                                                // Ready/Delivered: Solid Green
+                                                (order.order_status === 'ready' || order.order_status === 'delivered') && "border-emerald-500 bg-emerald-500 shadow-none scale-100"
+                                            )} />
+
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Retirada</p>
+                                            <p className="text-sm font-medium">{settings?.store_address_street || "Loja"}, {settings?.store_address_number || "S/N"}</p>
+
+                                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
+                                                {settings?.store_address_neighborhood && <span>{settings.store_address_neighborhood}</span>}
+                                                {settings?.store_address_city && <span>• {settings.store_address_city}</span>}
+                                                {settings?.store_address_zip_code && <span>• CEP {settings.store_address_zip_code}</span>}
+                                            </div>
+                                        </div>
+
+                                        {/* Client Address */}
+                                        <div className="relative pl-8">
+                                            {/* Client Dot Animation */}
+                                            <div className={cn(
+                                                "absolute left-[-1px] top-1 w-4 h-4 rounded-full border-2 ring-4 ring-background transition-all duration-500 z-10",
+                                                "border-muted bg-background",
+
+                                                // Ready: Destination waiting (Yellow pulse)
+                                                order.order_status === 'ready' && "border-amber-500 bg-amber-50 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.4)]",
+
+                                                // Delivered: Solid Green
+                                                order.order_status === 'delivered' && "border-emerald-500 bg-emerald-500 shadow-none scale-100"
+                                            )} />
+
+                                            <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">Entrega</p>
+                                            <p className="text-sm font-medium">
+                                                {order.client_addresses ? `${order.client_addresses.street}, ${order.client_addresses.number}${order.client_addresses.complement ? ' - ' + order.client_addresses.complement : ''}` : "Endereço não disponível"}
+                                            </p>
+                                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
+                                                <span>{order.client_addresses?.neighborhood}</span>
+                                                {order.client_addresses?.city && <span>• {order.client_addresses.city}</span>}
+                                                {order.client_addresses?.zip_code && <span>• CEP {order.client_addresses.zip_code}</span>}
+                                            </div>
+
+                                            {/* Client Info inline */}
+                                            <div className="mt-3 flex items-center gap-2 text-sm bg-muted/30 p-2 rounded border border-muted/50 w-fit">
+                                                <User className="w-3.5 h-3.5 text-muted-foreground" />
+                                                <span className="font-medium">{order.clients?.name || "Cliente"}</span>
+                                                {order.clients?.phone && (
+                                                    <>
+                                                        <span className="text-muted-foreground/30">|</span>
+                                                        <span className="text-muted-foreground">{order.clients.phone}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-2 pt-1">
+                                        <Button
+                                            onClick={handleWhatsApp}
+                                            size="sm"
+                                            className="bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-sm h-8 flex-1"
+                                        >
+                                            <MessageCircle className="w-3.5 h-3.5 mr-2" />
+                                            Enviar p/ Motoboy
+                                        </Button>
+                                        <Button
+                                            onClick={handlePrint}
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-8 flex-1"
+                                        >
+                                            <Printer className="w-3.5 h-3.5 mr-2" />
+                                            Imprimir Etiqueta
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">Cliente</p>
-                                <p className="font-medium">{order.clients?.name || "Consumidor Final"}</p>
-                                {order.clients?.phone && (
-                                    <p className="text-sm text-muted-foreground">{order.clients.phone}</p>
-                                )}
+                        )}
+
+                        {/* Cliente - Only show if NOT delivery (since it's already shown in delivery section) OR keep consistent? 
+                            User said "Nova seção Entrega bem destacada". Didn't say to remove "Cliente" section, but it's redundant.
+                            Let's keep it for consistency for now, or hide if delivery?
+                            Actually, standard details are good to keep. 
+                        */}
+                        {!order.is_delivery && (
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <User className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Cliente</p>
+                                    <p className="font-medium">{order.clients?.name || "Consumidor Final"}</p>
+                                    {order.clients?.phone && (
+                                        <p className="text-sm text-muted-foreground">{order.clients.phone}</p>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Retirada */}
                         {order.scheduled_pickup && (
@@ -121,7 +342,9 @@ export function OrderDetailDialog({
                                     <Calendar className="w-5 h-5 text-amber-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Retirada Agendada</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {order.is_delivery ? "Entrega Agendada" : "Retirada Agendada"}
+                                    </p>
                                     <p className="font-medium">
                                         {format(new Date(order.scheduled_pickup), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                                     </p>
@@ -183,6 +406,7 @@ export function OrderDetailDialog({
 
                         <Separator />
 
+
                         {/* Pagamento */}
                         <div>
                             <div className="flex items-center gap-2 mb-3">
@@ -204,6 +428,14 @@ export function OrderDetailDialog({
                                         <p className="text-sm text-amber-800">Restante a pagar</p>
                                         <p className="font-bold text-amber-800">{formatCurrency(remainingAmount)}</p>
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Delivery Fee Info */}
+                            {order.is_delivery && order.delivery_fee && (
+                                <div className="mt-2 flex justify-between items-center px-3 py-2 text-sm text-muted-foreground bg-muted/20 rounded-lg">
+                                    <span>Taxa de Entrega</span>
+                                    <span>{formatCurrency(order.delivery_fee)}</span>
                                 </div>
                             )}
                         </div>

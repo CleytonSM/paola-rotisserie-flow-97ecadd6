@@ -8,6 +8,14 @@ export const clientSchema = z.object({
     }),
     email: z.string().email("Email inválido").optional().or(z.literal("")),
     phone: z.string().optional(),
+    // Address fields (optional for creation)
+    address_zip_code: z.string().optional(),
+    address_street: z.string().optional(),
+    address_number: z.string().optional(),
+    address_neighborhood: z.string().optional(),
+    address_city: z.string().optional(),
+    address_state: z.string().optional(),
+    address_complement: z.string().optional(),
 });
 
 export type ClientSchema = z.infer<typeof clientSchema>;

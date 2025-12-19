@@ -5,8 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CardMachine } from "@/services/database/machines";
 import { completeSale, SaleItem, SalePayment } from "@/services/database/sales";
+import { getAppSettings } from "@/services/database/settings";
 import type { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 import type { PixKey } from "@/services/database/pix_keys";
+import type { Client } from "@/components/features/clients/types";
 
 export function usePayment() {
     const navigate = useNavigate();
@@ -25,12 +27,25 @@ export function usePayment() {
     
     const [amountGiven, setAmountGiven] = useState<string>("");
 
-    const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
     const [isPartialPayment, setIsPartialPayment] = useState(false);
     const [paymentEntries, setPaymentEntries] = useState<PaymentEntry[]>([]);
 
     const [scheduledPickup, setScheduledPickup] = useState<Date | null>(null);
+
+    const [isDelivery, setIsDelivery] = useState(false);
+    const [deliveryAddressId, setDeliveryAddressId] = useState<string | null>(null);
+    const [deliveryFee, setDeliveryFee] = useState<number>(0);
+
+    useEffect(() => {
+        // Load default delivery fee
+        getAppSettings().then(({ data }) => {
+            if (data) {
+                setDeliveryFee(data.fixed_delivery_fee);
+            }
+        });
+    }, []);
 
     useEffect(() => {
         if (items.length === 0) {
@@ -59,6 +74,11 @@ export function usePayment() {
                 currentTotal = currentTotal * (1 + flag.tax_rate / 100);
             }
         }
+        
+        if (isDelivery) {
+            currentTotal += deliveryFee;
+        }
+
         return currentTotal;
     };
 
@@ -180,7 +200,10 @@ export function usePayment() {
                     client_id: selectedClient?.id || null,
                     notes: notes || null,
                     change_amount: changeAmount,
-                    scheduled_pickup: scheduledPickup?.toISOString() || null
+                    scheduled_pickup: scheduledPickup?.toISOString() || null,
+                    is_delivery: isDelivery,
+                    delivery_address_id: deliveryAddressId,
+                    delivery_fee: isDelivery ? deliveryFee : 0
                 },
                 items: saleItems,
                 payments: payments
@@ -201,11 +224,16 @@ export function usePayment() {
                     total: totalAmount,
                     subtotal: total(),
                     method: isPartialPayment ? 'multiple' : selectedMethod,
+                    clientId: selectedClient?.id,
                     clientName: selectedClient?.name,
+                    clientPhone: selectedClient?.phone,
                     items: items,
                     change: changeAmount,
                     pixKey: pixKeyObject,
-                    pixAmount: pixPaymentAmount
+                    pixAmount: pixPaymentAmount,
+                    isDelivery,
+                    deliveryAddressId,
+                    deliveryFee
                 }
             });
 
@@ -249,6 +277,12 @@ export function usePayment() {
         getTotalAllocated,
         getRemainingBalance,
         scheduledPickup,
-        setScheduledPickup
+        setScheduledPickup,
+        isDelivery,
+        setIsDelivery,
+        deliveryAddressId,
+        setDeliveryAddressId,
+        deliveryFee,
+        setDeliveryFee
     };
 }

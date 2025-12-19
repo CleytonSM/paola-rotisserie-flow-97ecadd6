@@ -19,6 +19,13 @@ export function useClientForm({ editingId, defaultValues, onSuccess }: UseClient
             cpf_cnpj: "",
             email: "",
             phone: "",
+            address_zip_code: "",
+            address_street: "",
+            address_number: "",
+            address_neighborhood: "",
+            address_city: "",
+            address_state: "",
+            address_complement: "",
             ...defaultValues,
         },
     });
@@ -35,6 +42,13 @@ export function useClientForm({ editingId, defaultValues, onSuccess }: UseClient
                 cpf_cnpj: "",
                 email: "",
                 phone: "",
+                address_zip_code: "",
+                address_street: "",
+                address_number: "",
+                address_neighborhood: "",
+                address_city: "",
+                address_state: "",
+                address_complement: "",
             });
         }
     }, [editingId, defaultValues, form]);

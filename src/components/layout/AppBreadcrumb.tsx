@@ -25,6 +25,7 @@ const routeNameMap: Record<string, string> = {
     "machines": "Maquininhas",
     "pix-keys": "Chaves Pix",
     "auth": "Autenticação",
+    "settings": "Configurações",
 };
 
 export function AppBreadcrumb() {

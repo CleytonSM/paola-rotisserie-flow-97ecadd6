@@ -37,6 +37,19 @@ export interface Order {
         amount: number;
         payment_method: string;
     }[];
+    is_delivery: boolean;
+    delivery_fee?: number;
+    delivery_address_id?: string;
+    client_addresses?: {
+        id: string;
+        street: string;
+        number: string;
+        complement?: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        zip_code: string;
+    } | null;
 }
 
 export interface OrderFilters {
@@ -85,7 +98,11 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                         id, name, quantity, unit_price, total_price, product_item_id,
                         product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                     ),
-                    sale_payments ( id, amount, payment_method )
+                    sale_payments ( id, amount, payment_method ),
+                    is_delivery,
+                    delivery_fee,
+                    delivery_address_id,
+                    client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .gte('scheduled_pickup', startFilterDate.toISOString())
                 .lte('scheduled_pickup', endFilterDate.toISOString());
@@ -109,7 +126,11 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                         id, name, quantity, unit_price, total_price, product_item_id,
                         product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                     ),
-                    sale_payments ( id, amount, payment_method )
+                    sale_payments ( id, amount, payment_method ),
+                    is_delivery,
+                    delivery_fee,
+                    delivery_address_id,
+                    client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .lt('scheduled_pickup', now.toISOString())
                 .neq('order_status', 'delivered')
@@ -148,7 +169,11 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                         id, name, quantity, unit_price, total_price, product_item_id,
                         product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                     ),
-                    sale_payments ( id, amount, payment_method )
+                    sale_payments ( id, amount, payment_method ),
+                    is_delivery,
+                    delivery_fee,
+                    delivery_address_id,
+                    client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .not('order_status', 'is', null);
 
@@ -223,7 +248,11 @@ export const getUpcomingOrders = async (): Promise<DatabaseResult<Order[]>> => {
                     id, name, quantity, unit_price, total_price, product_item_id,
                     product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                 ),
-                sale_payments ( id, amount, payment_method )
+                sale_payments ( id, amount, payment_method ),
+                is_delivery,
+                delivery_fee,
+                delivery_address_id,
+                client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
             `)
             .gte('scheduled_pickup', today.toISOString())
             .lte('scheduled_pickup', threeDaysFromNow.toISOString())

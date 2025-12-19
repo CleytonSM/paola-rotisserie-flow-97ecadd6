@@ -7,6 +7,10 @@ import { motion } from "framer-motion";
 import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
 import { ReceiptSummary } from "@/components/features/pdv/success/ReceiptSummary";
 import { printerService } from "@/services/printer/PrinterService";
+import { useAppSettings } from "@/hooks/useAppSettings";
+import { useClientAddresses } from "@/hooks/useClientAddresses";
+import { MessageSquare } from "lucide-react";
+import { formatCurrency } from "@/utils/format";
 
 interface SuccessPageState {
     saleId?: string;
@@ -18,22 +22,45 @@ interface SuccessPageState {
     pixKey?: { key: string; key_value?: string };
     pixAmount?: number;
     clientName?: string;
+    clientId?: string;
+    clientPhone?: string;
     items?: any[];
     change?: number;
+    isDelivery?: boolean;
+    deliveryAddressId?: string;
+    deliveryFee?: number;
 }
 
 export default function SuccessPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const state = location.state as SuccessPageState || {};
+    const state = (location.state || {}) as SuccessPageState;
     const {
         saleId, displayId: numericId, total, subtotal, method,
-        pixKey, pixAmount, orderId, clientName, items, change
+        pixKey, pixAmount, orderId, clientName, items, change,
+        clientId, clientPhone, isDelivery, deliveryAddressId, deliveryFee
     } = state;
 
     const finalDisplayId = numericId ? `#${numericId}` : (saleId || orderId)?.slice(0, 8);
     const [showPixModal, setShowPixModal] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
+
+    const { settings } = useAppSettings();
+    const { addresses } = useClientAddresses(clientId);
+    const deliveryAddress = addresses.find(a => a.id === deliveryAddressId);
+
+    const handleWhatsApp = () => {
+        if (!settings || !deliveryAddress) return;
+
+        const storeInfo = `*${settings.store_name || "Paola Gonçalves Rotisseria"}*\n *Retirada:* ${settings.store_address_street}, ${settings.store_address_number} - ${settings.store_address_neighborhood}\nCEP: ${settings.store_address_zip_code}`;
+
+        const clientInfo = `*Entrega:* ${deliveryAddress.street}, ${deliveryAddress.number} ${deliveryAddress.complement ? `(${deliveryAddress.complement})` : ""} - ${deliveryAddress.neighborhood}\nCEP: ${deliveryAddress.zip_code}`;
+
+        const message = `${storeInfo}\n\n${clientInfo}`;
+
+        const encoded = encodeURIComponent(message);
+        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    };
 
     const handlePrint = async () => {
         if (!items || items.length === 0) return;
@@ -41,10 +68,11 @@ export default function SuccessPage() {
         setIsPrinting(true);
         try {
             await printerService.printReceipt({
-                storeName: "Paola Gonçalves Rotisseria",
+                storeName: settings.store_name || "Paola Gonçalves Rotisseria",
                 date: new Date(),
                 orderId: finalDisplayId,
                 clientName: clientName,
+                clientPhone: clientPhone,
                 items: items.map((item: any) => ({
                     name: item.name,
                     quantity: item.quantity,
@@ -59,6 +87,9 @@ export default function SuccessPage() {
                             method === 'cash' || method === 'money' ? 'Dinheiro' :
                                 method === 'multiple' ? 'Múltiplos Métodos' : method,
                 change: change,
+                isDelivery: isDelivery,
+                deliveryFee: deliveryFee,
+                deliveryAddress: deliveryAddress ? `${deliveryAddress.street}, ${deliveryAddress.number} - ${deliveryAddress.neighborhood}, ${deliveryAddress.city}/${deliveryAddress.state}` : undefined
             });
         } catch (error) {
             // Silently fail or minimal feedback, logic mainly depends on printer service
@@ -127,6 +158,18 @@ export default function SuccessPage() {
                         Nova Venda
                         <ArrowRight className="ml-2 h-5 w-5 opacity-90" />
                     </Button>
+
+                    {isDelivery && (
+                        <Button
+                            variant="outline"
+                            className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                            onClick={handleWhatsApp}
+                            disabled={!deliveryAddress}
+                        >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Enviar para Motoboy
+                        </Button>
+                    )}
 
                     <Button
                         variant="ghost"
