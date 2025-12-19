@@ -34,7 +34,8 @@ export interface ProductCatalogInput {
 }
 
 export const getProductCatalog = async (
-    activeOnly: boolean = true,
+    isActive: 'all' | 'active' | 'inactive' = 'active',
+    isInternal: 'all' | 'internal' | 'external' = 'all',
     searchTerm: string = "",
     page: number = 1,
     pageSize: number = 100
@@ -45,8 +46,16 @@ export const getProductCatalog = async (
             .select("*", { count: "exact" })
             .order("name", { ascending: true });
 
-        if (activeOnly) {
+        if (isActive === 'active') {
             query = query.eq("is_active", true);
+        } else if (isActive === 'inactive') {
+            query = query.eq("is_active", false);
+        }
+
+        if (isInternal === 'internal') {
+            query = query.eq("is_internal", true);
+        } else if (isInternal === 'external') {
+            query = query.eq("is_internal", false);
         }
 
         if (searchTerm) {
@@ -65,7 +74,8 @@ export const getProductCatalog = async (
 };
 
 export const getProductCatalogList = async (
-    activeOnly: boolean = true,
+    isActive: 'all' | 'active' | 'inactive' = 'active',
+    isInternal: 'all' | 'internal' | 'external' = 'all',
     searchTerm: string = "",
     page: number = 1,
     pageSize: number = 100
@@ -89,8 +99,16 @@ export const getProductCatalogList = async (
             `, { count: "exact" })
             .order("name", { ascending: true });
 
-        if (activeOnly) {
+        if (isActive === 'active') {
             query = query.eq("is_active", true);
+        } else if (isActive === 'inactive') {
+            query = query.eq("is_active", false);
+        }
+
+        if (isInternal === 'internal') {
+            query = query.eq("is_internal", true);
+        } else if (isInternal === 'external') {
+            query = query.eq("is_internal", false);
         }
 
         if (searchTerm) {
