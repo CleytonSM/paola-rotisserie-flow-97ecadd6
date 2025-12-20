@@ -192,7 +192,7 @@ export const reportsService = {
         
         const { data, error } = await supabase
             .from("sales")
-            .select("id, total_amount, client_id, notes") 
+            .select("id, total_amount, client_id, notes, is_delivery, scheduled_pickup") 
             .eq("status", "completed")
             .gte("created_at", from)
             .lte("created_at", to);
@@ -206,15 +206,19 @@ export const reportsService = {
             const amount = Number(sale.total_amount);
             let type = "Balcão"; 
             
-            const notesLower = sale.notes?.toLowerCase() || "";
-
-            if (notesLower.includes("entrega") || notesLower.includes("delivery")) {
-                type = "Entrega";
-            } else if (notesLower.includes("agendado") || notesLower.includes("encomenda") || notesLower.includes("retirada agendada")) {
+            // Prioritize explicit columns over notes
+            if (sale.scheduled_pickup) {
                 type = "Agendado";
-            } else if (sale.client_id) {
-                 // optionally distinguish identified counter sales vs anonymous
-                 // type = "Balcão (Identificado)";
+            } else if (sale.is_delivery) {
+                type = "Entrega";
+            } else {
+                // Fallback to notes for older records or external integrations
+                const notesLower = sale.notes?.toLowerCase() || "";
+                if (notesLower.includes("entrega") || notesLower.includes("delivery")) {
+                    type = "Entrega";
+                } else if (notesLower.includes("agendado") || notesLower.includes("encomenda") || notesLower.includes("retirada agendada")) {
+                    type = "Agendado";
+                }
             }
 
             const existing = typeMap.get(type) || { total: 0, count: 0 };

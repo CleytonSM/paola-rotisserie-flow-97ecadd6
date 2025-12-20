@@ -6,7 +6,23 @@ import { formatCurrency } from "@/components/features/reports/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
-const COLORS = ["hsl(var(--primary))", "hsl(var(--muted-foreground))", "hsl(var(--secondary))"];
+const TYPE_COLORS: Record<string, string> = {
+    "Balcão": "hsl(var(--primary))",
+    "Entrega": "#3b82f6",  // Blue
+    "Agendado": "#1ab12eff", // Green
+};
+
+const FALLBACK_COLORS = [
+    "hsl(var(--primary))",
+    "hsl(var(--secondary))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))"
+];
+
+const getColor = (type: string, index: number) => {
+    return TYPE_COLORS[type] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+};
 
 export default function ReportsTypes() {
     const {
@@ -45,15 +61,15 @@ export default function ReportsTypes() {
                                         data={salesByType}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={60}
+                                        labelLine={false}
                                         outerRadius={100}
                                         fill="#8884d8"
-                                        paddingAngle={5}
                                         dataKey="total"
                                         nameKey="type"
+                                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                                     >
                                         {salesByType.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={getColor(entry.type, index)} />
                                         ))}
                                     </Pie>
                                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
@@ -66,7 +82,7 @@ export default function ReportsTypes() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Resumo</CardTitle>
+                        <CardTitle>Detalhes</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
@@ -75,13 +91,14 @@ export default function ReportsTypes() {
                                     <div className="flex items-center gap-2">
                                         <div
                                             className="h-3 w-3 rounded-full"
-                                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                            style={{ backgroundColor: getColor(item.type, index) }}
                                         />
                                         <span className="font-medium">{item.type}</span>
                                     </div>
                                     <div className="text-right">
                                         <div className="font-bold">{formatCurrency(item.total)}</div>
-                                        <div className="text-xs text-muted-foreground">{item.count} vendas</div>
+                                        <div className="text-xs text-muted-foreground">{item.count}
+                                            {item.count === 1 ? " venda" : " vendas"}</div>
                                     </div>
                                 </div>
                             ))}

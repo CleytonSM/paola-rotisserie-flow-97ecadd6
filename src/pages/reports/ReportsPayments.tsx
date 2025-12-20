@@ -97,7 +97,9 @@ export default function ReportsPayments() {
                                     </div>
                                     <div className="text-right">
                                         <div className="font-bold">{formatCurrency(item.total)}</div>
-                                        <div className="text-xs text-muted-foreground">{item.count} transações</div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {item.count} {item.count === 1 ? "transação" : "transações"}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
