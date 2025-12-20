@@ -229,19 +229,21 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                                         {/* Store Address */}
                                         <div className="relative pl-8 mb-6">
                                             {/* Store Dot Animation */}
-                                            <div className={cn(
-                                                "absolute left-[-1px] top-1 w-4 h-4 rounded-full border-2 ring-4 ring-background transition-all duration-500 z-10",
-                                                "border-muted bg-background",
+                                            <div
+                                                style={{ animationDuration: '1.5s' }}
+                                                className={cn(
+                                                    "absolute left-[-8px] top-1 w-4 h-4 rounded-full border-2 ring-4 ring-background transition-all duration-500 z-10",
+                                                    "border-muted bg-background",
 
-                                                // Received: Blue pulse (or red if late)
-                                                order.order_status === 'received' && "border-blue-600 bg-blue-50 shadow-[0_0_10px_rgba(37,99,235,0.3)] animate-pulse",
+                                                    // Received: Blue pulse (or red if late)
+                                                    order.order_status === 'received' && "border-blue-600 bg-blue-50 shadow-[0_0_10px_rgba(37,99,235,0.3)] animate-pulse",
 
-                                                // Preparing: Amber pulse
-                                                order.order_status === 'preparing' && "border-amber-500 bg-amber-50 shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse",
+                                                    // Preparing: Amber pulse
+                                                    order.order_status === 'preparing' && "border-amber-500 bg-amber-50 shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse",
 
-                                                // Ready/Delivered: Solid Green
-                                                (order.order_status === 'ready' || order.order_status === 'delivered') && "border-emerald-500 bg-emerald-500 shadow-none scale-100"
-                                            )} />
+                                                    // Ready/Delivered: Solid Green
+                                                    (order.order_status === 'ready' || order.order_status === 'delivered') && "border-emerald-500 bg-emerald-500 shadow-none scale-100"
+                                                )} />
 
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Retirada</p>
                                             <p className="text-sm font-medium">{settings?.store_address_street || "Loja"}, {settings?.store_address_number || "S/N"}</p>
@@ -256,16 +258,18 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                                         {/* Client Address */}
                                         <div className="relative pl-8">
                                             {/* Client Dot Animation */}
-                                            <div className={cn(
-                                                "absolute left-[-1px] top-1 w-4 h-4 rounded-full border-2 ring-4 ring-background transition-all duration-500 z-10",
-                                                "border-muted bg-background",
+                                            <div
+                                                style={{ animationDuration: '1.5s' }}
+                                                className={cn(
+                                                    "absolute left-[-8px] top-1 w-4 h-4 rounded-full border-2 ring-4 ring-background transition-all duration-500 z-10",
+                                                    "border-muted bg-background",
 
-                                                // Ready: Destination waiting (Yellow pulse)
-                                                order.order_status === 'ready' && "border-amber-500 bg-amber-50 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.4)]",
+                                                    // Ready: Destination waiting (Yellow pulse)
+                                                    order.order_status === 'ready' && "border-amber-500 bg-amber-50 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.4)]",
 
-                                                // Delivered: Solid Green
-                                                order.order_status === 'delivered' && "border-emerald-500 bg-emerald-500 shadow-none scale-100"
-                                            )} />
+                                                    // Delivered: Solid Green
+                                                    order.order_status === 'delivered' && "border-emerald-500 bg-emerald-500 shadow-none scale-100"
+                                                )} />
 
                                             <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">Entrega</p>
                                             <p className="text-sm font-medium">
