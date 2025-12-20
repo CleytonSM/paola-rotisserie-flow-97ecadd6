@@ -6,18 +6,14 @@ import { useOrders } from "@/hooks/useOrders";
 import {
     OrderFilters,
     OrderKanban,
-    OrderList,
-    OrderEmptyState,
     DeliveryFilterType
 } from "@/components/features/orders";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export default function Orders() {
-    const isMobile = useIsMobile();
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [deliveryFilter, setDeliveryFilter] = useState<DeliveryFilterType>('all');
     const {
@@ -81,16 +77,6 @@ export default function Orders() {
                 <div className="flex items-center justify-center py-16">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-            ) : isMobile ? (
-                orders.length === 0 ? (
-                    <OrderEmptyState hasFilters={hasFilters} />
-                ) : (
-                    <OrderList
-                        orders={orders}
-                        onStatusChange={handleStatusChange}
-                        isUpdating={isUpdating}
-                    />
-                )
             ) : (
                 <OrderKanban
                     orders={orders}

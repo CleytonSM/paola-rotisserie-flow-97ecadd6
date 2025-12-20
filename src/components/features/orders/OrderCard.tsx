@@ -161,8 +161,8 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                 {/* Client Name + Sub location */}
                 <div className="mb-3">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                        <User className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="font-medium text-sm truncate max-w-[180px]" title={order.clients?.name}>
+                        <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="font-medium text-sm truncate flex-1 min-w-0" title={order.clients?.name}>
                             {order.clients?.name || "Consumidor Final"}
                         </span>
                     </div>
@@ -170,11 +170,11 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                     {/* Location or Time Subtext */}
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-5">
                         {order.is_delivery && order.client_addresses?.neighborhood ? (
-                            <span className="truncate max-w-[200px] text-orange-600/80">
+                            <span className="truncate flex-1 min-w-0 text-orange-600/80">
                                 {order.client_addresses.neighborhood}
                             </span>
                         ) : (
-                            <div className={cn("flex items-center gap-1", isLate ? "text-red-600 font-medium" : "")}>
+                            <div className={cn("flex items-center gap-1 shrink-0", isLate ? "text-red-600 font-medium" : "")}>
                                 <Clock className="w-3 h-3" />
                                 <span>{formatPickupTime()}</span>
                             </div>
@@ -202,16 +202,16 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                             size="sm"
                             variant="outline"
                             className={cn(
-                                "w-full h-10 text-sm font-medium", // Restored functionality-focused button
-                                getActionButtonStyle(nextStatus) // Restored solid colors
+                                "flex-1 h-10 text-sm font-medium min-w-0", // Added flex-1 and min-w-0
+                                getActionButtonStyle(nextStatus)
                             )}
                         >
-                            <span>{ORDER_STATUS_LABELS[nextStatus]}</span>
-                            <ChevronRight className="w-3 h-3 opacity-50" />
+                            <span className="truncate">{ORDER_STATUS_LABELS[nextStatus]}</span>
+                            <ChevronRight className="w-3 h-3 opacity-50 shrink-0" />
                         </Button>
 
                         {timeLeft && (
-                            <div className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 h-8 rounded border border-amber-100 min-w-fit">
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 h-8 rounded border border-amber-100 min-w-fit shrink-0">
                                 <Timer className="w-3 h-3" />
                                 {timeLeft}
                             </div>

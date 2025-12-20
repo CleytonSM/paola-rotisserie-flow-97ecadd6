@@ -17,7 +17,7 @@ const OPTIONS: { value: DeliveryFilterType; label: string }[] = [
 
 export function DeliveryTypeFilter({ value, onChange, className }: DeliveryTypeFilterProps) {
     return (
-        <div className={cn("p-1 bg-muted/30 rounded-full inline-flex relative", className)}>
+        <div className={cn("p-1 bg-muted/30 rounded-full grid grid-cols-3 relative", className)}>
             {OPTIONS.map((option) => {
                 const isSelected = value === option.value;
 
@@ -26,7 +26,7 @@ export function DeliveryTypeFilter({ value, onChange, className }: DeliveryTypeF
                         key={option.value}
                         onClick={() => onChange(option.value)}
                         className={cn(
-                            "relative px-4 py-1.5 text-sm font-medium rounded-full transition-colors z-10",
+                            "relative px-3 py-1.5 text-sm font-medium rounded-full transition-colors z-10 text-center",
                             isSelected ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
@@ -44,3 +44,4 @@ export function DeliveryTypeFilter({ value, onChange, className }: DeliveryTypeF
         </div>
     );
 }
+

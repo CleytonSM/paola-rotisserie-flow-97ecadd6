@@ -40,34 +40,40 @@ export function OrderFilters({
     const isCustomDate = dateFilter && !isToday && !isTomorrow && !isNext7Days;
 
     return (
-        <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center">
-            <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Buscar por número ou nome do cliente..."
-                    value={searchTerm}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    className="pl-9"
+        <div className="flex flex-col gap-3 mb-6">
+            {/* Row 1: Search + Delivery Filter */}
+            <div className="flex flex-col md:flex-row gap-3">
+                {/* Search - full width on mobile, flex-1 on desktop */}
+                <div className="relative w-full md:flex-1 md:max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar por número ou nome..."
+                        value={searchTerm}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        className="pl-9 w-full h-10"
+                    />
+                    {searchTerm && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                            onClick={() => onSearchChange('')}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+
+                {/* Delivery Filter - full width on mobile */}
+                <DeliveryTypeFilter
+                    value={deliveryFilter}
+                    onChange={onDeliveryFilterChange}
+                    className="shadow-sm border bg-background w-full md:w-auto"
                 />
-                {searchTerm && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                        onClick={() => onSearchChange('')}
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
             </div>
 
-            <DeliveryTypeFilter
-                value={deliveryFilter}
-                onChange={onDeliveryFilterChange}
-                className="shadow-sm border bg-background"
-            />
-
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+            {/* Row 2: Date Buttons - 2x2 grid on mobile, inline on desktop */}
+            <div className="grid grid-cols-2 md:flex md:flex-row gap-2">
                 <Button
                     variant={isToday ? "secondary" : "outline"}
                     size="sm"
@@ -99,24 +105,26 @@ export function OrderFilters({
                     )}
                     onClick={() => onDateChange({ from: today, to: addDays(today, 6) })}
                 >
-                    Próximos 7 dias
+                    7 dias
                 </Button>
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
                             variant={isCustomDate ? "secondary" : "outline"}
                             className={cn(
-                                "w-[180px] justify-start text-left font-normal",
+                                "h-10 justify-start text-left font-normal",
                                 !dateFilter && "text-muted-foreground",
                                 isCustomDate && "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"
                             )}
                         >
-                            <CalendarIcon className={cn("mr-2 h-4 w-4", isCustomDate && "text-primary")} />
-                            {dateFilter && dateFilter instanceof Date ? (
-                                format(dateFilter, "dd/MM/yyyy", { locale: ptBR })
-                            ) : (
-                                "Filtrar por data"
-                            )}
+                            <CalendarIcon className={cn("mr-2 h-4 w-4 shrink-0", isCustomDate && "text-primary")} />
+                            <span className="truncate">
+                                {dateFilter && dateFilter instanceof Date ? (
+                                    format(dateFilter, "dd/MM/yyyy", { locale: ptBR })
+                                ) : (
+                                    "Data"
+                                )}
+                            </span>
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="end">
@@ -146,3 +154,4 @@ export function OrderFilters({
         </div>
     );
 }
+
