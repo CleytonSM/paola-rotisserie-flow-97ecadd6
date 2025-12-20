@@ -174,6 +174,19 @@ export class ZebraPrinterStrategy implements PrinterInterface {
             ${itemsHtml}
 
             <div class="divider"></div>
+            
+            <div class="item-row">
+                <span>Subtotal:</span>
+                <span>${formatCurrency(data.subtotal)}</span>
+            </div>
+            ${data.deliveryFee ? `
+            <div class="item-row">
+                <span>Taxa Entrega:</span>
+                <span>${formatCurrency(data.deliveryFee)}</span>
+            </div>
+            ` : ''}
+
+            <div class="divider"></div>
             <div style="font-size: 24px; font-weight: bold; text-align: right; margin-top: 10px;">
                 TOTAL: ${formatCurrency(data.total)}
             </div>
