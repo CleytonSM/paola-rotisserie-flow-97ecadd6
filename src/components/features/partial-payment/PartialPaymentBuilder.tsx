@@ -145,7 +145,7 @@ export function PartialPaymentBuilder({
                         {paymentEntries.map((entry) => (
                             <div
                                 key={entry.id}
-                                className="flex items-center justify-between bg-white border rounded-lg p-3"
+                                className="flex items-center justify-between bg-card border rounded-lg p-3"
                             >
                                 <div className="flex-1">
                                     <div className="font-medium text-sm">{getMethodLabel(entry.method)}</div>
@@ -237,8 +237,8 @@ export function PartialPaymentBuilder({
                 )}
 
                 {isComplete && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
-                        <span className="text-sm text-emerald-700 font-medium">
+                    <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-center">
+                        <span className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
                             ✓ Valor total alocado
                         </span>
                     </div>

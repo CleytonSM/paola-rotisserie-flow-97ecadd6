@@ -30,25 +30,25 @@ export function CartItem({ item, onAddMore }: CartItemProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, x: -10 }}
             className={cn(
-                "p-3 mb-2 bg-white rounded-lg shadow-sm border border-sidebar-border",
+                "p-3 mb-2 bg-card rounded-lg shadow-sm border border-sidebar-border",
                 isInternalGroup && "border-primary/20"
             )}
         >
             <div className="flex items-center justify-between">
                 <div className="flex-1 cursor-pointer" onClick={() => isInternalGroup && setExpanded(!expanded)}>
                     <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-gray-800 line-clamp-1">{item.name}</h4>
+                        <h4 className="font-medium text-foreground line-clamp-1">{item.name}</h4>
                         {isInternalGroup && (
                             expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />
                         )}
                     </div>
                     {!isInternalGroup ? (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                             {formatCurrency(item.base_price)}
                         </div>
                     ) : (
                         <div className="text-xs text-muted-foreground">
-                            {item.quantity} itens selecionados
+                            {item.quantity} {item.quantity === 1 ? 'item selecionado' : 'itens selecionados'}
                         </div>
                     )}
                 </div>
@@ -109,7 +109,7 @@ export function CartItem({ item, onAddMore }: CartItemProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         onClick={() => removeItem(item.id)}
                     >
                         <Trash2 className="h-4 w-4" />
@@ -125,17 +125,17 @@ export function CartItem({ item, onAddMore }: CartItemProps) {
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="mt-2 pt-2 border-t border-dashed border-gray-100 space-y-1">
+                        <div className="mt-2 pt-2 border-t border-dashed border-border space-y-1">
                             {item.subItems!.map((sub, idx) => (
-                                <div key={sub.id} className="flex items-center justify-between text-xs py-1 px-1 hover:bg-gray-50 rounded">
+                                <div key={sub.id} className="flex items-center justify-between text-xs py-1 px-1 hover:bg-accent rounded">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-mono text-gray-400">#{sub.barcode}</span>
-                                        <span className="text-gray-600">{sub.weight.toFixed(3)}kg</span>
+                                        <span className="font-mono text-muted-foreground"># {sub.barcode}</span>
+                                        <span className="text-muted-foreground">{sub.weight.toFixed(3)}kg</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="font-medium text-gray-700">{formatCurrency(sub.price)}</span>
+                                        <span className="font-medium text-foreground">{formatCurrency(sub.price)}</span>
                                         <button
-                                            className="text-gray-300 hover:text-red-500 transition-colors"
+                                            className="text-muted-foreground hover:text-destructive transition-colors"
                                             onClick={() => removeSubItem(item.id, sub.id)}
                                         >
                                             <Trash2 className="h-3 w-3" />

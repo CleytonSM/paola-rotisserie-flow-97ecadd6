@@ -78,7 +78,7 @@ export default function PaymentPage() {
                         onSelectClient={setSelectedClient}
                     />
                     {/* Delivery Section */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-sidebar-border space-y-4">
+                    <div className="bg-card p-6 rounded-xl shadow-sm border border-sidebar-border space-y-4">
                         <div className="flex items-center space-x-3">
                             <Checkbox
                                 id="is-delivery"

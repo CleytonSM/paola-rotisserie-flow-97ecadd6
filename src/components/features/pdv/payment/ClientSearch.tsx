@@ -106,15 +106,15 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
 
     if (selectedClient) {
         return (
-            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+            <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                         <User className="h-5 w-5" />
                     </div>
                     <div>
-                        <p className="font-medium text-gray-900">{selectedClient.name}</p>
+                        <p className="font-medium text-foreground">{selectedClient.name}</p>
                         {selectedClient.cpf_cnpj && (
-                            <p className="text-sm text-gray-500">{maskCpfCnpj(selectedClient.cpf_cnpj)}</p>
+                            <p className="text-sm text-muted-foreground">{maskCpfCnpj(selectedClient.cpf_cnpj)}</p>
                         )}
                     </div>
                 </div>
@@ -122,7 +122,7 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
                     variant="ghost"
                     size="icon"
                     onClick={handleClear}
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 >
                     <X className="h-5 w-5" />
                 </Button>
@@ -136,7 +136,7 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
-                        className="pl-12 h-14 text-base shadow-sm border-border focus:border-primary focus:ring-primary/20 rounded-xl bg-white"
+                        className="pl-12 h-14 text-base shadow-sm border-border focus:border-primary focus:ring-primary/20 rounded-xl bg-card"
                         placeholder="Buscar cliente por nome ou CPF/CNPJ..."
                         value={searchQuery}
                         onChange={(e) => {
@@ -170,19 +170,19 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto z-50 overflow-hidden"
+                        className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-xl border border-border max-h-60 overflow-y-auto z-50 overflow-hidden"
                     >
                         {filteredClients.length > 0 ? (
                             filteredClients.map((client) => (
                                 <div
                                     key={client.id}
-                                    className="flex items-center justify-between p-3 hover:bg-primary-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
+                                    className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer transition-colors border-b border-border last:border-0"
                                     onClick={() => handleSelect(client)}
                                 >
                                     <div className="flex flex-col">
                                         <span className="font-medium text-gray-800">{client.name}</span>
                                         {client.cpf_cnpj && (
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-xs text-muted-foreground">
                                                 {maskCpfCnpj(client.cpf_cnpj)}
                                             </span>
                                         )}
@@ -190,7 +190,7 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
                                 </div>
                             ))
                         ) : (
-                            <div className="p-4 text-center text-gray-500 text-sm">
+                            <div className="p-4 text-center text-muted-foreground text-sm">
                                 Nenhum cliente encontrado.
                             </div>
                         )}

@@ -8,6 +8,7 @@ import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { signOut } from "@/services/auth";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function SidebarFooter() {
     const navigate = useNavigate();
@@ -25,7 +26,8 @@ export function SidebarFooter() {
     return (
         <SidebarFooterUI className="border-t border-border/40 p-2">
             <SidebarMenu>
-                <SidebarMenuItem>
+                <SidebarMenuItem className="flex items-center gap-2">
+                    <ThemeToggle className="shrink-0 group-data-[collapsible=icon]:mx-auto" />
                     <SidebarMenuButton
                         onClick={handleSignOut}
                         tooltip="Sair"
@@ -39,3 +41,4 @@ export function SidebarFooter() {
         </SidebarFooterUI>
     );
 }
+

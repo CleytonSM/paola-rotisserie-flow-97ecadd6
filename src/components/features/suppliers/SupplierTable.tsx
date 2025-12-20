@@ -31,15 +31,15 @@ export function SupplierTable({
   const columns: ColumnDef<Supplier>[] = [
     {
       header: "Fornecedor",
-      cell: (row) => <span className="font-medium text-stone-700">{row.name}</span>
+      cell: (row) => <span className="font-medium text-foreground">{row.name}</span>
     },
     {
       header: "Documento",
-      cell: (row) => <span className="font-mono text-xs text-stone-500">{row.cnpj || "-"}</span>
+      cell: (row) => <span className="font-mono text-xs text-muted-foreground">{row.cnpj || "-"}</span>
     },
     {
       header: "Telefone",
-      cell: (row) => <span className="text-stone-600">{row.phone || "-"}</span>
+      cell: (row) => <span className="text-foreground/80">{row.phone || "-"}</span>
     },
     {
       header: "Ações",
@@ -49,7 +49,7 @@ export function SupplierTable({
             variant="ghost"
             size="icon"
             onClick={() => onEdit(row)}
-            className="h-8 w-8 text-stone-400 hover:text-amber-600 hover:bg-amber-50"
+            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -57,7 +57,7 @@ export function SupplierTable({
             variant="ghost"
             size="icon"
             onClick={() => onDelete(row.id)}
-            className="h-8 w-8 text-stone-400 hover:text-red-600 hover:bg-red-50"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

@@ -21,7 +21,7 @@ export function PDVFooter({ total, hasItems, onToggleProducts }: PDVFooterProps)
     const isMobile = useIsMobile();
 
     return (
-        <div className="m-4 mt-0 bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-sidebar-border z-20 relative">
+        <div className="m-4 mt-0 bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-sidebar-border z-20 relative">
             {/* Mobile: Centered Products Toggle Button at Top */}
             {isMobile && onToggleProducts && (
                 <div className="absolute -top-5 left-1/2 -translate-x-1/2">
