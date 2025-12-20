@@ -72,7 +72,7 @@ export function ReportsPieChart({ data, isEmpty, loading }: ReportsPieChartProps
                       cornerRadius={5}
                     >
                       {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                        <Cell key={`cell-${index}`} fill={entry.fill || `hsl(var(--chart-${(index % 5) + 1}))`} />
                       ))}
                     </Pie>
                     <ChartTooltip

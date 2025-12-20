@@ -6,6 +6,7 @@ import { Download } from "lucide-react";
 import type { ReportsFilter } from "./types";
 
 const filterOptions: { label: string; value: ReportsFilter }[] = [
+  { label: "Hoje", value: "today" },
   { label: "Últimos 7 dias", value: "weekly" },
   { label: "Últimos 30 dias", value: "monthly" },
   { label: "Últimos 2 meses", value: "bimonthly" },

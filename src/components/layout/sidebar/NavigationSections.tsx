@@ -57,29 +57,39 @@ export function NavigationSections({ isActive }: NavigationSectionsProps) {
                 <SidebarGroupLabel>{navigationGroups.financial.label}</SidebarGroupLabel>
                 <SidebarMenu>
                     {navigationGroups.financial.items.map((item) => (
-                        <SidebarMenuItem key={item.url}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={isActive(item.url)}
-                                tooltip={item.title}
-                                className="rounded-xl transition-all duration-200 hover:bg-sidebar-accent hover:shadow-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
-                            >
-                                <Link to={item.url} onClick={handleClick}>
-                                    {item.icon && (
-                                        <item.icon
-                                            className={
-                                                item.url === "/receivable"
-                                                    ? "text-secondary"
-                                                    : item.url === "/payable"
-                                                        ? "text-destructive"
-                                                        : "text-foreground/70"
-                                            }
-                                        />
-                                    )}
-                                    <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        item.items ? (
+                            <NavGroup
+                                key={item.title}
+                                title={item.title}
+                                icon={item.icon!}
+                                items={item.items}
+                                isActive={isActive}
+                            />
+                        ) : (
+                            <SidebarMenuItem key={item.url}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive(item.url)}
+                                    tooltip={item.title}
+                                    className="rounded-xl transition-all duration-200 hover:bg-sidebar-accent hover:shadow-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
+                                >
+                                    <Link to={item.url} onClick={handleClick}>
+                                        {item.icon && (
+                                            <item.icon
+                                                className={
+                                                    item.url === "/receivable"
+                                                        ? "text-secondary"
+                                                        : item.url === "/payable"
+                                                            ? "text-destructive"
+                                                            : "text-foreground/70"
+                                                }
+                                            />
+                                        )}
+                                        <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )
                     ))}
                 </SidebarMenu>
             </SidebarGroup>

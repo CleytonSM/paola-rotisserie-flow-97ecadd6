@@ -16,6 +16,7 @@ export type AccountPayable = {
 };
 
 export type ReportsFilter =
+  | "today"
   | "weekly"
   | "monthly"
   | "bimonthly"
@@ -46,5 +47,38 @@ export type TopItem = {
   name: string;
   value: number;
   percentage: number;
+  quantity?: number;
 };
 
+export type ProductReportItem = {
+    id: string;
+    name: string;
+    quantity: number;
+    totalValue: number;
+};
+
+export type HourlySalesData = {
+    hour: number;
+    value: number;
+    count: number;
+};
+
+export type DailySalesData = {
+    dayOfWeek: string;
+    value: number;
+    count: number;
+};
+
+export type PaymentMethodReport = {
+    method: string;
+    total: number;
+    count: number;
+    percentage: number;
+};
+
+export type SalesTypeReport = {
+    type: string; // 'Balcão', 'Entrega', 'Agendado'
+    total: number;
+    count: number;
+    percentage: number;
+};

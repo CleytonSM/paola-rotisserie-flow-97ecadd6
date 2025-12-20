@@ -26,6 +26,9 @@ const routeNameMap: Record<string, string> = {
     "pix-keys": "Chaves Pix",
     "auth": "Autenticação",
     "settings": "Configurações",
+    "daily": "Diário",
+    "payments": "Pagamentos",
+    "types": "Tipos",
 };
 
 export function AppBreadcrumb() {
