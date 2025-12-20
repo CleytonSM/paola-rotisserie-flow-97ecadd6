@@ -103,7 +103,7 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute z-50 -left-4 h-8 w-8 rounded-full shadow-lg pointer-events-auto bg-white border border-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                        className="absolute z-50 -left-4 h-8 w-8 rounded-full shadow-lg pointer-events-auto bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent"
                         onClick={() => setIsOpen(!isOpen)}
                     >
                         {isOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -119,7 +119,7 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                     }}
                     transition={{ duration: 0.35, ease: "easeInOut" }}
                     className={cn(
-                        "bg-white flex flex-col shadow-sm overflow-hidden pointer-events-auto",
+                        "bg-card flex flex-col shadow-sm overflow-hidden pointer-events-auto",
                         isMobile
                             ? "rounded-t-2xl border-t border-sidebar-border w-full absolute bottom-0"
                             : "h-full border border-sidebar-border rounded-2xl"
@@ -137,7 +137,7 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Buscar..."
-                                    className="pl-8 bg-white border-sidebar-border focus:ring-primary/20 rounded-xl"
+                                    className="pl-8 bg-card border-sidebar-border focus:ring-primary/20 rounded-xl"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
@@ -160,7 +160,7 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                                             {topProducts.map((product) => (
                                                 <div
                                                     key={product.id}
-                                                    className="group relative bg-white hover:bg-sidebar-accent rounded-xl p-2 cursor-pointer transition-all border border-sidebar-border hover:border-primary/20 shadow-sm hover:shadow-md"
+                                                    className="group relative bg-card hover:bg-accent rounded-xl p-2 cursor-pointer transition-all border border-sidebar-border hover:border-primary/20 shadow-sm hover:shadow-md"
                                                     onClick={() => handleAddItem(product)}
                                                 >
                                                     <div className="h-16 w-full bg-sidebar-accent rounded-lg mb-2 flex items-center justify-center text-xs text-primary/40 overflow-hidden relative">
@@ -204,10 +204,10 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                                         {filteredProducts.map((product) => (
                                             <div
                                                 key={product.id}
-                                                className="flex items-center gap-3 p-2 rounded-xl bg-white cursor-pointer border border-sidebar-border shadow-sm transition-all hover:bg-sidebar-accent group"
+                                                className="flex items-center gap-3 p-2 rounded-xl bg-card cursor-pointer border border-sidebar-border shadow-sm transition-all hover:bg-accent group"
                                                 onClick={() => handleAddItem(product)}
                                             >
-                                                <div className="h-10 w-10 bg-white border border-sidebar-border rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] text-primary/40 overflow-hidden relative">
+                                                <div className="h-10 w-10 bg-card border border-sidebar-border rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] text-primary/40 overflow-hidden relative">
                                                     {product.image_url ? (
                                                         <img
                                                             src={product.image_url}

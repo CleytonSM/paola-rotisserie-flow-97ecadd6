@@ -8,78 +8,98 @@
 
 @layer base {
   :root {
-    /* Fundo principal: #FFFBF5 (creme claro) */
     --background: 39 100% 98%;
-    /* Texto principal: #2E2E2E (quase preto, clássico) */
     --foreground: 0 0% 18%;
 
-    /* Fundo de Card/Popover: #FFFEFB */
     --card: 48 100% 99%;
     --card-foreground: 0 0% 18%;
 
     --popover: 48 100% 99%;
     --popover-foreground: 0 0% 18%;
 
-    /* Primária (CTAs): #e5b35e (amarelo-dourado quente) */
     --primary: 38 72% 63%;
-    /* Texto do botão primário: #1F2937 (alto contraste) */
     --primary-foreground: 215 28% 17%;
-    /* Hover da primária: versão mais escura */
     --primary-hover: 38 72% 55%;
 
-    /* Secundária (Apoio): #5DAB57 (verde-oliva acolhedor) */
     --secondary: 115 30% 51%;
-    /* Texto da secundária: #FFFEFB */
     --secondary-foreground: 48 100% 99%;
-    /* Hover da secundária: #559C4F */
     --secondary-hover: 115 30% 47%;
 
-    /* Destrutivo (mantido para semântica) */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Tertiary (Azul Clássico) */
     --tertiary: 240 100% 25%;
     --tertiary-foreground: 0 0% 100%;
     --tertiary-hover: 240 100% 20%;
 
-    /* Neutros Quentes */
-    /* Muted (Inputs): #F8F4F0 */
     --muted: 38 33% 95%;
-    /* Texto secundário: #6B7280 */
     --muted-foreground: 215 9% 51%;
 
-    /* Accent (Hover sutil): #F8F4F0 */
     --accent: 38 33% 95%;
     --accent-foreground: 0 0% 18%;
 
-    /* Bordas: #F0E6D2 (tom de papel) */
     --border: 40 48% 88%;
-    /* Input (fundo, igual ao muted) */
     --input: 38 33% 95%;
 
-    /* Ring (Foco): #e5b35e */
     --ring: 38 72% 63%;
 
-    /* Cantos mais arredondados */
     --radius: 1rem;
 
-    /* Transições suaves */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* --- SIDEBAR VARIABLES (Mapped to Theme) --- */
     --sidebar-background: 39 100% 98%;
-    /* Matches --background */
     --sidebar-foreground: 0 0% 18%;
-    /* Matches --foreground */
     --sidebar-primary: 38 72% 63%;
-    /* Matches --primary */
     --sidebar-primary-foreground: 215 28% 17%;
     --sidebar-accent: 38 33% 95%;
-    /* Matches --accent */
     --sidebar-accent-foreground: 0 0% 18%;
     --sidebar-border: 40 48% 88%;
-    /* Matches --border */
+    --sidebar-ring: 38 72% 63%;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 96%;
+
+    --card: 0 0% 14%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 14%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 38 72% 63%;
+    --primary-foreground: 215 28% 17%;
+    --primary-hover: 38 72% 55%;
+
+    --secondary: 115 30% 51%;
+    --secondary-foreground: 48 100% 99%;
+    --secondary-hover: 115 30% 47%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --tertiary: 240 100% 45%;
+    --tertiary-foreground: 0 0% 100%;
+    --tertiary-hover: 240 100% 40%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 63%;
+
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 96%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+
+    --ring: 38 72% 63%;
+
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 38 72% 63%;
+    --sidebar-primary-foreground: 215 28% 17%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 20%;
     --sidebar-ring: 38 72% 63%;
   }
 }

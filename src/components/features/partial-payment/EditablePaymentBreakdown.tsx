@@ -90,7 +90,7 @@ export function EditablePaymentBreakdown({
                         {paymentEntries.map((entry) => (
                             <div
                                 key={entry.id}
-                                className="flex items-center gap-3 bg-white border rounded-lg p-3"
+                                className="flex items-center gap-3 bg-card border rounded-lg p-3"
                             >
                                 <div className="flex-1">
                                     <div className="font-medium text-sm">

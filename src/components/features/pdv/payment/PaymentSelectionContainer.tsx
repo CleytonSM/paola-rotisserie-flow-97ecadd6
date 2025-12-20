@@ -42,7 +42,7 @@ export function PaymentSelectionContainer({ paymentState }: PaymentSelectionCont
     return (
         <div className="space-y-6">
             {/* Partial Payment Toggle */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-sidebar-border">
+            <div className="bg-card p-4 rounded-xl shadow-sm border border-sidebar-border">
                 <div className="flex items-center space-x-2">
                     <Checkbox
                         id="partial-payment"
@@ -95,7 +95,7 @@ export function PaymentSelectionContainer({ paymentState }: PaymentSelectionCont
             {isPartialPayment && paymentEntries.some(e => e.method === 'pix') && pixKeys.length > 0 && (
                 <Button
                     variant="outline"
-                    className="w-full h-12 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                    className="w-full h-12 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
                     onClick={() => setShowPixModal(true)}
                 >
                     <QrCode className="mr-2 h-4 w-4" />

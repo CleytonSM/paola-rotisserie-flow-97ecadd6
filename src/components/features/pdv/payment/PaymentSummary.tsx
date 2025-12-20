@@ -16,7 +16,7 @@ interface PaymentSummaryProps {
 export function PaymentSummary({ items, subtotal, total, notes, setNotes, isDelivery, deliveryFee }: PaymentSummaryProps) {
     return (
         <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-sidebar-border">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-sidebar-border">
                 <h2 className="font-playfair font-semibold text-lg mb-4 text-foreground">Resumo do Pedido</h2>
                 <ScrollArea className="max-h-[400px]">
                     <div className="space-y-3 pr-4">
@@ -64,7 +64,7 @@ export function PaymentSummary({ items, subtotal, total, notes, setNotes, isDeli
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-sidebar-border">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-sidebar-border">
                 <h2 className="font-playfair font-semibold text-lg mb-4 text-foreground">Observações</h2>
                 <Textarea
                     placeholder="Alguma observação sobre o pedido?"

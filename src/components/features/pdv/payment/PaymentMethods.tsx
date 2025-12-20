@@ -49,7 +49,7 @@ export function PaymentMethods({
 }: PaymentMethodsProps) {
     return (
         <div className="space-y-4">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-sidebar-border space-y-4">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-sidebar-border space-y-4">
                 <h2 className="font-playfair font-semibold text-lg mb-2 text-foreground">Forma de Pagamento</h2>
                 <PaymentMethodCard
                     id="pix"

@@ -6,7 +6,7 @@ interface PDVHeaderProps {
 
 export function PDVHeader({ itemCount }: PDVHeaderProps) {
     return (
-        <div className="m-4 mb-0 bg-white rounded-2xl px-6 py-4 flex items-center justify-between shadow-sm z-10 border border-sidebar-border">
+        <div className="m-4 mb-0 bg-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-sm z-10 border border-sidebar-border">
             <h1 className="text-2xl font-playfair font-bold text-foreground flex items-center gap-2">
                 <ShoppingCart className="h-6 w-6 text-primary" />
                 PDV <span className="text-muted-foreground font-sans text-sm font-normal">Nova Venda</span>

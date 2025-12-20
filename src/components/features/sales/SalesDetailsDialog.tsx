@@ -184,7 +184,7 @@ export function SalesDetailsDialog({
                         <Button
                             variant="outline"
                             size="sm"
-                            className="w-full text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                            className="w-full text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
                             onClick={() => setShowPixModal(true)}
                         >
                             <QrCode className="mr-2 h-4 w-4" />

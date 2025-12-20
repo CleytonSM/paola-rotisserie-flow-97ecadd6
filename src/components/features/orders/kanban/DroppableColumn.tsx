@@ -34,7 +34,7 @@ export function DroppableColumn({
                 className
             )}
         >
-            <div className="px-4 py-3 border-b bg-white/50 backdrop-blur-sm">
+            <div className="px-4 py-3 border-b bg-card/80 dark:bg-card/60 backdrop-blur-sm">
                 <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-sm">
                         {ORDER_STATUS_LABELS[status]}
@@ -43,7 +43,7 @@ export function DroppableColumn({
                         key={count}
                         initial={{ scale: 1.2 }}
                         animate={{ scale: 1 }}
-                        className="bg-white px-2 py-0.5 rounded-full text-xs font-medium"
+                        className="bg-card dark:bg-muted px-2 py-0.5 rounded-full text-xs font-medium text-foreground"
                     >
                         {count}
                     </motion.span>

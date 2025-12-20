@@ -117,7 +117,7 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                 order.order_status === 'delivered' && "border-l-primary",
 
                 // Late override
-                isLate && "border-l-red-500 ring-1 ring-red-100"
+                isLate && "border-l-red-500 ring-1 ring-red-200 dark:ring-red-900"
             )}
             onClick={onClick}
         >
@@ -134,12 +134,12 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
 
                         {/* Delivery/Pickup Badge - Cleaner look */}
                         {order.is_delivery ? (
-                            <div className="flex items-center gap-1 text-[11px] font-medium text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">
+                            <div className="flex items-center gap-1 text-[11px] font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/50 px-1.5 py-0.5 rounded border border-orange-200 dark:border-orange-800">
                                 <Bike className="w-3 h-3" />
                                 <span>Entrega</span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                            <div className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
                                 <Store className="w-3 h-3" />
                                 <span>Retirada</span>
                             </div>
@@ -147,7 +147,7 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                     </div>
 
                     <div className="text-right leading-tight">
-                        <div className="font-bold text-sm text-emerald-700">
+                        <div className="font-bold text-sm text-emerald-700 dark:text-emerald-400">
                             {formatCurrency(order.total_amount)}
                         </div>
                         {hasPartialPayment && (
@@ -211,7 +211,7 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                         </Button>
 
                         {timeLeft && (
-                            <div className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 h-8 rounded border border-amber-100 min-w-fit shrink-0">
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 h-8 rounded border border-amber-200 dark:border-amber-800 min-w-fit shrink-0">
                                 <Timer className="w-3 h-3" />
                                 {timeLeft}
                             </div>
