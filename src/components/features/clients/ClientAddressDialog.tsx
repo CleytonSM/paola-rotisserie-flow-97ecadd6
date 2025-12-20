@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -32,6 +33,7 @@ interface ClientAddressDialogProps {
 
 export function ClientAddressDialog({ open, onOpenChange, clientId }: ClientAddressDialogProps) {
     const { addAddress, isAdding } = useClientAddresses(clientId);
+    const [isLoadingCep, setIsLoadingCep] = useState(false);
 
     const form = useForm<AddressFormValues>({
         resolver: zodResolver(addressSchema),
@@ -55,6 +57,7 @@ export function ClientAddressDialog({ open, onOpenChange, clientId }: ClientAddr
         }
 
         try {
+            setIsLoadingCep(true);
             const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
             const data = await response.json();
 
@@ -71,6 +74,8 @@ export function ClientAddressDialog({ open, onOpenChange, clientId }: ClientAddr
             form.setFocus("number");
         } catch (error) {
             toast.error("Erro ao buscar CEP");
+        } finally {
+            setIsLoadingCep(false);
         }
     };
 
@@ -78,7 +83,14 @@ export function ClientAddressDialog({ open, onOpenChange, clientId }: ClientAddr
         try {
             await addAddress({
                 client_id: clientId,
-                ...data,
+                street: data.street,
+                number: data.number,
+                complement: data.complement,
+                neighborhood: data.neighborhood,
+                city: data.city,
+                state: data.state,
+                zip_code: data.zip_code,
+                is_default: data.is_default,
             });
             form.reset();
             onOpenChange(false);
@@ -114,8 +126,8 @@ export function ClientAddressDialog({ open, onOpenChange, clientId }: ClientAddr
                                                     placeholder="00000-000"
                                                 />
                                             </FormControl>
-                                            <Button type="button" size="icon" variant="secondary" onClick={handleCepSearch}>
-                                                <Search className="h-4 w-4" />
+                                            <Button type="button" size="icon" variant="secondary" onClick={handleCepSearch} disabled={isLoadingCep}>
+                                                {isLoadingCep ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                                             </Button>
                                         </div>
                                         <FormMessage />

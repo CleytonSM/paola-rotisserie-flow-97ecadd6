@@ -22,6 +22,10 @@ import SuccessPage from "./pages/pdv/SuccessPage";
 import Sales from "./pages/Sales";
 import Orders from "./pages/Orders";
 import SettingsPage from "./pages/SettingsPage";
+import ReportsProducts from "./pages/reports/ReportsProducts";
+import ReportsDaily from "./pages/reports/ReportsDaily";
+import ReportsPayments from "./pages/reports/ReportsPayments";
+import ReportsTypes from "./pages/reports/ReportsTypes";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +43,10 @@ const App = () => (
             <Route path="/payable" element={<Payable />} />
             <Route path="/receivable" element={<Receivable />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/reports/products" element={<ReportsProducts />} />
+            <Route path="/reports/daily" element={<ReportsDaily />} />
+            <Route path="/reports/payments" element={<ReportsPayments />} />
+            <Route path="/reports/types" element={<ReportsTypes />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/machines" element={<Machines />} />

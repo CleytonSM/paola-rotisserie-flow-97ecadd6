@@ -7,6 +7,7 @@ export interface NavItem {
   url: string;
   icon?: React.ElementType;
   disabled?: boolean;
+  items?: NavItem[];
 }
 
 export interface NavGroupProps {

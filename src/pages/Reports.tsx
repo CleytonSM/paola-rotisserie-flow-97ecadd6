@@ -1,15 +1,11 @@
-
 import { useNavigate } from "react-router-dom";
-import { ReportsFilters } from "@/components/features/reports/ReportsFilters";
 import { ReportsKPIs } from "@/components/features/reports/ReportsKPIs";
 import { ReportsBarChart } from "@/components/features/reports/ReportsBarChart";
 import { ReportsPieChart } from "@/components/features/reports/ReportsPieChart";
 import { TopClientsList } from "@/components/features/reports/TopClientsList";
 import { TopSuppliersList } from "@/components/features/reports/TopSuppliersList";
-import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
-import { PageHeader } from "@/components/ui/common/PageHeader";
 import { useReports } from "@/hooks/useReports";
-import { Scaffolding } from "@/components/ui/Scaffolding";
+import { ReportLayout } from "@/components/features/reports/ReportLayout";
 
 export default function Reports() {
   const {
@@ -27,22 +23,15 @@ export default function Reports() {
   } = useReports();
 
   return (
-    <Scaffolding>
-      <PageHeader
-        title="Relatórios"
-        subtitle="Visão completa do fluxo financeiro."
-        action={
-          <ReportsFilters
-            filter={filter}
-            onFilterChange={setFilter}
-            customDateRange={customDateRange}
-            onCustomDateRangeChange={setCustomDateRange}
-            onExport={exportToPDF}
-          />
-        }
-        children={<AppBreadcrumb />}
-      />
-
+    <ReportLayout
+      title="Relatórios Gerais"
+      subtitle="Visão completa do fluxo financeiro."
+      filter={filter}
+      setFilter={setFilter}
+      customDateRange={customDateRange}
+      setCustomDateRange={setCustomDateRange}
+      onExport={exportToPDF}
+    >
       {/* KPIs */}
       <ReportsKPIs kpiData={kpiData} />
 
@@ -61,6 +50,6 @@ export default function Reports() {
         <TopClientsList clients={topClients} loading={loading} />
         <TopSuppliersList suppliers={topSuppliers} loading={loading} />
       </div>
-    </Scaffolding>
+    </ReportLayout>
   );
 }
