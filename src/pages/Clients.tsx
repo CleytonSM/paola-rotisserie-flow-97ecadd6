@@ -1,3 +1,4 @@
+import { ClientAddressesListDialog } from "@/components/features/clients/ClientAddressesListDialog";
 import { ClientFormDialog } from "@/components/features/clients/ClientFormDialog";
 import { DeleteClientDialog } from "@/components/features/clients/DeleteClientDialog";
 
@@ -25,8 +26,13 @@ export default function Clients() {
     page,
     setPage,
     pageSize,
-    totalCount
+    totalCount,
+    addressDialogOpen,
+    setAddressDialogOpen,
+    addressClientId
   } = useClients();
+
+  const addressClientName = clients.find(c => c.id === addressClientId)?.name || null;
 
   return (
     <Scaffolding>
@@ -63,6 +69,12 @@ export default function Clients() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
+      />
+      <ClientAddressesListDialog
+        open={addressDialogOpen}
+        onOpenChange={setAddressDialogOpen}
+        clientId={addressClientId}
+        clientName={addressClientName}
       />
     </Scaffolding >
   );

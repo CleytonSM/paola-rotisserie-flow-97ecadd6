@@ -52,3 +52,13 @@ export const formatPixKey = (type: string, value: string) => {
       return value;
   }
 };
+
+export const applyCurrencyMask = (value: string) => {
+  const numericValue = value.replace(/\D/g, "");
+  const formattedValue = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(Number(numericValue) / 100);
+  
+  return formattedValue;
+};

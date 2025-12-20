@@ -105,6 +105,12 @@ export function usePayment() {
     };
 
     const handleConfirm = async () => {
+        // Validation: Delivery requires address
+        if (isDelivery && !deliveryAddressId) {
+            toast.error("Selecione um endereço para entrega");
+            return;
+        }
+
         if (isPartialPayment) {
             if (paymentEntries.length === 0) {
                 toast.error("Adicione pelo menos um método de pagamento");
@@ -120,6 +126,12 @@ export function usePayment() {
             }
         } else {
             if (!selectedMethod) return;
+
+            // Validation: Pix requires key selection
+            if (selectedMethod === 'pix' && !selectedPixKey) {
+                toast.error("Selecione uma chave Pix");
+                return;
+            }
         }
 
         setIsProcessing(true);

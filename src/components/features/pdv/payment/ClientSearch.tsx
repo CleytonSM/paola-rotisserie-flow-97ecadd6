@@ -20,7 +20,7 @@ interface ClientSearchProps {
 }
 
 export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchProps) {
-    const { clients } = useClients();
+    const { clients } = useClients({ fetchAll: true });
     const [searchQuery, setSearchQuery] = useState("");
     const [showPreview, setShowPreview] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);

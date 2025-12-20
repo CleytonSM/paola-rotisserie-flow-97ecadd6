@@ -17,6 +17,7 @@ import { useClientAddresses } from "@/hooks/useClientAddresses";
 import { ClientAddressDialog } from "@/components/features/clients/ClientAddressDialog";
 import { useState, useEffect } from "react";
 import { ClientAddress } from "@/types/entities";
+import { applyCurrencyMask } from "@/lib/masks";
 
 export default function PaymentPage() {
     const paymentState = usePayment();
@@ -130,11 +131,14 @@ export default function PaymentPage() {
                                 <div className="space-y-2">
                                     <Label>Taxa de Entrega (R$)</Label>
                                     <Input
-                                        type="number"
-                                        min="0"
-                                        step="0.50"
-                                        value={deliveryFee}
-                                        onChange={(e) => setDeliveryFee(Number(e.target.value))}
+                                        type="text"
+                                        placeholder="R$ 0,00"
+                                        value={applyCurrencyMask((deliveryFee || 0).toFixed(2).replace('.', ''))}
+                                        onChange={(e) => {
+                                            const rawValue = e.target.value.replace(/\D/g, "");
+                                            const numericValue = Number(rawValue) / 100;
+                                            setDeliveryFee(numericValue);
+                                        }}
                                     />
                                 </div>
                             </div>

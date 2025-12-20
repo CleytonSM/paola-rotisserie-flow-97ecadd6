@@ -12,7 +12,7 @@ import { DataTableAction } from "@/components/ui/data-table-action";
 import { ColumnDef } from "@/components/ui/common/generic-table";
 import { PAGE_SIZE } from "@/config/constants";
 
-export const useClients = () => {
+export const useClients = (options?: { fetchAll?: boolean }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [clients, setClients] = useState<Client[]>([]);
@@ -20,7 +20,7 @@ export const useClients = () => {
 
     // Pagination state
     const [page, setPage] = useState(1);
-    const [pageSize] = useState(PAGE_SIZE);
+    const [pageSize] = useState(options?.fetchAll ? 1000 : PAGE_SIZE);
 
     const [totalCount, setTotalCount] = useState(0);
 
