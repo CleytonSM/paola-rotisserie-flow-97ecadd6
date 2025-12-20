@@ -15,6 +15,7 @@ export const catalogSchema = z.object({
     is_internal: z.boolean().default(true),
     quantity: z.number().int("Quantidade deve ser um número inteiro").positive("Quantidade deve ser positiva").optional(),
     is_active: z.boolean().default(true),
+    image_url: z.string().nullable().optional(),
 });
 
 /**

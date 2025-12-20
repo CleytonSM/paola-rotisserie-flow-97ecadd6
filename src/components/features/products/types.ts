@@ -15,6 +15,7 @@ export interface ProductCatalog {
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
+    image_url?: string | null;
 }
 
 export interface FormData {

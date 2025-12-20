@@ -19,6 +19,7 @@ export interface ProductCatalog {
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
+    image_url?: string | null;
 }
 
 export interface ProductCatalogInput {
@@ -31,6 +32,7 @@ export interface ProductCatalogInput {
     is_internal?: boolean;
     quantity?: number | null;
     is_active?: boolean;
+    image_url?: string | null;
 }
 
 export const getProductCatalog = async (
@@ -95,7 +97,8 @@ export const getProductCatalogList = async (
                 shelf_life_days,
                 default_discount,
                 created_at,
-                updated_at
+                updated_at,
+                image_url
             `, { count: "exact" })
             .order("name", { ascending: true });
 
@@ -250,3 +253,16 @@ export const searchProductCatalog = async (
         return { data: null, error: error as Error };
     }
 };
+
+export const getTopSellingProducts = async (limit: number = 6): Promise<DatabaseResult<ProductCatalog[]>> => {
+    try {
+        const { data, error } = await supabase
+            .rpc('get_top_selling_products', { limit_count: limit });
+
+        if (error) throw error;
+        return { data, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+

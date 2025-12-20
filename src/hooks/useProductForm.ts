@@ -22,6 +22,7 @@ const formSchema = z.object({
     is_internal: z.boolean().default(true),
     quantity: z.string().optional(),
     is_active: z.boolean().default(true),
+    image_url: z.string().nullable().optional(),
 }).superRefine((data, ctx) => {
     if (data.is_internal) {
         if (!data.shelf_life_days || parseInt(data.shelf_life_days) < 1) {
@@ -59,6 +60,7 @@ const INITIAL_VALUES: FormSchemaType = {
     is_internal: true,
     quantity: "",
     is_active: true,
+    image_url: null,
 };
 
 /**
@@ -90,6 +92,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             is_internal: data.is_internal,
             quantity: data.quantity ? parseInt(data.quantity) : undefined,
             is_active: data.is_active,
+            image_url: data.image_url,
         };
     };
 
@@ -134,6 +137,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             is_internal: product.is_internal,
             quantity: product.quantity?.toString() || "",
             is_active: product.is_active,
+            image_url: product.image_url || null,
         });
         setDialogOpen(true);
     };

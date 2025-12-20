@@ -4,7 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { getProductCatalog, ProductCatalog } from "@/services/database/product-catalog";
+import { getProductCatalog, getTopSellingProducts, ProductCatalog } from "@/services/database/product-catalog";
 import { useCartStore } from "@/stores/cartStore";
 import { formatCurrency } from "@/utils/format";
 import { cn } from "@/lib/utils";
@@ -21,14 +21,20 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
     // null = not yet determined, then set based on device type
     const [isOpen, setIsOpen] = useState<boolean | null>(null);
     const [products, setProducts] = useState<ProductCatalog[]>([]);
+    const [topProducts, setTopProducts] = useState<ProductCatalog[]>([]);
     const [search, setSearch] = useState("");
     const hasInitialized = useRef(false);
     // Removed direct useCartStore use for adding items, relying on parent handler
     // const addItem = useCartStore((state) => state.addItem);
 
     const loadProducts = async () => {
-        const { data } = await getProductCatalog();
-        if (data) setProducts(data);
+        const [catalogResult, topResult] = await Promise.all([
+            getProductCatalog(),
+            getTopSellingProducts(6)
+        ]);
+
+        if (catalogResult.data) setProducts(catalogResult.data);
+        if (topResult.data) setTopProducts(topResult.data);
     };
 
     useEffect(() => {
@@ -66,7 +72,7 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
         p.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const topProducts = products.slice(0, 6); // Mock top products for now
+    // const topProducts = products.slice(0, 6); // Mock removed
 
     const handleAddItem = (product: ProductCatalog) => {
         onProductSelect(product);
@@ -157,8 +163,16 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                                                     className="group relative bg-white hover:bg-sidebar-accent rounded-xl p-2 cursor-pointer transition-all border border-sidebar-border hover:border-primary/20 shadow-sm hover:shadow-md"
                                                     onClick={() => handleAddItem(product)}
                                                 >
-                                                    <div className="h-16 w-full bg-sidebar-accent rounded-lg mb-2 flex items-center justify-center text-xs text-primary/40">
-                                                        IMG
+                                                    <div className="h-16 w-full bg-sidebar-accent rounded-lg mb-2 flex items-center justify-center text-xs text-primary/40 overflow-hidden relative">
+                                                        {product.image_url ? (
+                                                            <img
+                                                                src={product.image_url}
+                                                                alt={product.name}
+                                                                className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-300"
+                                                            />
+                                                        ) : (
+                                                            "IMG"
+                                                        )}
                                                     </div>
                                                     <p className="text-xs font-medium text-foreground line-clamp-2 leading-tight mb-1">
                                                         {product.name}
@@ -193,8 +207,16 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                                                 className="flex items-center gap-3 p-2 rounded-xl bg-white cursor-pointer border border-sidebar-border shadow-sm transition-all hover:bg-sidebar-accent group"
                                                 onClick={() => handleAddItem(product)}
                                             >
-                                                <div className="h-10 w-10 bg-white border border-sidebar-border rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] text-primary/40">
-                                                    IMG
+                                                <div className="h-10 w-10 bg-white border border-sidebar-border rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] text-primary/40 overflow-hidden relative">
+                                                    {product.image_url ? (
+                                                        <img
+                                                            src={product.image_url}
+                                                            alt={product.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        "IMG"
+                                                    )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-medium text-foreground truncate group-hover:text-primary">

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/common/money-input";
@@ -10,6 +10,10 @@ import { UseFormReturn } from "react-hook-form";
 import { maskPrice, maskDiscount } from "./utils";
 import { ProductFormValues } from "@/hooks/useProductForm";
 import { GenericFormDialog } from "@/components/ui/common/generic-form-dialog";
+import { Loader2, Image as ImageIcon, X, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 interface ProductFormDialogProps {
@@ -32,6 +36,45 @@ export function ProductFormDialog({
     loading,
 }: ProductFormDialogProps) {
     const { register, watch, setValue } = form;
+    const [uploading, setUploading] = useState(false);
+    const imageUrl = watch("image_url");
+
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            if (!event.target.files || event.target.files.length === 0) {
+                return;
+            }
+            const file = event.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            setUploading(true);
+
+            const { error: uploadError } = await supabase.storage
+                .from('products')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            const { data } = supabase.storage.from('products').getPublicUrl(filePath);
+
+            setValue("image_url", data.publicUrl);
+            toast.success("Imagem enviada com sucesso!");
+        } catch (error) {
+            toast.error("Erro ao enviar imagem");
+            console.error(error);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const removeImage = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setValue("image_url", null);
+    };
 
     // Effect to force 'un' unit type when product is not internal
     useEffect(() => {
@@ -66,17 +109,70 @@ export function ProductFormDialog({
         >
             <div className="col-span-1 sm:col-span-2 grid gap-4">
                 {/* Name */}
-                <div className="grid gap-2">
-                    <Label htmlFor="name">
-                        Nome <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                        id="name"
-                        placeholder="Ex: Frango Assado"
-                        {...register("name")}
-                        maxLength={100}
-                        required
-                    />
+                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    <div className="flex-1 w-full grid gap-2">
+                        <Label htmlFor="name">
+                            Nome <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="name"
+                            placeholder="Ex: Frango Assado"
+                            {...register("name")}
+                            maxLength={100}
+                            required
+                        />
+                    </div>
+
+                    {/* Image Upload */}
+                    <div className="flex-shrink-0">
+                        <Label className="block mb-2 text-center sm:text-left">Imagem</Label>
+                        <div className="flex items-center gap-4">
+                            <div className="relative group">
+                                <Avatar className="h-20 w-20 border-2 border-dashed border-muted-foreground/50 group-hover:border-primary transition-colors">
+                                    <AvatarImage src={imageUrl || undefined} className="object-cover" />
+                                    <AvatarFallback className="bg-transparent">
+                                        {uploading ? (
+                                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                        ) : (
+                                            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                                        )}
+                                    </AvatarFallback>
+                                </Avatar>
+
+                                {imageUrl && (
+                                    <button
+                                        onClick={removeImage}
+                                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm hover:bg-destructive/90 transition-colors"
+                                        type="button"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="relative">
+                                <Input
+                                    id="image-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                    disabled={uploading}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
+                                    disabled={uploading}
+                                    onClick={() => document.getElementById('image-upload')?.click()}
+                                >
+                                    <Upload className="h-3 w-3" />
+                                    {imageUrl ? 'Alterar' : 'Enviar'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* New: Internal Product Switch */}
