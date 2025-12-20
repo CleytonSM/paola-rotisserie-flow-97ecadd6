@@ -77,11 +77,6 @@ export default function PaymentPage() {
                         selectedClient={selectedClient}
                         onSelectClient={setSelectedClient}
                     />
-                    <ScheduledPickupPicker
-                        value={scheduledPickup}
-                        onChange={setScheduledPickup}
-                    />
-
                     {/* Delivery Section */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-sidebar-border space-y-4">
                         <div className="flex items-center space-x-3">
@@ -144,6 +139,12 @@ export default function PaymentPage() {
                             </div>
                         )}
                     </div>
+
+                    <ScheduledPickupPicker
+                        value={scheduledPickup}
+                        onChange={setScheduledPickup}
+                        label={isDelivery ? "Agendar Entrega" : "Agendar Retirada"}
+                    />
 
                     <ClientAddressDialog
                         open={showAddressDialog}

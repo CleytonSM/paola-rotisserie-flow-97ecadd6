@@ -14,9 +14,10 @@ import { Card, CardContent } from "@/components/ui/card";
 interface ScheduledPickupPickerProps {
     value: Date | null;
     onChange: (date: Date | null) => void;
+    label?: string;
 }
 
-export function ScheduledPickupPicker({ value, onChange }: ScheduledPickupPickerProps) {
+export function ScheduledPickupPicker({ value, onChange, label }: ScheduledPickupPickerProps) {
     const [isScheduled, setIsScheduled] = useState(!!value);
     const [isOpen, setIsOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(value || undefined);
@@ -93,7 +94,7 @@ export function ScheduledPickupPicker({ value, onChange }: ScheduledPickupPicker
                         className="text-sm font-medium cursor-pointer flex items-center gap-2"
                     >
                         <CalendarClock className="w-4 h-4 text-primary" />
-                        Agendar retirada
+                        {label || "Agendar retirada"}
                     </Label>
                 </div>
 
