@@ -6,12 +6,15 @@ import { cn } from "@/lib/utils";
 import { format, isSameDay, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Search, X } from "lucide-react";
+import { DeliveryFilterType, DeliveryTypeFilter } from "./DeliveryTypeFilter";
 
 interface OrderFiltersProps {
     dateFilter?: Date | { from: Date; to: Date };
     onDateChange: (date: Date | { from: Date; to: Date } | undefined) => void;
     searchTerm: string;
     onSearchChange: (term: string) => void;
+    deliveryFilter: DeliveryFilterType;
+    onDeliveryFilterChange: (type: DeliveryFilterType) => void;
 }
 
 export function OrderFilters({
@@ -19,6 +22,8 @@ export function OrderFilters({
     onDateChange,
     searchTerm,
     onSearchChange,
+    deliveryFilter,
+    onDeliveryFilterChange
 }: OrderFiltersProps) {
     const today = new Date();
     const tomorrow = addDays(today, 1);
@@ -35,8 +40,8 @@ export function OrderFilters({
     const isCustomDate = dateFilter && !isToday && !isTomorrow && !isNext7Days;
 
     return (
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center">
+            <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                     placeholder="Buscar por número ou nome do cliente..."
@@ -55,6 +60,12 @@ export function OrderFilters({
                     </Button>
                 )}
             </div>
+
+            <DeliveryTypeFilter
+                value={deliveryFilter}
+                onChange={onDeliveryFilterChange}
+                className="shadow-sm border bg-background"
+            />
 
             <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
                 <Button
