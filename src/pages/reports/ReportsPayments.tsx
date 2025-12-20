@@ -6,13 +6,23 @@ import { formatCurrency } from "@/components/features/reports/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
-const COLORS = [
+const PAYMENT_COLORS: Record<string, string> = {
+    "Dinheiro": "#22c55e", // Green
+    "Crédito": "#3b82f6",  // Blue
+    "Débito": "#ef4444",   // Red
+};
+
+const FALLBACK_COLORS = [
     "hsl(var(--primary))",
     "hsl(var(--secondary))",
     "hsl(var(--chart-3))",
     "hsl(var(--chart-4))",
     "hsl(var(--chart-5))"
 ];
+
+const getColor = (method: string, index: number) => {
+    return PAYMENT_COLORS[method] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+};
 
 export default function ReportsPayments() {
     const {
@@ -59,7 +69,7 @@ export default function ReportsPayments() {
                                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                                     >
                                         {salesByPayment.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={getColor(entry.method, index)} />
                                         ))}
                                     </Pie>
                                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
@@ -81,7 +91,7 @@ export default function ReportsPayments() {
                                     <div className="flex items-center gap-2">
                                         <div
                                             className="h-3 w-3 rounded-full"
-                                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                            style={{ backgroundColor: getColor(item.method, index) }}
                                         />
                                         <span className="font-medium">{item.method}</span>
                                     </div>
