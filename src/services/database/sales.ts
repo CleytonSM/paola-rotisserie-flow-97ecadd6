@@ -25,6 +25,9 @@ export interface SaleData {
     notes?: string | null;
     change_amount?: number;
     scheduled_pickup?: string | null;
+    is_delivery?: boolean;
+    delivery_address_id?: string | null;
+    delivery_fee?: number;
 }
 
 export interface CompleteSaleParams {

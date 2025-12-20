@@ -10,9 +10,10 @@ interface ScannerDialogProps {
     onOpenChange: (open: boolean) => void;
     onProductFound: (product: ProductCatalog) => void;
     onInternalItemFound: (item: ProductItem) => void;
+    onScan?: (barcode: string) => void;
 }
 
-export function ScannerDialog({ open, onOpenChange, onProductFound, onInternalItemFound }: ScannerDialogProps) {
+export function ScannerDialog({ open, onOpenChange, onProductFound, onInternalItemFound, onScan }: ScannerDialogProps) {
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const lastScanTimeRef = useRef<number>(0);
 
@@ -68,6 +69,12 @@ export function ScannerDialog({ open, onOpenChange, onProductFound, onInternalIt
             const now = Date.now();
             if (now - lastScanTimeRef.current < 2000) return;
             lastScanTimeRef.current = now;
+
+            // Optional raw scan override
+            if (onScan) {
+                onScan(decodedText);
+                return;
+            }
 
             try {
                 const scannedBarcode = parseInt(decodedText, 10);

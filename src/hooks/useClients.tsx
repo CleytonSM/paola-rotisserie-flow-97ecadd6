@@ -2,11 +2,12 @@ import { Client } from "@/components/features/clients/types";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getClientsList, getClientById, createClient, updateClient, deleteClient } from "@/services/database";
+import { createClientAddress } from "@/services/database/addresses";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { maskCpfCnpj, maskPhone } from "@/components/features/clients/utils";
 import { useClientForm } from "./useClientForm";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MapPin } from "lucide-react";
 import { DataTableAction } from "@/components/ui/data-table-action";
 import { ColumnDef } from "@/components/ui/common/generic-table";
 import { PAGE_SIZE } from "@/config/constants";
@@ -28,6 +29,10 @@ export const useClients = () => {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    // Address Modal states
+    const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+    const [addressClientId, setAddressClientId] = useState<string | null>(null);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -91,11 +96,39 @@ export const useClients = () => {
     };
 
     const handleCreate = async (data: any) => {
-        const { error } = await createClient(data);
-        if (error) {
+        // Extract address data
+        const {
+            address_zip_code,
+            address_street,
+            address_number,
+            address_neighborhood,
+            address_city,
+            address_state,
+            address_complement,
+            ...clientData
+        } = data;
+
+        const { error, data: newClient } = await createClient(clientData);
+        if (error || !newClient) {
             toast.error("Erro ao criar cliente");
             return false;
         }
+
+        // If there is address data, create the address
+        if (address_zip_code && address_street && address_number) {
+            await createClientAddress({
+                client_id: newClient.id,
+                zip_code: address_zip_code,
+                street: address_street,
+                number: address_number,
+                neighborhood: address_neighborhood || "",
+                city: address_city || "",
+                state: address_state || "",
+                complement: address_complement || "",
+                is_default: true // First address is default
+            });
+        }
+
         toast.success("Cliente criado com sucesso!");
         loadData();
         return true;
@@ -119,7 +152,10 @@ export const useClients = () => {
         }
     };
 
-
+    const handleManageAddresses = (clientId: string) => {
+        setAddressClientId(clientId);
+        setAddressDialogOpen(true);
+    };
 
     const [editFormData, setEditFormData] = useState<any>(null);
 
@@ -187,6 +223,12 @@ export const useClients = () => {
             cell: (client) => (
                 <>
                     <DataTableAction
+                        tooltip="Gerenciar endereços"
+                        onClick={() => handleManageAddresses(client.id)}
+                        className="hover:text-blue-600"
+                        icon={MapPin}
+                    />
+                    <DataTableAction
                         tooltip="Editar cliente"
                         onClick={() => handleEditClick(client)}
                         className="hover:text-primary"
@@ -226,6 +268,9 @@ export const useClients = () => {
         onSubmit,
         columns,
         handleDialogOpenChange,
+        addressDialogOpen,
+        setAddressDialogOpen,
+        addressClientId,
     };
 };
 

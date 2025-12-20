@@ -23,12 +23,33 @@ export interface Order {
         quantity: number;
         unit_price: number;
         total_price: number;
+        product_item_id?: string | null;
+        product_catalog?: {
+            id: string;
+            is_internal: boolean;
+            base_price: number;
+            catalog_barcode?: number;
+            name: string;
+        } | null;
     }[];
     sale_payments?: {
         id: string;
         amount: number;
         payment_method: string;
     }[];
+    is_delivery: boolean;
+    delivery_fee?: number;
+    delivery_address_id?: string;
+    client_addresses?: {
+        id: string;
+        street: string;
+        number: string;
+        complement?: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        zip_code: string;
+    } | null;
 }
 
 export interface OrderFilters {
@@ -73,8 +94,15 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                     notes,
                     change_amount,
                     clients ( id, name, phone ),
-                    sale_items ( id, name, quantity, unit_price, total_price ),
-                    sale_payments ( id, amount, payment_method )
+                    sale_items ( 
+                        id, name, quantity, unit_price, total_price, product_item_id,
+                        product_catalog ( id, is_internal, base_price, catalog_barcode, name )
+                    ),
+                    sale_payments ( id, amount, payment_method ),
+                    is_delivery,
+                    delivery_fee,
+                    delivery_address_id,
+                    client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .gte('scheduled_pickup', startFilterDate.toISOString())
                 .lte('scheduled_pickup', endFilterDate.toISOString());
@@ -94,8 +122,15 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                     notes,
                     change_amount,
                     clients ( id, name, phone ),
-                    sale_items ( id, name, quantity, unit_price, total_price ),
-                    sale_payments ( id, amount, payment_method )
+                    sale_items ( 
+                        id, name, quantity, unit_price, total_price, product_item_id,
+                        product_catalog ( id, is_internal, base_price, catalog_barcode, name )
+                    ),
+                    sale_payments ( id, amount, payment_method ),
+                    is_delivery,
+                    delivery_fee,
+                    delivery_address_id,
+                    client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .lt('scheduled_pickup', now.toISOString())
                 .neq('order_status', 'delivered')
@@ -130,8 +165,15 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                     notes,
                     change_amount,
                     clients ( id, name, phone ),
-                    sale_items ( id, name, quantity, unit_price, total_price ),
-                    sale_payments ( id, amount, payment_method )
+                    sale_items ( 
+                        id, name, quantity, unit_price, total_price, product_item_id,
+                        product_catalog ( id, is_internal, base_price, catalog_barcode, name )
+                    ),
+                    sale_payments ( id, amount, payment_method ),
+                    is_delivery,
+                    delivery_fee,
+                    delivery_address_id,
+                    client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .not('order_status', 'is', null);
 
@@ -202,8 +244,15 @@ export const getUpcomingOrders = async (): Promise<DatabaseResult<Order[]>> => {
                 created_at,
                 notes,
                 clients ( id, name, phone ),
-                sale_items ( id, name, quantity, unit_price, total_price ),
-                sale_payments ( id, amount, payment_method )
+                sale_items ( 
+                    id, name, quantity, unit_price, total_price, product_item_id,
+                    product_catalog ( id, is_internal, base_price, catalog_barcode, name )
+                ),
+                sale_payments ( id, amount, payment_method ),
+                is_delivery,
+                delivery_fee,
+                delivery_address_id,
+                client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
             `)
             .gte('scheduled_pickup', today.toISOString())
             .lte('scheduled_pickup', threeDaysFromNow.toISOString())
@@ -232,6 +281,87 @@ export const updateOrderStatus = async (
         if (error) throw error;
 
         return { data: data as { success: boolean }, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+
+export const linkProductItemToSaleItem = async (
+    saleItemId: string,
+    productItemId: string
+): Promise<DatabaseResult<void>> => {
+    try {
+        // 1. Update sale_item with product_item_id
+        const { error: saleItemError } = await supabase
+            .from('sale_items')
+            .update({ product_item_id: productItemId })
+            .eq('id', saleItemId);
+
+        if (saleItemError) throw saleItemError;
+
+        // 2. Update product_item status to 'sold' (and ideally link to sale, but sale_id is on header... 
+        // actually product_item also has sale_id. We should fetch the sale_id from sale_item parent...
+        // For now, let's just mark as sold. A perfect implementation would link sale_id too.
+        // Let's first get the sale_item to know the sale_id
+        const { data: saleItemData, error: fetchError } = await supabase
+            .from('sale_items')
+            .select('sale_id')
+            .eq('id', saleItemId)
+            .single();
+            
+        if (fetchError) throw fetchError;
+        
+        const { error: productItemError } = await supabase
+            .from('product_item')
+            .update({ 
+                status: 'sold',
+                sold_at: new Date().toISOString(),
+                sale_id: saleItemData.sale_id
+            })
+            .eq('id', productItemId);
+
+        if (productItemError) throw productItemError;
+
+        return { data: null, error: null };
+    } catch (error) {
+        return { data: null, error: error as Error };
+    }
+};
+
+export const checkAndSetOrderReady = async (
+    saleId: string
+): Promise<DatabaseResult<boolean>> => {
+    try {
+        // Get all items for this sale
+        const { data: items, error } = await supabase
+            .from('sale_items')
+            .select('id, product_item_id, product_catalog (is_internal)')
+            .eq('sale_id', saleId);
+
+        if (error) throw error;
+        
+        if (!items || items.length === 0) return { data: false, error: null };
+
+        // Check if all internal items have a linked product_item_id
+        // (External products don't have product_item_id usually, or at least we focusing on internal ones)
+        // Actually, we should check if all items that SHOULD be linked are linked.
+        // For simplicity: if all items have product_item_id OR aren't internal (maybe?)
+        // Let's assume strict check: all items in the order must have product_item_id if they are internal.
+        
+        const allLinked = items.every((item: any) => {
+            // If it's internal, it must have product_item_id
+            if (item.product_catalog?.is_internal) {
+                return !!item.product_item_id;
+            }
+            return true; // Non-internal items don't need linking (or apply different logic)
+        });
+
+        if (allLinked) {
+            await updateOrderStatus(saleId, 'ready');
+            return { data: true, error: null };
+        }
+
+        return { data: false, error: null };
     } catch (error) {
         return { data: null, error: error as Error };
     }

@@ -16,6 +16,8 @@ import {
     Tag,
     ShoppingCart,
     Clock,
+    SquareMenu,
+    Menu,
 } from "lucide-react";
 import { NavItem } from "./types";
 import { PixIcon } from "./components/icons/PixIcon";
@@ -83,6 +85,7 @@ export const navigationGroups = {
                 title: "Configurações",
                 icon: Settings,
                 items: [
+                    { title: "Geral", url: "/settings", icon: Menu },
                     { title: "Maquininhas", url: "/machines", icon: CreditCard },
                     { title: "Chaves Pix", url: "/pix-keys", icon: PixIcon },
                 ] as NavItem[],

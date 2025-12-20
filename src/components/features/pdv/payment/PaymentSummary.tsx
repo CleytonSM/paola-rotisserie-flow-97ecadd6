@@ -9,9 +9,11 @@ interface PaymentSummaryProps {
     total: number;
     notes: string;
     setNotes: (notes: string) => void;
+    isDelivery?: boolean;
+    deliveryFee?: number;
 }
 
-export function PaymentSummary({ items, subtotal, total, notes, setNotes }: PaymentSummaryProps) {
+export function PaymentSummary({ items, subtotal, total, notes, setNotes, isDelivery, deliveryFee }: PaymentSummaryProps) {
     return (
         <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-sidebar-border">
@@ -49,6 +51,12 @@ export function PaymentSummary({ items, subtotal, total, notes, setNotes }: Paym
                         <span>Subtotal</span>
                         <span>{formatCurrency(subtotal)}</span>
                     </div>
+                    {isDelivery && (
+                        <div className="flex justify-between text-muted-foreground">
+                            <span>Taxa de Entrega</span>
+                            <span>{formatCurrency(deliveryFee || 0)}</span>
+                        </div>
+                    )}
                     <div className="flex justify-between text-2xl font-bold text-primary pt-2">
                         <span>TOTAL</span>
                         <span>{formatCurrency(total)}</span>

@@ -14,6 +14,7 @@ import {
 import { Order, OrderStatus, ORDER_STATUS_LABELS } from "@/services/database";
 import { OrderCard } from "./OrderCard";
 import { DraggableOrderCard } from "./DraggableOrderCard";
+import { DeliveryFilterType } from "./DeliveryTypeFilter";
 import { OrderDetailDialog } from "./OrderDetailDialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ interface OrderKanbanProps {
     orders: Order[];
     onStatusChange: (orderId: string, newStatus: OrderStatus) => void;
     isUpdating?: boolean;
+    filterType: DeliveryFilterType;
 }
 
 const KANBAN_COLUMNS: { status: OrderStatus; color: string; dropColor: string }[] = [
@@ -150,8 +152,11 @@ function DroppableColumn({
     );
 }
 
-export function OrderKanban({ orders, onStatusChange, isUpdating }: OrderKanbanProps) {
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+export function OrderKanban({ orders, onStatusChange, isUpdating, filterType }: OrderKanbanProps) {
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const selectedOrder = useMemo(() =>
+        orders.find(o => o.id === selectedOrderId) || null,
+        [orders, selectedOrderId]);
     const [activeOrder, setActiveOrder] = useState<Order | null>(null);
     // Optimistic state: tracks pending status changes before backend confirms
     const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, OrderStatus>>({});
@@ -197,8 +202,17 @@ export function OrderKanban({ orders, onStatusChange, isUpdating }: OrderKanbanP
         }
     }, [orders]);
 
+    const filteredOrders = useMemo(() => {
+        if (filterType === 'all') return displayOrders;
+        return displayOrders.filter(order => {
+            if (filterType === 'delivery') return order.is_delivery;
+            if (filterType === 'pickup') return !order.is_delivery;
+            return true;
+        });
+    }, [displayOrders, filterType]);
+
     const getOrdersByStatus = (status: OrderStatus) =>
-        displayOrders.filter(order => order.order_status === status);
+        filteredOrders.filter(order => order.order_status === status);
 
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
@@ -251,7 +265,7 @@ export function OrderKanban({ orders, onStatusChange, isUpdating }: OrderKanbanP
                             dropColor={dropColor}
                             orders={getOrdersByStatus(status)}
                             onStatusChange={onStatusChange}
-                            onCardClick={setSelectedOrder}
+                            onCardClick={(order) => setSelectedOrderId(order.id)}
                             isUpdating={isUpdating}
                             activeOrderId={activeOrder?.id}
                         />
@@ -279,8 +293,8 @@ export function OrderKanban({ orders, onStatusChange, isUpdating }: OrderKanbanP
 
             <OrderDetailDialog
                 order={selectedOrder}
-                open={!!selectedOrder}
-                onOpenChange={(open) => !open && setSelectedOrder(null)}
+                open={!!selectedOrderId}
+                onOpenChange={(open) => !open && setSelectedOrderId(null)}
                 onStatusChange={onStatusChange}
                 isUpdating={isUpdating}
             />

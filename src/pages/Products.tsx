@@ -28,6 +28,10 @@ export const Products = () => {
         handleDeleteConfirm,
         searchTerm,
         setSearchTerm,
+        isActiveFilter,
+        setIsActiveFilter,
+        isInternalFilter,
+        setIsInternalFilter,
         deleteDialogOpen,
         setDeleteDialogOpen,
         page,
@@ -63,6 +67,10 @@ export const Products = () => {
                 stockSummaries={stockSummaries}
                 loadingStock={loadingStock}
                 isLoadingAll={isLoadingAll}
+                isActiveFilter={isActiveFilter}
+                setIsActiveFilter={setIsActiveFilter}
+                isInternalFilter={isInternalFilter}
+                setIsInternalFilter={setIsInternalFilter}
                 onEdit={handleEdit}
                 onDelete={handleDeleteClick}
                 count={totalCount}

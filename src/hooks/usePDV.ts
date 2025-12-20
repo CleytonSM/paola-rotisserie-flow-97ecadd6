@@ -36,7 +36,7 @@ export function usePDV() {
             return;
         }
 
-        // Stock validation for non-internal products
+        // Stock validation ONLY for external products
         if (product.quantity !== undefined && product.quantity !== null) {
             const currentItems = useCartStore.getState().items;
             const currentInCart = currentItems.find(i => i.id === product.id)?.quantity || 0;
@@ -58,7 +58,34 @@ export function usePDV() {
         toast.success(`Produto adicionado: ${product.name}`);
     }, [addItem, clearSearch]);
 
-    const handleInternalItemSelect = useCallback((item: ProductItem) => {
+    const handleInternalItemSelect = useCallback((item: ProductItem | null) => {
+        // Handle Scheduled Production (No stock/physical item)
+        if (!item) {
+            if (!selectedProduct) {
+                 toast.error("Erro: Produto não selecionado.");
+                 return;
+            }
+
+            const payload: AddItemPayload = {
+                id: selectedProduct.id,
+                name: selectedProduct.name,
+                base_price: selectedProduct.base_price,
+                is_internal: true,
+                catalog_id: selectedProduct.id,
+                sub_item_id: undefined, // Explicitly undefined/null
+                weight: 1, // Default weight for scheduled/unit items
+                catalog_barcode: selectedProduct.catalog_barcode || undefined,
+                scanned_barcode: undefined,
+                unit_type: selectedProduct.unit_type,
+            };
+
+            addItem(payload);
+            setSelectionOpen(false);
+            setSelectedProduct(null);
+            toast.success(`Item agendado adicionado: ${selectedProduct.name}`);
+            return;
+        }
+
         const catalogData = selectedProduct || item.product_catalog;
         
         if (!catalogData) {

@@ -24,10 +24,13 @@ export const useProductCatalog = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [products, setProducts] = useState<ProductCatalog[]>([]);
-    const [showInactive, setShowInactive] = useState(false);
     
-    // Pagination & Search
+    // Filters
     const [searchTerm, setSearchTerm] = useState("");
+    const [isActiveFilter, setIsActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
+    const [isInternalFilter, setIsInternalFilter] = useState<'all' | 'internal' | 'external'>('all');
+    
+    // Pagination
     const [page, setPage] = useState(1);
     const [pageSize] = useState(PAGE_SIZE);
 
@@ -44,7 +47,7 @@ export const useProductCatalog = () => {
             loadData();
         };
         checkAuth();
-    }, [navigate, showInactive, page, searchTerm]);
+    }, [navigate, isActiveFilter, isInternalFilter, page, searchTerm]);
 
     const loadData = async () => {
         setLoading(true);
@@ -62,7 +65,7 @@ export const useProductCatalog = () => {
         // But let's proceed with hook assuming valid service, and I'll double check service later.
         // Actually, let's fix the service in the next step if I realized I broke it.
         
-        const result = await getProductCatalogList(showInactive, searchTerm, page, pageSize);
+        const result = await getProductCatalogList(isActiveFilter, isInternalFilter, searchTerm, page, pageSize);
         if (result.error) {
             toast.error("Erro ao carregar produtos");
         } else if (result.data) {
@@ -172,10 +175,12 @@ export const useProductCatalog = () => {
     };
 
     return {
-        products, // No filtering here
+        products,
         loading,
-        showInactive,
-        setShowInactive,
+        isActiveFilter,
+        setIsActiveFilter,
+        isInternalFilter,
+        setIsInternalFilter,
         createProduct,
         updateProduct,
         deleteProduct,

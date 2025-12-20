@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Order, OrderStatus } from "@/services/database";
 import { OrderCard } from "./OrderCard";
 import { OrderDetailDialog } from "./OrderDetailDialog";
@@ -10,7 +10,10 @@ interface OrderListProps {
 }
 
 export function OrderList({ orders, onStatusChange, isUpdating }: OrderListProps) {
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const selectedOrder = useMemo(() =>
+        orders.find(o => o.id === selectedOrderId) || null,
+        [orders, selectedOrderId]);
 
     return (
         <>
@@ -20,7 +23,7 @@ export function OrderList({ orders, onStatusChange, isUpdating }: OrderListProps
                         key={order.id}
                         order={order}
                         onStatusChange={onStatusChange}
-                        onClick={() => setSelectedOrder(order)}
+                        onClick={() => setSelectedOrderId(order.id)}
                         isUpdating={isUpdating}
                     />
                 ))}
@@ -28,8 +31,8 @@ export function OrderList({ orders, onStatusChange, isUpdating }: OrderListProps
 
             <OrderDetailDialog
                 order={selectedOrder}
-                open={!!selectedOrder}
-                onOpenChange={(open) => !open && setSelectedOrder(null)}
+                open={!!selectedOrderId}
+                onOpenChange={(open) => !open && setSelectedOrderId(null)}
                 onStatusChange={onStatusChange}
                 isUpdating={isUpdating}
             />

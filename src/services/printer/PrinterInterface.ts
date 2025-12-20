@@ -17,7 +17,12 @@ export interface ReceiptData {
   total: number;
   paymentMethod: string;
   clientName?: string;
+  clientPhone?: string;
   change?: number; // Troco
+  isDelivery?: boolean;
+  deliveryAddress?: string;
+  deliveryFee?: number;
+  notes?: string;
 }
 
 export interface PrinterInterface {

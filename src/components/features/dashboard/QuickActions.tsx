@@ -1,4 +1,4 @@
-import { Plus, TrendingDown } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ActionButton } from "./ActionButton";
 
@@ -15,7 +15,7 @@ export function QuickActions({ navigate }: QuickActionsProps) {
             <CardContent className="flex flex-col space-y-4">
                 <ActionButton
                     onClick={() => navigate("/receivable")}
-                    icon={Plus}
+                    icon={TrendingUp}
                     title="Adicionar Entrada"
                     description="Registrar novo recebimento"
                     variant="secondary"

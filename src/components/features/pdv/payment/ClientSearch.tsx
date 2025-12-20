@@ -9,6 +9,7 @@ import { maskCpfCnpj } from "@/components/features/clients/utils";
 import { ClientFormDialog } from "@/components/features/clients/ClientFormDialog";
 import { useClientForm } from "@/hooks/useClientForm";
 import { createClient } from "@/services/database/clients";
+import { createClientAddress } from "@/services/database/addresses";
 import { toast } from "sonner";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -59,10 +60,37 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
     };
 
     const handleCreate = async (data: any) => {
-        const { data: newClient, error } = await createClient(data);
-        if (error) {
+        // Extract address data
+        const {
+            address_zip_code,
+            address_street,
+            address_number,
+            address_neighborhood,
+            address_city,
+            address_state,
+            address_complement,
+            ...clientData
+        } = data;
+
+        const { data: newClient, error } = await createClient(clientData);
+        if (error || !newClient) {
             toast.error("Erro ao criar cliente");
             return false;
+        }
+
+        // If there is address data, create the address
+        if (address_zip_code && address_street && address_number) {
+            await createClientAddress({
+                client_id: newClient.id,
+                zip_code: address_zip_code,
+                street: address_street,
+                number: address_number,
+                neighborhood: address_neighborhood || "",
+                city: address_city || "",
+                state: address_state || "",
+                complement: address_complement || "",
+                is_default: true // First address is default
+            });
         }
 
         toast.success("Cliente criado com sucesso!");

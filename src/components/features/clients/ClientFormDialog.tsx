@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Search, Loader2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { ClientSchema } from "@/schemas/client.schema";
 import { applyCpfCnpjMask, applyPhoneMask } from "./utils";
 import { GenericFormDialog } from "@/components/ui/common/generic-form-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
+import { toast } from "sonner";
+import { applyCepMask } from "@/lib/masks";
 
 interface ClientFormDialogProps {
   open: boolean;
@@ -38,6 +42,38 @@ export function ClientFormDialog({
     const { value } = e.target;
     const maskedValue = applyPhoneMask(value);
     setValue("phone", maskedValue);
+  };
+
+  const [showAddress, setShowAddress] = useState(false);
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+
+  const handleCepSearch = async () => {
+    const cep = watch("address_zip_code")?.replace(/\D/g, "");
+    if (!cep || cep.length !== 8) {
+      toast.error("CEP inválido");
+      return;
+    }
+
+    setIsSearchingCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+
+      setValue("address_street", data.logradouro);
+      setValue("address_neighborhood", data.bairro);
+      setValue("address_city", data.localidade);
+      setValue("address_state", data.uf);
+      form.setFocus("address_number");
+    } catch (error) {
+      toast.error("Erro ao buscar CEP");
+    } finally {
+      setIsSearchingCep(false);
+    }
   };
 
   return (
@@ -103,6 +139,65 @@ export function ClientFormDialog({
           <span className="text-xs text-destructive">{errors.email.message}</span>
         )}
       </div>
+
+      {!editingId && (
+        <div className="sm:col-span-2 space-y-4 pt-4 border-t">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="add-address"
+              checked={showAddress}
+              onCheckedChange={(checked) => setShowAddress(checked as boolean)}
+            />
+            <Label htmlFor="add-address" className="cursor-pointer">Adicionar endereço agora?</Label>
+          </div>
+
+          {showAddress && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in slide-in-from-top-2">
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <div className="flex gap-2">
+                  <Input
+                    {...register("address_zip_code")}
+                    onChange={(e) => {
+                      e.target.value = applyCepMask(e.target.value);
+                      form.setValue("address_zip_code", e.target.value);
+                    }}
+                    placeholder="00000-000"
+                    maxLength={9}
+                  />
+                  <Button type="button" size="icon" variant="outline" onClick={handleCepSearch} disabled={isSearchingCep}>
+                    {isSearchingCep ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input {...register("address_number")} placeholder="123" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Rua</Label>
+                <Input {...register("address_street")} placeholder="Rua das Flores" />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input {...register("address_neighborhood")} placeholder="Centro" />
+              </div>
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input {...register("address_complement")} placeholder="Apto 101" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input {...register("address_city")} placeholder="Cidade" />
+              </div>
+              <div className="space-y-2">
+                <Label>Estado</Label>
+                <Input {...register("address_state")} placeholder="UF" maxLength={2} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </GenericFormDialog>
   );
 }

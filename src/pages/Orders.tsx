@@ -7,7 +7,8 @@ import {
     OrderFilters,
     OrderKanban,
     OrderList,
-    OrderEmptyState
+    OrderEmptyState,
+    DeliveryFilterType
 } from "@/components/features/orders";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2, RefreshCw } from "lucide-react";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 export default function Orders() {
     const isMobile = useIsMobile();
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [deliveryFilter, setDeliveryFilter] = useState<DeliveryFilterType>('all');
     const {
         orders,
         isLoading,
@@ -71,6 +73,8 @@ export default function Orders() {
                 onDateChange={setDateFilter}
                 searchTerm={filters.searchTerm || ''}
                 onSearchChange={setSearchTerm}
+                deliveryFilter={deliveryFilter}
+                onDeliveryFilterChange={setDeliveryFilter}
             />
 
             {isLoading && orders.length === 0 ? (
@@ -92,6 +96,7 @@ export default function Orders() {
                     orders={orders}
                     onStatusChange={handleStatusChange}
                     isUpdating={isUpdating}
+                    filterType={deliveryFilter}
                 />
             )}
         </Scaffolding>

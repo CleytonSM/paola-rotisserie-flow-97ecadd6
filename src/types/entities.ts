@@ -43,6 +43,34 @@ export interface AccountPayable {
   supplier?: Supplier;
 }
 
+
+export interface ClientAddress {
+  id: string;
+  client_id: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  is_default: boolean;
+}
+
+export interface AppSettings {
+  id: string;
+  store_cnpj?: string;
+  store_name?: string;
+  store_address_street?: string;
+  store_address_number?: string;
+  store_address_complement?: string;
+  store_address_neighborhood?: string;
+  store_address_city?: string;
+  store_address_state?: string;
+  store_address_zip_code?: string;
+  fixed_delivery_fee: number;
+}
+
 export type OrderStatus = 'received' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 
 

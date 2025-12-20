@@ -19,6 +19,13 @@ import {
 } from "@/components/features/products/utils";
 import { getStatusVariant } from "@/utils/status";
 import { StockSummary } from "@/services/database";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface ProductsTableProps {
     products: ProductCatalog[];
@@ -30,6 +37,10 @@ interface ProductsTableProps {
     isLoadingAll: boolean;
     onEdit: (product: ProductCatalog) => void;
     onDelete: (id: string) => void;
+    isActiveFilter: 'all' | 'active' | 'inactive';
+    setIsActiveFilter: (value: 'all' | 'active' | 'inactive') => void;
+    isInternalFilter: 'all' | 'internal' | 'external';
+    setIsInternalFilter: (value: 'all' | 'internal' | 'external') => void;
     count?: number;
     page?: number;
     rowsPerPage?: number;
@@ -46,6 +57,10 @@ export function ProductsTable({
     isLoadingAll,
     onEdit,
     onDelete,
+    isActiveFilter,
+    setIsActiveFilter,
+    isInternalFilter,
+    setIsInternalFilter,
     count,
     page,
     rowsPerPage,
@@ -95,6 +110,14 @@ export function ProductsTable({
             cell: (product) => (
                 <Badge variant={getStatusVariant(product.is_active)}>
                     {product.is_active ? "Ativo" : "Inativo"}
+                </Badge>
+            ),
+        },
+        {
+            header: "Tipo",
+            cell: (product) => (
+                <Badge variant={product.is_internal ? "default" : "outline"}>
+                    {product.is_internal ? "Interno" : "Externo"}
                 </Badge>
             ),
         },
@@ -186,6 +209,38 @@ export function ProductsTable({
         },
     ];
 
+    const filterControls = (
+        <>
+            <Select
+                value={isActiveFilter}
+                onValueChange={(value: any) => setIsActiveFilter(value)}
+            >
+                <SelectTrigger className="w-[140px] h-10">
+                    <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos Status</SelectItem>
+                    <SelectItem value="active">Ativos</SelectItem>
+                    <SelectItem value="inactive">Inativos</SelectItem>
+                </SelectContent>
+            </Select>
+
+            <Select
+                value={isInternalFilter}
+                onValueChange={(value: any) => setIsInternalFilter(value)}
+            >
+                <SelectTrigger className="w-[140px] h-10">
+                    <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos Tipos</SelectItem>
+                    <SelectItem value="internal">Internos</SelectItem>
+                    <SelectItem value="external">Externos</SelectItem>
+                </SelectContent>
+            </Select>
+        </>
+    );
+
     return (
         <GenericTable
             columns={columns}
@@ -193,6 +248,7 @@ export function ProductsTable({
             isLoading={loading}
             searchTerm={searchTerm}
             onSearchChange={onSearchChange}
+            filterControls={filterControls}
             searchPlaceholder="Buscar por nome, código interno, código de barras..."
             emptyStateMessage="Nenhum produto cadastrado no catálogo."
             count={count}
