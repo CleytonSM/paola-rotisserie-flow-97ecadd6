@@ -33,7 +33,7 @@ const formSchema = z.object({
             });
         }
     } else {
-        if (!data.quantity || parseInt(data.quantity) < 1) {
+        if (data.quantity === undefined || data.quantity === "" || parseInt(data.quantity) < 0) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Quantidade é obrigatória para produtos externos",

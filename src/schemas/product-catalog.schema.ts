@@ -13,7 +13,7 @@ export const catalogSchema = z.object({
     default_discount: z.number().min(0, "Desconto não pode ser negativo").max(1, "Desconto não pode ser maior que 100%").optional(),
     unit_type: z.enum(["kg", "un"]).default("kg"),
     is_internal: z.boolean().default(true),
-    quantity: z.number().int("Quantidade deve ser um número inteiro").positive("Quantidade deve ser positiva").optional(),
+    quantity: z.number().int("Quantidade deve ser um número inteiro").min(0, "Quantidade não pode ser negativa").optional(),
     is_active: z.boolean().default(true),
     image_url: z.string().nullable().optional(),
 });

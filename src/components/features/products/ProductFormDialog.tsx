@@ -238,7 +238,7 @@ export function ProductFormDialog({
                             type="number"
                             placeholder="Ex: 3"
                             {...register("quantity")}
-                            min={1}
+                            min={0}
                             required
                         />
                     </div>
