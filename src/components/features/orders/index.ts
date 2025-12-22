@@ -6,3 +6,7 @@ export { OrderEmptyState } from "./OrderEmptyState";
 export { OrderList } from "./OrderList";
 export { ScheduledPickupPicker } from "./ScheduledPickupPicker";
 export { OrderDetailDialog } from "./OrderDetailDialog";
+export { NewOrderModal } from "./NewOrderModal";
+export { NewOrderButton } from "./NewOrderButton";
+export { NewOrderProductSearch } from "./NewOrderProductSearch";
+export { WhatsAppImportModal } from "./WhatsAppImportModal";

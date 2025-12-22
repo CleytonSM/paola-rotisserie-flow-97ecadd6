@@ -8,10 +8,11 @@ import {
     OrderStatus,
     OrderFilters 
 } from "@/services/database";
-import { SoundService } from "@/services/sound";
+import { useSoundNotifications } from "./useSoundNotifications";
 
 export function useOrders() {
     const queryClient = useQueryClient();
+    const { playStatusReady, playStatusDelivered } = useSoundNotifications();
     const [filters, setFilters] = useState<OrderFilters>({
         date: undefined,
         dateRange: undefined,
@@ -42,9 +43,9 @@ export function useOrders() {
             
             // Play appropriate sound based on new status
             if (newStatus === 'ready') {
-                SoundService.playStatusReady();
+                playStatusReady();
             } else if (newStatus === 'delivered') {
-                SoundService.playStatusDelivered();
+                playStatusDelivered();
             }
         },
         onError: () => {
