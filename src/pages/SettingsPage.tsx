@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { AppSettingsFormValues, appSettingsSchema } from "@/schemas/settings.schema";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Search, Save, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Search, Save, Loader2, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { IMaskInput } from "react-imask";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
@@ -34,6 +35,7 @@ export default function SettingsPage() {
             store_address_state: "",
             store_address_zip_code: "",
             fixed_delivery_fee: 15.00,
+            sound_enabled: true,
         },
     });
 
@@ -50,6 +52,7 @@ export default function SettingsPage() {
                 store_address_state: settings.store_address_state || "",
                 store_address_zip_code: settings.store_address_zip_code || "",
                 fixed_delivery_fee: settings.fixed_delivery_fee ?? 15.00,
+                sound_enabled: settings.sound_enabled ?? true,
             });
         }
     }, [settings, form]);
@@ -359,6 +362,38 @@ export default function SettingsPage() {
                                     )}
                                 />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Volume2 className="h-5 w-5" />
+                                Notificações
+                            </CardTitle>
+                            <CardDescription>Configure alertas sonoros do sistema</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <FormField
+                                control={form.control}
+                                name="sound_enabled"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                        <div className="space-y-0.5">
+                                            <FormLabel className="text-base">Sons de Notificação</FormLabel>
+                                            <FormDescription>
+                                                Tocar sons suaves ao criar pedidos e mudar status
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
                         </CardContent>
                     </Card>
 

@@ -11,6 +11,7 @@ import { useAppSettings } from "@/hooks/useAppSettings";
 import { useClientAddresses } from "@/hooks/useClientAddresses";
 import { MessageSquare } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
+import { useSoundNotifications } from "@/hooks/useSoundNotifications";
 
 interface SuccessPageState {
     saleId?: string;
@@ -48,6 +49,7 @@ export default function SuccessPage() {
     const { settings } = useAppSettings();
     const { addresses } = useClientAddresses(clientId);
     const deliveryAddress = addresses.find(a => a.id === deliveryAddressId);
+    const { playOrderCreated } = useSoundNotifications();
 
     const handleWhatsApp = () => {
         if (!settings || !deliveryAddress) return;
@@ -105,8 +107,10 @@ export default function SuccessPage() {
             navigate("/pdv");
         } else {
             clearCart();
+            // Play success sound for new order
+            playOrderCreated();
         }
-    }, [saleId, orderId, navigate, clearCart]);
+    }, [saleId, orderId, navigate, clearCart, playOrderCreated]);
 
     if (!saleId && !orderId) return null;
 

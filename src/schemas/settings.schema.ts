@@ -11,6 +11,7 @@ export const appSettingsSchema = z.object({
   store_address_state: z.string().length(2, "UF inválido"),
   store_address_zip_code: z.string().min(8, "CEP inválido").transform(val => val.replace(/\D/g, "")),
   fixed_delivery_fee: z.coerce.number().min(0, "Taxa deve ser zero ou positiva"),
+  sound_enabled: z.boolean().default(true),
 });
 
 export type AppSettingsFormValues = z.infer<typeof appSettingsSchema>;

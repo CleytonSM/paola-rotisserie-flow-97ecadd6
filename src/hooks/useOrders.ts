@@ -8,6 +8,7 @@ import {
     OrderStatus,
     OrderFilters 
 } from "@/services/database";
+import { SoundService } from "@/services/sound";
 
 export function useOrders() {
     const queryClient = useQueryClient();
@@ -32,11 +33,19 @@ export function useOrders() {
         mutationFn: async ({ saleId, status }: { saleId: string; status: OrderStatus }) => {
             const { error } = await updateOrderStatus(saleId, status);
             if (error) throw error;
+            return status; // Return status to use in onSuccess
         },
-        onSuccess: () => {
+        onSuccess: (newStatus) => {
             queryClient.invalidateQueries({ queryKey: ['orders'] });
             queryClient.invalidateQueries({ queryKey: ['upcomingOrders'] });
             toast.success("Status atualizado com sucesso!");
+            
+            // Play appropriate sound based on new status
+            if (newStatus === 'ready') {
+                SoundService.playStatusReady();
+            } else if (newStatus === 'delivered') {
+                SoundService.playStatusDelivered();
+            }
         },
         onError: () => {
             toast.error("Erro ao atualizar status");
