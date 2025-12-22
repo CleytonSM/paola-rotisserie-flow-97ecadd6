@@ -9,6 +9,12 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { parseBarcode } from "@/utils/barcode";
 import { getProductItemByBarcode, ProductItem } from "@/services/database/product-items";
+import { cn } from "@/lib/utils";
+
+// Helper to check if an external product is out of stock
+const isOutOfStock = (product: ProductCatalog): boolean => {
+    return !product.is_internal && (product.quantity ?? 0) <= 0;
+};
 
 interface PDVSearchProps {
     searchQuery: string;
@@ -154,8 +160,19 @@ export function PDVSearch({
                                 {searchResults.map((product) => (
                                     <div
                                         key={product.id}
-                                        className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer transition-colors border-b border-border last:border-0"
-                                        onClick={() => handleProductSelect(product)}
+                                        className={cn(
+                                            "flex items-center justify-between p-3 cursor-pointer transition-colors border-b border-border last:border-0",
+                                            isOutOfStock(product)
+                                                ? "bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50"
+                                                : "hover:bg-accent"
+                                        )}
+                                        onClick={() => {
+                                            if (isOutOfStock(product)) {
+                                                toast.error(`Produto sem estoque: ${product.name}`);
+                                                return;
+                                            }
+                                            handleProductSelect(product);
+                                        }}
                                     >
                                         <div className="flex flex-col gap-1">
                                             <span className="font-medium text-foreground">{product.name}</span>

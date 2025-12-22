@@ -9,6 +9,12 @@ import { useCartStore } from "@/stores/cartStore";
 import { formatCurrency } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+
+// Helper to check if an external product is out of stock
+const isOutOfStock = (product: ProductCatalog): boolean => {
+    return !product.is_internal && (product.quantity ?? 0) <= 0;
+};
 
 interface ProductSidebarRightProps {
     onProductSelect: (product: ProductCatalog) => void;
@@ -75,6 +81,12 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
     // const topProducts = products.slice(0, 6); // Mock removed
 
     const handleAddItem = (product: ProductCatalog) => {
+        // Block out-of-stock external products
+        if (isOutOfStock(product)) {
+            toast.error(`Produto sem estoque: ${product.name}`);
+            return;
+        }
+
         onProductSelect(product);
         if (isMobile) {
             // Optional: Close sidebar on selection logic if desired, or keep open
@@ -157,10 +169,15 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-2 gap-2">
-                                            {topProducts.map((product) => (
+                                            {topProducts.filter(p => p.is_active !== false).map((product) => (
                                                 <div
                                                     key={product.id}
-                                                    className="group relative bg-card hover:bg-accent rounded-xl p-2 cursor-pointer transition-all border border-sidebar-border hover:border-primary/20 shadow-sm hover:shadow-md"
+                                                    className={cn(
+                                                        "group relative rounded-xl p-2 cursor-pointer transition-all border shadow-sm hover:shadow-md",
+                                                        isOutOfStock(product)
+                                                            ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-950/50"
+                                                            : "bg-card hover:bg-accent border-sidebar-border hover:border-primary/20"
+                                                    )}
                                                     onClick={() => handleAddItem(product)}
                                                 >
                                                     <div className="h-16 w-full bg-sidebar-accent rounded-lg mb-2 flex items-center justify-center text-xs text-primary/40 overflow-hidden relative">
@@ -201,10 +218,15 @@ export function ProductSidebarRight({ onProductSelect, onOpenChange, externalOpe
                                     </div>
                                 ) : (
                                     <div className={isMobile ? "grid grid-cols-1 gap-2" : "space-y-2"}>
-                                        {filteredProducts.map((product) => (
+                                        {filteredProducts.filter(p => p.is_active !== false).map((product) => (
                                             <div
                                                 key={product.id}
-                                                className="flex items-center gap-3 p-2 rounded-xl bg-card cursor-pointer border border-sidebar-border shadow-sm transition-all hover:bg-accent group"
+                                                className={cn(
+                                                    "flex items-center gap-3 p-2 rounded-xl cursor-pointer border shadow-sm transition-all group",
+                                                    isOutOfStock(product)
+                                                        ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-950/50"
+                                                        : "bg-card hover:bg-accent border-sidebar-border"
+                                                )}
                                                 onClick={() => handleAddItem(product)}
                                             >
                                                 <div className="h-10 w-10 bg-card border border-sidebar-border rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] text-primary/40 overflow-hidden relative">
