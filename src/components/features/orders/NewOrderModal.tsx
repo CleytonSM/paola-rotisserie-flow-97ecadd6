@@ -74,7 +74,10 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
         setSelectionOpen,
         selectedProductForSelection,
         handleProductSelect,
-        handleAddInternalItem
+        handleAddInternalItem,
+
+        // Imported fields tracking
+        importedFields
     } = orderState;
 
     const { addresses } = useClientAddresses(selectedClient?.id);
@@ -85,6 +88,14 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
     const [selectedTime, setSelectedTime] = useState<string>(
         scheduledPickup ? format(scheduledPickup, "HH:mm") : "12:00"
     );
+
+    // Sync date/time when scheduledPickup changes (e.g., from WhatsApp import)
+    useEffect(() => {
+        if (scheduledPickup) {
+            setSelectedDate(scheduledPickup);
+            setSelectedTime(format(scheduledPickup, "HH:mm"));
+        }
+    }, [scheduledPickup]);
 
     const { data: pixKeys = [] } = useQuery({
         queryKey: ["pixKeys", "active"],
@@ -139,12 +150,15 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                                 onSelectClient={setSelectedClient}
                             />
 
-                            <NewOrderProductSearch
-                                items={items}
-                                onProductSelect={handleProductSelect}
-                                onUpdateQuantity={updateItemQuantity}
-                                onRemoveItem={removeItem}
-                            />
+                            <div>
+                                <NewOrderProductSearch
+                                    items={items}
+                                    onProductSelect={handleProductSelect}
+                                    onUpdateQuantity={updateItemQuantity}
+                                    onRemoveItem={removeItem}
+                                    importedFromWhatsApp={importedFields?.items}
+                                />
+                            </div>
 
                             <div className="space-y-3">
                                 <Label className="text-sm font-medium flex items-center gap-2">
@@ -183,11 +197,19 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                                         </PopoverContent>
                                     </Popover>
 
-                                    <HourSelector
-                                        value={selectedTime}
-                                        onChange={setSelectedTime}
-                                        className="h-12"
-                                    />
+                                    <div className={cn(
+                                        "relative transition-all duration-500 rounded-lg",
+                                        importedFields?.scheduledPickup && "bg-green-50/50 dark:bg-green-900/20 ring-1 ring-green-200/50 dark:ring-green-800/50"
+                                    )}>
+                                        <HourSelector
+                                            value={selectedTime}
+                                            onChange={setSelectedTime}
+                                            className={cn(
+                                                "h-12",
+                                                importedFields?.scheduledPickup && "border-transparent bg-transparent"
+                                            )}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -268,13 +290,23 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Observações</Label>
-                                <Textarea
-                                    placeholder="Observações do pedido..."
-                                    className="resize-none min-h-[80px]"
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                />
+                                <Label>
+                                    Observações
+                                </Label>
+                                <div className={cn(
+                                    "relative transition-all duration-500 rounded-lg",
+                                    importedFields?.notes && "bg-green-50/50 dark:bg-green-900/20 ring-1 ring-green-200/50 dark:ring-green-800/50"
+                                )}>
+                                    <Textarea
+                                        placeholder="Observações do pedido..."
+                                        className={cn(
+                                            "resize-none min-h-[80px]",
+                                            importedFields?.notes && "border-transparent bg-transparent focus-visible:ring-offset-0"
+                                        )}
+                                        value={notes}
+                                        onChange={(e) => setNotes(e.target.value)}
+                                    />
+                                </div>
                             </div>
 
                             <div className="bg-card p-4 rounded-xl border border-border space-y-4">

@@ -13,13 +13,17 @@ interface NewOrderProductSearchProps {
     onProductSelect: (product: ProductCatalog) => void;
     onUpdateQuantity: (itemId: string, quantity: number) => void;
     onRemoveItem: (itemId: string) => void;
+    importedFromWhatsApp?: boolean;
 }
+
+import { cn } from "@/lib/utils";
 
 export function NewOrderProductSearch({
     items,
     onProductSelect,
     onUpdateQuantity,
-    onRemoveItem
+    onRemoveItem,
+    importedFromWhatsApp
 }: NewOrderProductSearchProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<ProductCatalog[]>([]);
@@ -124,10 +128,23 @@ export function NewOrderProductSearch({
             {items.length > 0 && (
                 <div className="space-y-2">
                     <div className="bg-muted/30 rounded-lg divide-y divide-sidebar-border border border-sidebar-border">
-                        {items.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-3 gap-3">
+                        {items.map((item, index) => (
+                            <div
+                                key={item.id}
+                                className={cn(
+                                    "flex items-center justify-between p-3 gap-3 transition-colors duration-500",
+                                    importedFromWhatsApp
+                                        ? "bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 last:border-0"
+                                        : ""
+                                )}
+                            >
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm truncate">{item.product.name}</p>
+                                    <p className={cn(
+                                        "font-medium text-sm truncate transition-colors",
+                                        importedFromWhatsApp && "text-green-700 dark:text-green-300"
+                                    )}>
+                                        {item.product.name}
+                                    </p>
                                     <p className="text-xs text-muted-foreground">
                                         {formatCurrency(item.unitPrice)} cada
                                     </p>

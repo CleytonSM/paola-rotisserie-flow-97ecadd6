@@ -38,6 +38,14 @@ export function useNewOrder(onSuccess?: () => void) {
     const [hasPartialPayment, setHasPartialPayment] = useState(false);
     const [paymentEntries, setPaymentEntries] = useState<PaymentEntry[]>([]);
 
+    // Track which fields were populated by WhatsApp import for visual highlighting
+    const [importedFields, setImportedFields] = useState<{
+        items: boolean;
+        scheduledPickup: boolean;
+        notes: boolean;
+        clientName: boolean;
+    }>({ items: false, scheduledPickup: false, notes: false, clientName: false });
+
     const subtotal = useMemo(() => {
         return items.reduce((sum, item) => sum + item.totalPrice, 0);
     }, [items]);
@@ -56,6 +64,7 @@ export function useNewOrder(onSuccess?: () => void) {
         setDeliveryFee(0);
         setHasPartialPayment(false);
         setPaymentEntries([]);
+        setImportedFields({ items: false, scheduledPickup: false, notes: false, clientName: false });
     }, []);
 
     const open = useCallback(() => {
@@ -246,7 +255,7 @@ export function useNewOrder(onSuccess?: () => void) {
     }) => {
         reset();
         if (data.client) setSelectedClient(data.client);
-        if (data.items) setItems(data.items);
+        if (data.items && data.items.length > 0) setItems(data.items);
         if (data.scheduledPickup) setScheduledPickup(data.scheduledPickup);
         
         let finalNotes = "";
@@ -260,6 +269,14 @@ export function useNewOrder(onSuccess?: () => void) {
         
         const defaultFee = settings?.fixed_delivery_fee ?? 0;
         setDeliveryFee(defaultFee);
+
+        // Track which fields were imported for visual highlighting
+        setImportedFields({
+            items: !!(data.items && data.items.length > 0),
+            scheduledPickup: !!data.scheduledPickup,
+            notes: !!(data.notes || data.clientName),
+            clientName: !!data.clientName,
+        });
         
         setIsOpen(true);
     }, [reset, settings?.fixed_delivery_fee]);
@@ -304,6 +321,8 @@ export function useNewOrder(onSuccess?: () => void) {
         canSubmit,
         submit,
         reset,
+        importedFields,
+        clearImportedFields: () => setImportedFields({ items: false, scheduledPickup: false, notes: false, clientName: false }),
 
         // Selection dialog
         selectionOpen,
