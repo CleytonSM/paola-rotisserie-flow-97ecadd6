@@ -40,6 +40,13 @@ export interface Order {
     is_delivery: boolean;
     delivery_fee?: number;
     delivery_address_id?: string;
+    delivery_zip_code?: string;
+    delivery_street?: string;
+    delivery_number?: string;
+    delivery_complement?: string;
+    delivery_neighborhood?: string;
+    delivery_city?: string;
+    delivery_state?: string;
     client_addresses?: {
         id: string;
         street: string;
@@ -102,6 +109,7 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                     is_delivery,
                     delivery_fee,
                     delivery_address_id,
+                    delivery_zip_code, delivery_street, delivery_number, delivery_complement, delivery_neighborhood, delivery_city, delivery_state,
                     client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .gte('scheduled_pickup', startFilterDate.toISOString())
@@ -130,6 +138,7 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                     is_delivery,
                     delivery_fee,
                     delivery_address_id,
+                    delivery_zip_code, delivery_street, delivery_number, delivery_complement, delivery_neighborhood, delivery_city, delivery_state,
                     client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .lt('scheduled_pickup', now.toISOString())
@@ -173,6 +182,7 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                     is_delivery,
                     delivery_fee,
                     delivery_address_id,
+                    delivery_zip_code, delivery_street, delivery_number, delivery_complement, delivery_neighborhood, delivery_city, delivery_state,
                     client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
                 `)
                 .not('order_status', 'is', null);
@@ -252,6 +262,7 @@ export const getUpcomingOrders = async (): Promise<DatabaseResult<Order[]>> => {
                 is_delivery,
                 delivery_fee,
                 delivery_address_id,
+                delivery_zip_code, delivery_street, delivery_number, delivery_complement, delivery_neighborhood, delivery_city, delivery_state,
                 client_addresses ( id, street, number, complement, neighborhood, city, state, zip_code )
             `)
             .gte('scheduled_pickup', today.toISOString())

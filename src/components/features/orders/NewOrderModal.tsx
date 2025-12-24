@@ -139,7 +139,7 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                     <DialogHeader className="px-6 py-4 border-b border-border bg-muted/40 shrink-0">
                         <DialogTitle className="flex items-center gap-2 text-xl font-playfair text-foreground">
                             <ShoppingBag className="h-5 w-5 text-primary" />
-                            <span>Novo Pedido</span>
+                            <span>{orderState.isEditing ? `Editar Pedido #${orderState.existingDisplayId}` : "Novo Pedido"}</span>
                         </DialogTitle>
                     </DialogHeader>
 
@@ -219,7 +219,6 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                                         id="is-delivery-new"
                                         checked={isDelivery}
                                         onCheckedChange={(checked) => setIsDelivery(checked as boolean)}
-                                        disabled={!selectedClient}
                                     />
                                     <Label
                                         htmlFor="is-delivery-new"
@@ -230,47 +229,155 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                                     </Label>
                                 </div>
 
-                                {!selectedClient && (
-                                    <p className="text-xs text-muted-foreground">
-                                        Selecione um cliente para habilitar entrega.
-                                    </p>
-                                )}
-
-                                {isDelivery && selectedClient && (
+                                {isDelivery && (
                                     <div className="space-y-4 pt-2 animate-in slide-in-from-top-2">
-                                        <div className="space-y-2">
-                                            <Label>Endereço de Entrega</Label>
-                                            <div className="flex gap-2">
-                                                <Select
-                                                    value={deliveryAddressId || ""}
-                                                    onValueChange={setDeliveryAddressId}
-                                                >
-                                                    <SelectTrigger className="flex-1 h-10">
-                                                        <SelectValue placeholder="Selecione um endereço" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {addresses.map((addr: ClientAddress) => (
-                                                            <SelectItem key={addr.id} value={addr.id}>
-                                                                {addr.street}, {addr.number} {addr.complement ? `(${addr.complement})` : ''} - {addr.neighborhood}
+                                        {/* Delivery Address Selection or Manual Entry */}
+                                        {selectedClient && addresses.length > 0 ? (
+                                            <div className="space-y-2">
+                                                <Label>Endereço de Entrega</Label>
+                                                <div className="flex gap-2">
+                                                    <Select
+                                                        value={deliveryAddressId || "manual"}
+                                                        onValueChange={(val) => {
+                                                            if (val === "manual") {
+                                                                setDeliveryAddressId(null);
+                                                            } else {
+                                                                setDeliveryAddressId(val);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="flex-1 h-10">
+                                                            <SelectValue placeholder="Selecione um endereço" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {addresses.map((addr: ClientAddress) => (
+                                                                <SelectItem key={addr.id} value={addr.id}>
+                                                                    {addr.street}, {addr.number} {addr.complement ? `(${addr.complement})` : ''} - {addr.neighborhood}
+                                                                </SelectItem>
+                                                            ))}
+                                                            <SelectItem value="manual">
+                                                                Outro Endereço (Manual)
                                                             </SelectItem>
-                                                        ))}
-                                                        {addresses.length === 0 && (
-                                                            <SelectItem value="none" disabled>
-                                                                Nenhum endereço cadastrado
-                                                            </SelectItem>
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                                <Button
-                                                    size="icon"
-                                                    variant="outline"
-                                                    className="h-10 w-10"
-                                                    onClick={() => setShowAddressDialog(true)}
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                </Button>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="outline"
+                                                        className="h-10 w-10"
+                                                        onClick={() => setShowAddressDialog(true)}
+                                                    >
+                                                        <Plus className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 mb-2 px-1">
+                                                <span className="text-sm font-medium text-muted-foreground">
+                                                    {selectedClient ?
+                                                        "Cliente sem endereços. Preencha a entrega:" :
+                                                        "Preencha o endereço de entrega:"}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {(!deliveryAddressId) && (
+                                            <div className="space-y-3 border-t pt-3 p-3 bg-muted/30 rounded-lg">
+                                                <div className="grid grid-cols-[120px_1fr] gap-3">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs">CEP</Label>
+                                                        <div className="relative">
+                                                            <Input
+                                                                className="h-9"
+                                                                placeholder="00000-000"
+                                                                value={orderState.manualAddress.zipCode}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                                                                    const formatted = val.replace(/^(\d{5})(\d)/, "$1-$2");
+                                                                    orderState.setManualAddress(prev => ({ ...prev, zipCode: formatted }));
+
+                                                                    if (val.length === 8) {
+                                                                        fetch(`https://viacep.com.br/ws/${val}/json/`)
+                                                                            .then(res => res.json())
+                                                                            .then(data => {
+                                                                                if (!data.erro) {
+                                                                                    orderState.setManualAddress(prev => ({
+                                                                                        ...prev,
+                                                                                        street: data.logradouro,
+                                                                                        neighborhood: data.bairro,
+                                                                                        city: data.localidade,
+                                                                                        state: data.uf,
+                                                                                        complement: prev.complement || data.complemento
+                                                                                    }));
+                                                                                    // Focus number field?
+                                                                                }
+                                                                            })
+                                                                            .catch(() => { });
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs">Rua</Label>
+                                                        <Input
+                                                            className="h-9"
+                                                            placeholder="Rua..."
+                                                            value={orderState.manualAddress.street}
+                                                            onChange={e => orderState.setManualAddress(prev => ({ ...prev, street: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-[80px_1fr] gap-3">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs">Número</Label>
+                                                        <Input
+                                                            className="h-9"
+                                                            placeholder="123"
+                                                            value={orderState.manualAddress.number}
+                                                            onChange={e => orderState.setManualAddress(prev => ({ ...prev, number: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs">Complemento</Label>
+                                                        <Input
+                                                            className="h-9"
+                                                            placeholder="Apto 101..."
+                                                            value={orderState.manualAddress.complement}
+                                                            onChange={e => orderState.setManualAddress(prev => ({ ...prev, complement: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs">Bairro</Label>
+                                                        <Input
+                                                            className="h-9"
+                                                            value={orderState.manualAddress.neighborhood}
+                                                            onChange={e => orderState.setManualAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs">Cidade/UF</Label>
+                                                        <div className="flex gap-1">
+                                                            <Input
+                                                                className="h-9 flex-1"
+                                                                value={orderState.manualAddress.city}
+                                                                onChange={e => orderState.setManualAddress(prev => ({ ...prev, city: e.target.value }))}
+                                                            />
+                                                            <Input
+                                                                className="h-9 w-12 text-center p-1"
+                                                                value={orderState.manualAddress.state}
+                                                                maxLength={2}
+                                                                onChange={e => orderState.setManualAddress(prev => ({ ...prev, state: e.target.value.toUpperCase() }))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div className="space-y-2">
                                             <Label>Taxa de Entrega (R$)</Label>
                                             <Input
@@ -369,7 +476,7 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                             ) : (
                                 <>
                                     <ShoppingBag className="mr-2 h-5 w-5" />
-                                    Criar Pedido
+                                    {orderState.isEditing ? "Salvar Alterações" : "Criar Pedido"}
                                 </>
                             )}
                         </Button>
@@ -388,8 +495,8 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                 onOpenChange={setSelectionOpen}
                 product={selectedProductForSelection}
                 onSelect={handleAddInternalItem}
-            // Determine excluded items (optional, if we want to prevent re-selecting same item ID)
-            // excludedItemIds={items.map(i => i.productItemId).filter(Boolean) as string[]}
+                // Determine excluded items (optional, if we want to prevent re-selecting same item ID)
+                excludedItemIds={items.map(i => i.productItemId).filter(Boolean) as string[]}
             />
         </>
     );

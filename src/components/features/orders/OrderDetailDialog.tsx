@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import { Order, OrderStatus, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, checkAndSetOrderReady, linkProductItemToSaleItem } from "@/services/database/orders";
+import { addPaymentToOrder, deleteOrder } from "@/services/database/sales";
 import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode, Truck, MapPin, Printer, MessageCircle, ExternalLink } from "lucide-react";
+import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode, Truck, MapPin, Printer, MessageCircle, ExternalLink, Pencil, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,6 +15,22 @@ import { toast } from "sonner";
 import { OrderItemLinkingFlow } from "./OrderItemLinkingFlow";
 import { ProductCatalog } from "@/services/database/product-catalog";
 import { useAppSettings } from "@/hooks/useAppSettings";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { PartialPaymentBuilder, PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
+import { getPixKeys } from "@/services/database/pix_keys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNewOrder } from "@/hooks/useNewOrder";
+import { NewOrderModal } from "./NewOrderModal";
 
 interface OrderDetailDialogProps {
     order: Order | null;
@@ -36,6 +53,77 @@ export function OrderDetailDialog({
     } | null>(null);
 
     const { settings } = useAppSettings();
+
+    // Logic for Edit, Delete and Add Payment
+    const queryClient = useQueryClient();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+    // Edit Order Logic
+    const editOrderState = useNewOrder(() => {
+        onOpenChange(false);
+    });
+
+    // Add Payment Logic
+    const [showAddPayment, setShowAddPayment] = useState(false);
+    const [newPaymentEntries, setNewPaymentEntries] = useState<PaymentEntry[]>([]);
+    const [isAddingPayment, setIsAddingPayment] = useState(false);
+
+    const { data: pixKeys = [] } = useQuery({
+        queryKey: ["pixKeys", "active"],
+        queryFn: async () => {
+            const { data, error } = await getPixKeys({ activeOnly: true });
+            if (error) throw error;
+            return data || [];
+        },
+        enabled: showAddPayment,
+    });
+
+    const handleAddPayment = async () => {
+        if (newPaymentEntries.length === 0) return;
+
+        setIsAddingPayment(true);
+        try {
+            for (const entry of newPaymentEntries) {
+                const { error } = await addPaymentToOrder({
+                    saleId: order.id,
+                    amount: entry.amount,
+                    paymentMethod: entry.method,
+                    pixKeyId: entry.details?.pixKeyId,
+                    machineId: entry.details?.machineId,
+                    cardFlag: entry.details?.cardBrand,
+                    installments: 1
+                });
+                if (error) throw error;
+            }
+            toast.success("Pagamento adicionado com sucesso!");
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            setShowAddPayment(false);
+            setNewPaymentEntries([]);
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao adicionar pagamento");
+        } finally {
+            setIsAddingPayment(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            const { error } = await deleteOrder(order.id);
+            if (error) throw error;
+            toast.success("Pedido excluído com sucesso");
+            onOpenChange(false);
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao excluir pedido");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteDialog(false);
+        }
+    };
 
     if (!order) return null;
 
@@ -83,13 +171,17 @@ export function OrderDetailDialog({
         `${settings.store_address_street || ''}, ${settings.store_address_number || ''}${settings.store_address_complement ? ' - ' + settings.store_address_complement : ''} - ${settings.store_address_neighborhood || ''}` :
         "Endereço da loja não configurado";
 
-    const clientAddress = order.client_addresses ?
-        `${order.client_addresses.street}, ${order.client_addresses.number}${order.client_addresses.complement ? ' - ' + order.client_addresses.complement : ''}, ${order.client_addresses.neighborhood}, ${order.client_addresses.city} - ${order.client_addresses.zip_code}` :
-        "Endereço não disponível";
+    const clientAddress = order.delivery_street ?
+        `${order.delivery_street}, ${order.delivery_number || 'S/N'}${order.delivery_complement ? ' - ' + order.delivery_complement : ''}, ${order.delivery_neighborhood}, ${order.delivery_city} - ${order.delivery_zip_code}` :
+        (order.client_addresses ?
+            `${order.client_addresses.street}, ${order.client_addresses.number}${order.client_addresses.complement ? ' - ' + order.client_addresses.complement : ''}, ${order.client_addresses.neighborhood}, ${order.client_addresses.city} - ${order.client_addresses.zip_code}` :
+            "Endereço não disponível");
 
-    const mapsUrl = order.client_addresses ?
-        `https://maps.google.com/?q=${encodeURIComponent(`${order.client_addresses.street}, ${order.client_addresses.number}, ${order.client_addresses.city}, ${order.client_addresses.state}`)}` :
-        "#";
+    const mapsUrl = order.delivery_street ?
+        `https://maps.google.com/?q=${encodeURIComponent(`${order.delivery_street}, ${order.delivery_number}, ${order.delivery_city}, ${order.delivery_state}`)}` :
+        (order.client_addresses ?
+            `https://maps.google.com/?q=${encodeURIComponent(`${order.client_addresses.street}, ${order.client_addresses.number}, ${order.client_addresses.city}, ${order.client_addresses.state}`)}` :
+            "#");
 
     const handleWhatsApp = () => {
         const message = `
@@ -193,6 +285,26 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                                 {format(new Date(order.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                             </p>
                         </div>
+
+                        <div className="flex gap-2 mr-12">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 gap-1.5"
+                                onClick={() => editOrderState.editOrder(order)}
+                            >
+                                <Pencil className="w-3.5 h-3.5" />
+                                Editar
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-8 gap-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 shadow-none dark:bg-red-950/20 dark:text-red-400 dark:border-red-900"
+                                onClick={() => setShowDeleteDialog(true)}
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                        </div>
                     </div>
                 </DialogHeader>
 
@@ -273,12 +385,27 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
 
                                             <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">Entrega</p>
                                             <p className="text-sm font-medium">
-                                                {order.client_addresses ? `${order.client_addresses.street}, ${order.client_addresses.number}${order.client_addresses.complement ? ' - ' + order.client_addresses.complement : ''}` : "Endereço não disponível"}
+                                                {order.delivery_street
+                                                    ? `${order.delivery_street}, ${order.delivery_number || 'S/N'}${order.delivery_complement ? ' - ' + order.delivery_complement : ''}`
+                                                    : (order.client_addresses
+                                                        ? `${order.client_addresses.street}, ${order.client_addresses.number}${order.client_addresses.complement ? ' - ' + order.client_addresses.complement : ''}`
+                                                        : "Endereço não disponível")
+                                                }
                                             </p>
                                             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
-                                                <span>{order.client_addresses?.neighborhood}</span>
-                                                {order.client_addresses?.city && <span>• {order.client_addresses.city}</span>}
-                                                {order.client_addresses?.zip_code && <span>• CEP {order.client_addresses.zip_code}</span>}
+                                                {order.delivery_street ? (
+                                                    <>
+                                                        <span>{order.delivery_neighborhood}</span>
+                                                        {order.delivery_city && <span>• {order.delivery_city}</span>}
+                                                        {order.delivery_zip_code && <span>• CEP {order.delivery_zip_code}</span>}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>{order.client_addresses?.neighborhood}</span>
+                                                        {order.client_addresses?.city && <span>• {order.client_addresses.city}</span>}
+                                                        {order.client_addresses?.zip_code && <span>• CEP {order.client_addresses.zip_code}</span>}
+                                                    </>
+                                                )}
                                             </div>
 
                                             {/* Client Info inline */}
@@ -428,10 +555,47 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
 
                             {!isPaid && remainingAmount > 0 && (
                                 <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex justify-between items-center mb-2">
                                         <p className="text-sm text-amber-800">Restante a pagar</p>
                                         <p className="font-bold text-amber-800">{formatCurrency(remainingAmount)}</p>
                                     </div>
+
+                                    {!showAddPayment ? (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full bg-white border-amber-200 text-amber-900 hover:bg-amber-100"
+                                            onClick={() => setShowAddPayment(true)}
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Adicionar Pagamento
+                                        </Button>
+                                    ) : (
+                                        <div className="bg-white p-3 rounded border border-amber-200 mt-2 space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <h4 className="text-sm font-semibold">Novo Pagamento</h4>
+                                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowAddPayment(false)}>
+                                                    <X className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+
+                                            <PartialPaymentBuilder
+                                                totalAmount={remainingAmount}
+                                                paymentEntries={newPaymentEntries}
+                                                onAddEntry={(entry: PaymentEntry) => setNewPaymentEntries([...newPaymentEntries, entry])}
+                                                onRemoveEntry={(id: string) => setNewPaymentEntries(newPaymentEntries.filter(e => e.id !== id))}
+                                                pixKeys={pixKeys}
+                                            />
+
+                                            <Button
+                                                className="w-full"
+                                                onClick={handleAddPayment}
+                                                disabled={isAddingPayment || newPaymentEntries.length === 0}
+                                            >
+                                                {isAddingPayment ? "Salvando..." : "Confirmar Pagamento"}
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -508,6 +672,29 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                     onStatusChange={onStatusChange}
                 />
             )}
+            {/* ALERT DIALOG */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir Pedido?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. O pedido será permanentemente removido e o estoque dos itens será restaurado.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                            {isDeleting ? "Excluindo..." : "Excluir"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <NewOrderModal
+                open={editOrderState.isOpen}
+                onOpenChange={(open) => !open && editOrderState.close()}
+                orderState={editOrderState}
+            />
         </Dialog>
     );
 }

@@ -38,6 +38,24 @@ export function usePayment() {
     const [deliveryAddressId, setDeliveryAddressId] = useState<string | null>(null);
     const [deliveryFee, setDeliveryFee] = useState<number>(0);
 
+    const [manualAddress, setManualAddress] = useState<{
+        zipCode: string;
+        street: string;
+        number: string;
+        complement: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+    }>({
+        zipCode: "",
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: ""
+    });
+
     useEffect(() => {
         // Load default delivery fee
         getAppSettings().then(({ data }) => {
@@ -106,9 +124,13 @@ export function usePayment() {
 
     const handleConfirm = async () => {
         // Validation: Delivery requires address
-        if (isDelivery && !deliveryAddressId) {
-            toast.error("Selecione um endereço para entrega");
-            return;
+        if (isDelivery) {
+             if (!deliveryAddressId) {
+                 if (!manualAddress.street || !manualAddress.number || !manualAddress.neighborhood) {
+                     toast.error("Selecione um endereço ou preencha o endereço manual");
+                     return;
+                 }
+            }
         }
 
         if (isPartialPayment) {
@@ -215,7 +237,16 @@ export function usePayment() {
                     scheduled_pickup: scheduledPickup?.toISOString() || null,
                     is_delivery: isDelivery,
                     delivery_address_id: deliveryAddressId,
-                    delivery_fee: isDelivery ? deliveryFee : 0
+                    delivery_fee: isDelivery ? deliveryFee : 0,
+                    ...(isDelivery && !deliveryAddressId ? {
+                        delivery_zip_code: manualAddress.zipCode,
+                        delivery_street: manualAddress.street,
+                        delivery_number: manualAddress.number,
+                        delivery_complement: manualAddress.complement,
+                        delivery_neighborhood: manualAddress.neighborhood,
+                        delivery_city: manualAddress.city,
+                        delivery_state: manualAddress.state
+                    } : {})
                 },
                 items: saleItems,
                 payments: payments
@@ -295,6 +326,8 @@ export function usePayment() {
         deliveryAddressId,
         setDeliveryAddressId,
         deliveryFee,
-        setDeliveryFee
+        setDeliveryFee,
+        manualAddress,
+        setManualAddress
     };
 }

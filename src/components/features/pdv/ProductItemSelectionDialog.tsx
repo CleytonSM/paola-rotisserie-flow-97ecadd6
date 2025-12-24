@@ -64,7 +64,7 @@ export function ProductItemSelectionDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+            <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col z-[60] bg-background">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         Selecionar Item:
