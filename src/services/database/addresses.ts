@@ -42,3 +42,17 @@ export const deleteClientAddress = async (id: string): Promise<DatabaseResult<nu
 
   return { data: null, error };
 };
+
+export const upsertClientAddressByCep = async (address: Omit<ClientAddress, 'id'>): Promise<DatabaseResult<ClientAddress>> => {
+  const { data: existingAddresses } = await getClientAddresses(address.client_id);
+  
+  const existingAddress = existingAddresses?.find(a => a.zip_code === address.zip_code);
+
+  if (existingAddress) {
+    return updateClientAddress(existingAddress.id, address);
+  } else {
+    // If no address with this CEP, create a new one. 
+    // Mark as default if it's the first one or if we want to ensure it's the active one.
+    return createClientAddress({ ...address, is_default: true });
+  }
+};

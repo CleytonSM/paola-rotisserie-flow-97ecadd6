@@ -18,19 +18,21 @@ export const formatCNPJ = (value: string) => {
 };
 
 export const formatPhone = (value: string) => {
-  const clean = value.replace(/\D/g, '');
+  const clean = value.replace(/\D/g, '').slice(0, 11);
   if (clean.length === 11) {
     return clean
       .replace(/(\d{2})(\d)/, '($1) $2')
       .replace(/(\d{5})(\d)/, '$1-$2');
   }
-  if (clean.length === 10) {
+  if (clean.length >= 7) {
     return clean
       .replace(/(\d{2})(\d)/, '($1) $2')
       .replace(/(\d{4})(\d)/, '$1-$2');
   }
-  // Handle +55 or other formats if needed, but for now basic 10/11 digit
-  return value;
+  if (clean.length >= 3) {
+    return clean.replace(/(\d{2})(\d)/, '($1) $2');
+  }
+  return clean;
 };
 
 export const applyCepMask = (value: string) => {
@@ -51,6 +53,23 @@ export const formatPixKey = (type: string, value: string) => {
     default:
       return value;
   }
+};
+
+export const formatWeight = (value: string) => {
+  // Remove anything that isn't a digit
+  const clean = value.replace(/\D/g, "");
+  if (!clean) return "0,000";
+  
+  // Convert to number and format with 3 decimal places
+  const number = parseInt(clean, 10) / 1000;
+  return number.toLocaleString("pt-BR", {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
+};
+
+export const parseBrazilianNumber = (value: string): number => {
+  return parseFloat(value.replace(/\./g, "").replace(",", "."));
 };
 
 export const applyCurrencyMask = (value: string) => {

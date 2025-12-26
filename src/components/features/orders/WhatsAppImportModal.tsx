@@ -3,10 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw, MessageSquare, Sparkles } from "lucide-react";
-import { searchProductCatalog } from "@/services/database/product-catalog";
 import { NewOrderItem } from "@/hooks/useNewOrder";
 import { Client } from "@/components/features/clients/types";
-import { parseWhatsAppMessage } from "@/utils/whatsappParser";
+import { analyzeWhatsAppMessage } from "@/services/whatsappImportService";
 
 interface WhatsAppImportModalProps {
     open: boolean;
@@ -29,37 +28,14 @@ export function WhatsAppImportModal({ open, onOpenChange, onImport }: WhatsAppIm
         setIsAnalyzing(true);
 
         try {
-            // Fetch all products for matching
-            const { data: catalogData } = await searchProductCatalog("");
-            const products = catalogData || [];
+            const result = await analyzeWhatsAppMessage(text);
 
-            // Parse the message using our utility
-            const parsed = parseWhatsAppMessage(text, products);
-
-            // Convert parsed items to NewOrderItem format
-            const items: NewOrderItem[] = [];
-            for (const parsedItem of parsed.items) {
-                // Search for the product to get full ProductCatalog object
-                const { data: productSearch } = await searchProductCatalog(parsedItem.product.name);
-                const fullProduct = productSearch?.find(p => p.id === parsedItem.product.id);
-
-                if (fullProduct) {
-                    items.push({
-                        id: parsedItem.id,
-                        product: fullProduct,
-                        quantity: parsedItem.quantity,
-                        unitPrice: parsedItem.unitPrice,
-                        totalPrice: parsedItem.totalPrice
-                    });
-                }
-            }
-
-            // Import directly to order modal - visual highlighting will show what was detected
             onImport({
-                items,
-                notes: parsed.notes,
-                scheduledPickup: parsed.scheduledTime,
-                clientName: parsed.clientName
+                items: result.items,
+                notes: result.notes,
+                scheduledPickup: result.scheduledPickup,
+                client: result.client,
+                clientName: result.clientName
             });
 
             setText("");

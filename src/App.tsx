@@ -27,6 +27,8 @@ import ReportsProducts from "./pages/reports/ReportsProducts";
 import ReportsDaily from "./pages/reports/ReportsDaily";
 import ReportsPayments from "./pages/reports/ReportsPayments";
 import ReportsTypes from "./pages/reports/ReportsTypes";
+import { CatalogPage } from "./pages/CatalogPage";
+import { CheckoutPage } from "./pages/CheckoutPage";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +47,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/cardapio" element={<CatalogPage />} />
+            <Route path="/cardapio/checkout" element={<CheckoutPage />} />
 
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />

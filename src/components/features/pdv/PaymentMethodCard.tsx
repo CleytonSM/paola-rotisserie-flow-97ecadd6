@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface PaymentMethodCardProps {
     id: string;
     title: string;
-    icon: LucideIcon;
+    icon: React.ComponentType<{ className?: string }>;
     selected: boolean;
     onClick: () => void;
     children?: React.ReactNode;
@@ -37,12 +37,14 @@ export function PaymentMethodCard({
                 >
                     <Icon className="h-6 w-6" />
                 </div>
-                <h3 className={cn("font-medium text-lg", selected ? "text-primary" : "text-foreground")}>
+                <h3 className={cn("font-medium text-lg flex-1", selected ? "text-primary" : "text-foreground")}>
                     {title}
                 </h3>
-                {selected && (
-                    <CheckCircle2 className="ml-auto h-6 w-6 text-green-500 fill-green-100 dark:fill-green-900" />
-                )}
+                <div className="w-6 h-6 shrink-0 ml-auto flex items-center justify-center">
+                    {selected && (
+                        <CheckCircle2 className="h-6 w-6 text-green-500 fill-green-100 dark:fill-green-900 animate-in zoom-in-50 duration-200" />
+                    )}
+                </div>
             </div>
 
             {children && (

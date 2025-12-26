@@ -26,6 +26,7 @@ export interface ParsedWhatsAppMessage {
     items: ParsedOrderItem[];
     scheduledTime: Date | undefined;
     clientName: string | undefined;
+    clientPhone: string | undefined;
     notes: string;
 }
 
@@ -68,7 +69,7 @@ export function normalize(text: string): string {
     else if (t.endsWith("aes")) t = t.slice(0, -3) + "ao";
     else if (t.endsWith("is") && t.length > 3) t = t.slice(0, -2) + "l";
     else if (t.endsWith("es") && t.length > 3) t = t.slice(0, -2);
-    else if (t.endsWith("s") && t.length > 2) t = t.slice(0, -1);
+    else if (t.endsWith("s") && t.length > 2) t = t.slice(0,-1);
 
     return t;
 }
@@ -269,10 +270,16 @@ export function parseItemLine<T extends { id: string; name: string; base_price: 
 }
 
 /**
- * Parse a complete WhatsApp message.
- * Extracts client name, items, scheduled time, and unrecognized lines as notes.
+ * Detect if a message is from the structured catalog format.
  */
-export function parseWhatsAppMessage<T extends { id: string; name: string; base_price: number }>(
+export function isStructuredMessage(text: string): boolean {
+    return text.includes("Novo pedido online") && text.includes("*Itens:*");
+}
+
+/**
+ * Parse a structured message from the virtual catalog.
+ */
+export function parseStructuredWhatsAppMessage<T extends { id: string; name: string; base_price: number }>(
     text: string,
     products: T[]
 ): ParsedWhatsAppMessage {
@@ -281,6 +288,111 @@ export function parseWhatsAppMessage<T extends { id: string; name: string; base_
     let notesLines: string[] = [];
     let scheduledTime: Date | undefined;
     let clientName: string | undefined;
+    let clientPhone: string | undefined;
+    let isParsingItems = false;
+
+    for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        // Extract client name
+        if (line.includes("*Cliente:*")) {
+            clientName = line.replace("*Cliente:*", "").trim();
+            continue;
+        }
+
+        // Extract client phone
+        if (line.includes("*Telefone:*")) {
+            clientPhone = line.replace("*Telefone:*", "").trim();
+            continue;
+        }
+
+        // Extract date and time
+        if (line.includes("*Data:*")) {
+            const timeMatch = line.match(/(\d{2}\/\d{2}\/\d{4}).*às\s*(\d{2}:\d{2})/);
+            if (timeMatch) {
+                const [_, datePart, timePart] = timeMatch;
+                const [day, month, year] = datePart.split('/').map(Number);
+                const [hours, minutes] = timePart.split(':').map(Number);
+                const d = new Date(year, month - 1, day, hours, minutes);
+                scheduledTime = d;
+            }
+            continue;
+        }
+
+        // Detect items section
+        if (line.includes("*Itens:*")) {
+            isParsingItems = true;
+            continue;
+        }
+
+        // Stop parsing items at Total or Observation
+        if (line.includes("*Total:*") || line.includes("*Observações:*")) {
+            isParsingItems = false;
+        }
+
+        if (isParsingItems) {
+            const item = parseItemLine(line, products);
+            if (item) {
+                items.push(item);
+            } else {
+                notesLines.push(rawLine);
+            }
+            continue;
+        }
+
+        // Extract observations
+        if (line.includes("*Observações:*")) {
+            const obs = line.replace("*Observações:*", "").trim();
+            if (obs) notesLines.push(obs);
+            continue;
+        }
+
+        // Ignore metadata lines
+        if (
+            line.includes("Novo pedido online") || 
+            line.includes("*Paola Gonçalves Rotisseria*") ||
+            line.includes("*Telefone:*") ||
+            line.includes("*Modalidade:*") ||
+            line.includes("*Endereço:*") ||
+            line.includes("*Pagamento:*") ||
+            line.includes("*Total:*") ||
+            line.includes("Pedido enviado via Catálogo Virtual")
+        ) {
+            continue;
+        }
+
+        notesLines.push(rawLine);
+    }
+
+    return {
+        items,
+        scheduledTime,
+        clientName,
+        clientPhone,
+        notes: notesLines.join('\n').trim(),
+    };
+}
+
+/**
+ * Parse a complete WhatsApp message.
+ * Extracts client name, items, scheduled time, and unrecognized lines as notes.
+ */
+export function parseWhatsAppMessage<T extends { id: string; name: string; base_price: number }>(
+    text: string,
+    products: T[]
+): ParsedWhatsAppMessage {
+    // If it's a structured message, use the specific parser
+    if (isStructuredMessage(text)) {
+        return parseStructuredWhatsAppMessage(text, products);
+    }
+
+    const lines = text.split('\n');
+    const items: ParsedOrderItem[] = [];
+    let notesLines: string[] = [];
+    let scheduledTime: Date | undefined;
+    let clientName: string | undefined;
+    let clientPhone: string | undefined;
 
     for (const rawLine of lines) {
         const line = rawLine.trim();
@@ -325,6 +437,7 @@ export function parseWhatsAppMessage<T extends { id: string; name: string; base_
         items,
         scheduledTime,
         clientName,
+        clientPhone,
         notes: notesLines.join('\n').trim(),
     };
 }

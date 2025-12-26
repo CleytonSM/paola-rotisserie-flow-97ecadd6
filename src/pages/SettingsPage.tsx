@@ -34,6 +34,7 @@ export default function SettingsPage() {
             store_address_city: "",
             store_address_state: "",
             store_address_zip_code: "",
+            store_whatsapp: "",
             fixed_delivery_fee: 15.00,
             sound_enabled: true,
         },
@@ -51,6 +52,7 @@ export default function SettingsPage() {
                 store_address_city: settings.store_address_city || "",
                 store_address_state: settings.store_address_state || "",
                 store_address_zip_code: settings.store_address_zip_code || "",
+                store_whatsapp: settings.store_whatsapp || "",
                 fixed_delivery_fee: settings.fixed_delivery_fee ?? 15.00,
                 sound_enabled: settings.sound_enabled ?? true,
             });
@@ -185,6 +187,28 @@ export default function SettingsPage() {
                                                 placeholder="00.000.000/0000-00"
                                             />
                                         </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="store_whatsapp"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>WhatsApp da Loja</FormLabel>
+                                        <FormControl>
+                                            <IMaskInput
+                                                mask="(00) 00000-0000"
+                                                value={field.value}
+                                                unmask={false}
+                                                onAccept={(value) => field.onChange(value)}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="(00) 00000-0000"
+                                            />
+                                        </FormControl>
+                                        <FormDescription>Número usado para receber os pedidos do catálogo</FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )}

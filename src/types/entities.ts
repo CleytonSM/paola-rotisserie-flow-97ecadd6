@@ -68,6 +68,7 @@ export interface AppSettings {
   store_address_city?: string;
   store_address_state?: string;
   store_address_zip_code?: string;
+  store_whatsapp?: string;
   fixed_delivery_fee: number;
   sound_enabled?: boolean;
 }

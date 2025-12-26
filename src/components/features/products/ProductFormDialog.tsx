@@ -14,6 +14,7 @@ import { Loader2, Image as ImageIcon, X, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
 
 
 interface ProductFormDialogProps {
@@ -173,6 +174,21 @@ export function ProductFormDialog({
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Description */}
+                <div className="grid gap-2">
+                    <Label htmlFor="description">Descrição Curta</Label>
+                    <Textarea
+                        id="description"
+                        placeholder="Ex: Frango assado na brasa com ervas finas e batatas coradas."
+                        {...register("description")}
+                        maxLength={500}
+                        className="resize-none"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Aparecerá no catálogo público para os clientes.
+                    </p>
                 </div>
 
                 {/* New: Internal Product Switch */}

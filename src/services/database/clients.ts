@@ -129,3 +129,27 @@ export const checkClientExists = async (cpfCnpj: string, excludeId?: string): Pr
 
   return !!data;
 };
+
+export const getClientByPhone = async (phone: string): Promise<DatabaseResult<any>> => {
+  const cleanedPhone = phone.replace(/\D/g, '');
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('phone', cleanedPhone)
+    .single();
+
+  return { data, error };
+};
+
+export const upsertClientByPhone = async (client: { name: string, phone: string, [key: string]: any }): Promise<DatabaseResult<any>> => {
+  const cleanedPhone = client.phone.replace(/\D/g, '');
+  
+  // First, try to find if client exists
+  const { data: existingClient } = await getClientByPhone(cleanedPhone);
+
+  if (existingClient) {
+    return updateClient(existingClient.id, { ...client, phone: cleanedPhone });
+  } else {
+    return createClient({ ...client, phone: cleanedPhone });
+  }
+};
