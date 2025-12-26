@@ -1,5 +1,5 @@
 import { searchProductCatalog } from "@/services/database/product-catalog";
-import { parseWhatsAppMessage, ParsedWhatsAppMessage } from "@/utils/whatsappParser";
+import { parseWhatsAppMessage, ParsedWhatsAppMessage, parseBrazilianAddress, ParsedAddress } from "@/utils/whatsappParser";
 import { NewOrderItem } from "@/hooks/useNewOrder";
 import { getClientByPhone } from "@/services/database/clients";
 import { Client } from "@/components/features/clients/types";
@@ -10,6 +10,8 @@ export interface WhatsAppImportResult {
     scheduledPickup?: Date;
     client?: Client;
     clientName?: string;
+    paymentMethod?: string;
+    address?: ParsedAddress | null;
 }
 
 /**
@@ -58,6 +60,8 @@ export const analyzeWhatsAppMessage = async (text: string): Promise<WhatsAppImpo
         notes: parsed.notes,
         scheduledPickup: parsed.scheduledTime,
         client: recognizedClient,
-        clientName: parsed.clientName
+        clientName: parsed.clientName,
+        paymentMethod: parsed.paymentMethod,
+        address: parsed.deliveryAddress ? parseBrazilianAddress(parsed.deliveryAddress) : null
     };
 };

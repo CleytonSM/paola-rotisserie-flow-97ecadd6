@@ -92,10 +92,15 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
     // Sync date/time when scheduledPickup changes (e.g., from WhatsApp import)
     useEffect(() => {
         if (scheduledPickup) {
-            setSelectedDate(scheduledPickup);
-            setSelectedTime(format(scheduledPickup, "HH:mm"));
+            const currentTimeStr = format(scheduledPickup, "HH:mm");
+            if (!selectedDate || selectedDate.getTime() !== scheduledPickup.getTime()) {
+                setSelectedDate(scheduledPickup);
+            }
+            if (selectedTime !== currentTimeStr) {
+                setSelectedTime(currentTimeStr);
+            }
         }
-    }, [scheduledPickup]);
+    }, [scheduledPickup, selectedDate, selectedTime]);
 
     const { data: pixKeys = [] } = useQuery({
         queryKey: ["pixKeys", "active"],
@@ -119,9 +124,12 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
             const [hours, minutes] = selectedTime.split(":").map(Number);
             const newDate = new Date(selectedDate);
             newDate.setHours(hours, minutes, 0, 0);
-            setScheduledPickup(newDate);
+
+            if (!scheduledPickup || scheduledPickup.getTime() !== newDate.getTime()) {
+                setScheduledPickup(newDate);
+            }
         }
-    }, [selectedDate, selectedTime, setScheduledPickup]);
+    }, [selectedDate, selectedTime, scheduledPickup, setScheduledPickup]);
 
     const handleClose = () => {
         close();
@@ -416,7 +424,10 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                                 </div>
                             </div>
 
-                            <div className="bg-card p-4 rounded-xl border border-border space-y-4">
+                            <div className={cn(
+                                "bg-card p-4 rounded-xl border border-border space-y-4 transition-all duration-500",
+                                importedFields?.paymentMethod && "bg-green-50/50 dark:bg-green-900/20 ring-1 ring-green-200/50 dark:ring-green-800/50 border-transparent"
+                            )}>
                                 <div className="flex items-center justify-between">
                                     <Label className="flex items-center gap-2 text-sm font-medium">
                                         <CreditCard className="h-4 w-4 text-primary" />

@@ -56,7 +56,7 @@ export default function SuccessPage() {
 
         const storeInfo = `*${settings.store_name || "Paola Gonçalves Rotisseria"}*\n *Retirada:* ${settings.store_address_street}, ${settings.store_address_number} - ${settings.store_address_neighborhood}\nCEP: ${settings.store_address_zip_code}`;
 
-        const clientInfo = `*Entrega:* ${deliveryAddress.street}, ${deliveryAddress.number} ${deliveryAddress.complement ? `(${deliveryAddress.complement})` : ""} - ${deliveryAddress.neighborhood}\nCEP: ${deliveryAddress.zip_code}`;
+        const clientInfo = `*Entrega:* ${deliveryAddress.street}, ${deliveryAddress.number} ${deliveryAddress.complement ? `(${deliveryAddress.complement})` : ""} - ${deliveryAddress.neighborhood}, ${deliveryAddress.city}/${deliveryAddress.state}\nCEP: ${deliveryAddress.zip_code}`;
 
         const message = `${storeInfo}\n\n${clientInfo}`;
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { useClients } from "@/hooks/useClients";
 import { Client } from "@/components/features/clients/types";
-import { maskCpfCnpj } from "@/components/features/clients/utils";
+import { maskCpfCnpj, maskPhone } from "@/components/features/clients/utils";
 import { ClientFormDialog } from "@/components/features/clients/ClientFormDialog";
 import { useClientForm } from "@/hooks/useClientForm";
 import { createClient } from "@/services/database/clients";
@@ -33,6 +33,7 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
         return (
             client.name.toLowerCase().includes(query) ||
             (client.cpf_cnpj && client.cpf_cnpj.includes(query)) ||
+            (client.phone && client.phone.includes(query)) ||
             (client.email && client.email.toLowerCase().includes(query))
         );
     });
@@ -112,10 +113,17 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
                         <User className="h-5 w-5" />
                     </div>
                     <div>
-                        <p className="font-medium text-foreground">{selectedClient.name}</p>
-                        {selectedClient.cpf_cnpj && (
-                            <p className="text-sm text-muted-foreground">{maskCpfCnpj(selectedClient.cpf_cnpj)}</p>
-                        )}
+                        <div className="flex flex-col">
+                            <p className="font-medium text-foreground">{selectedClient.name}</p>
+                            <div className="flex gap-3">
+                                {selectedClient.phone && (
+                                    <p className="text-sm text-muted-foreground">{maskPhone(selectedClient.phone)}</p>
+                                )}
+                                {selectedClient.cpf_cnpj && (
+                                    <p className="text-sm text-muted-foreground">{maskCpfCnpj(selectedClient.cpf_cnpj)}</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <Button
@@ -137,7 +145,7 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                         className="pl-12 h-14 text-base shadow-sm border-border focus:border-primary focus:ring-primary/20 rounded-xl bg-card"
-                        placeholder="Buscar cliente por nome ou CPF/CNPJ..."
+                        placeholder="Buscar cliente por nome, CPF/CNPJ ou telefone..."
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
@@ -181,11 +189,18 @@ export function ClientSearch({ selectedClient, onSelectClient }: ClientSearchPro
                                 >
                                     <div className="flex flex-col">
                                         <span className="font-medium text-gray-800">{client.name}</span>
-                                        {client.cpf_cnpj && (
-                                            <span className="text-xs text-muted-foreground">
-                                                {maskCpfCnpj(client.cpf_cnpj)}
-                                            </span>
-                                        )}
+                                        <div className="flex gap-3">
+                                            {client.phone && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {maskPhone(client.phone)}
+                                                </span>
+                                            )}
+                                            {client.cpf_cnpj && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {maskCpfCnpj(client.cpf_cnpj)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))

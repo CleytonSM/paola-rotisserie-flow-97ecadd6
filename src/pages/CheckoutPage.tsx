@@ -183,8 +183,11 @@ export function CheckoutPage() {
             .join("\n");
 
         const fullAddress = isDelivery
-            ? `${street}, ${number}${complement ? ` (${complement})` : ""} - ${neighborhood}, ${city} - CEP: ${cep}`
+            ? `${street}, ${number}${complement ? ` (${complement})` : ""} - ${neighborhood}, ${city}/${state} - CEP: ${cep}`
             : "";
+
+        const deliveryFee = settings?.fixed_delivery_fee || 0;
+        const currentTotal = total() + (isDelivery ? deliveryFee : 0);
 
         const paymentMethodLabel = {
             pix: "Pix",
@@ -205,7 +208,7 @@ ${isDelivery ? `*Endereço:* ${fullAddress}\n` : ""}*Data:* ${dateStr} às ${tim
 *Itens:*
 ${itemsList}
 
-*Total:* ${formatCurrency(total())}
+${isDelivery ? `*Subtotal:* ${formatCurrency(total())}\n*Taxa de Entrega:* ${formatCurrency(deliveryFee)}\n` : ""}*Total:* ${formatCurrency(currentTotal)}
 
 ${notes ? `*Observações:* ${notes}` : ""}
 
@@ -511,10 +514,22 @@ Pedido enviado via Catálogo Virtual`;
                                         </div>
                                     ))}
                                 </div>
-                                <div className="border-t border-dashed border-border pt-4 mt-4">
-                                    <div className="flex justify-between items-center">
+                                <div className="border-t border-dashed border-border pt-4 mt-4 space-y-2">
+                                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                                        <span>Subtotal</span>
+                                        <span>{formatCurrency(total())}</span>
+                                    </div>
+                                    {isDelivery && (
+                                        <div className="flex justify-between items-center text-sm text-muted-foreground">
+                                            <span>Taxa de Entrega</span>
+                                            <span>{formatCurrency(settings?.fixed_delivery_fee || 0)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center pt-2">
                                         <span className="font-bold text-lg">Total estimado</span>
-                                        <span className="text-2xl font-bold text-primary">{formatCurrency(total())}</span>
+                                        <span className="text-2xl font-bold text-primary">
+                                            {formatCurrency(total() + (isDelivery ? (settings?.fixed_delivery_fee || 0) : 0))}
+                                        </span>
                                     </div>
                                     <p className="text-[10px] text-muted-foreground italic text-center uppercase tracking-wider mt-4">
                                         O pagamento é feito diretamente no WhatsApp ou na retirada/entrega.

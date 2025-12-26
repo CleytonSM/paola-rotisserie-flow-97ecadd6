@@ -36,6 +36,11 @@ export interface Order {
         id: string;
         amount: number;
         payment_method: string;
+        pix_key_id?: string | null;
+        pix_keys?: {
+            id: string;
+            key_value: string;
+        } | null;
     }[];
     is_delivery: boolean;
     delivery_fee?: number;
@@ -105,7 +110,7 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                         id, name, quantity, unit_price, total_price, product_item_id,
                         product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                     ),
-                    sale_payments ( id, amount, payment_method ),
+                    sale_payments ( id, amount, payment_method, pix_key_id, pix_keys ( id, key_value ) ),
                     is_delivery,
                     delivery_fee,
                     delivery_address_id,
@@ -134,7 +139,7 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                         id, name, quantity, unit_price, total_price, product_item_id,
                         product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                     ),
-                    sale_payments ( id, amount, payment_method ),
+                    sale_payments ( id, amount, payment_method, pix_key_id, pix_keys ( id, key_value ) ),
                     is_delivery,
                     delivery_fee,
                     delivery_address_id,
@@ -178,7 +183,7 @@ export const getOrders = async (filters?: OrderFilters): Promise<DatabaseResult<
                         id, name, quantity, unit_price, total_price, product_item_id,
                         product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                     ),
-                    sale_payments ( id, amount, payment_method ),
+                    sale_payments ( id, amount, payment_method, pix_key_id, pix_keys ( id, key_value ) ),
                     is_delivery,
                     delivery_fee,
                     delivery_address_id,
@@ -258,7 +263,7 @@ export const getUpcomingOrders = async (): Promise<DatabaseResult<Order[]>> => {
                     id, name, quantity, unit_price, total_price, product_item_id,
                     product_catalog ( id, is_internal, base_price, catalog_barcode, name )
                 ),
-                sale_payments ( id, amount, payment_method ),
+                sale_payments ( id, amount, payment_method, pix_key_id, pix_keys ( id, key_value ) ),
                 is_delivery,
                 delivery_fee,
                 delivery_address_id,

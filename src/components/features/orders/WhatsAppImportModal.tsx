@@ -15,7 +15,9 @@ interface WhatsAppImportModalProps {
         notes: string,
         scheduledPickup?: Date,
         client?: Client,
-        clientName?: string
+        clientName?: string,
+        paymentMethod?: string,
+        address?: any
     }) => void;
 }
 
@@ -35,7 +37,9 @@ export function WhatsAppImportModal({ open, onOpenChange, onImport }: WhatsAppIm
                 notes: result.notes,
                 scheduledPickup: result.scheduledPickup,
                 client: result.client,
-                clientName: result.clientName
+                clientName: result.clientName,
+                paymentMethod: result.paymentMethod,
+                address: result.address
             });
 
             setText("");

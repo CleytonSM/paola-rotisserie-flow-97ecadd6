@@ -27,6 +27,8 @@ export interface ParsedWhatsAppMessage {
     scheduledTime: Date | undefined;
     clientName: string | undefined;
     clientPhone: string | undefined;
+    paymentMethod: string | undefined;
+    deliveryAddress: string | undefined;
     notes: string;
 }
 
@@ -289,6 +291,8 @@ export function parseStructuredWhatsAppMessage<T extends { id: string; name: str
     let scheduledTime: Date | undefined;
     let clientName: string | undefined;
     let clientPhone: string | undefined;
+    let paymentMethod: string | undefined;
+    let deliveryAddress: string | undefined;
     let isParsingItems = false;
 
     for (const rawLine of lines) {
@@ -304,6 +308,24 @@ export function parseStructuredWhatsAppMessage<T extends { id: string; name: str
         // Extract client phone
         if (line.includes("*Telefone:*")) {
             clientPhone = line.replace("*Telefone:*", "").trim();
+            continue;
+        }
+
+        // Extract payment method
+        if (line.includes("*Pagamento:*")) {
+            const label = line.replace("*Pagamento:*", "").trim();
+            const lowerLabel = label.toLowerCase();
+            if (lowerLabel.includes("pix")) paymentMethod = "pix";
+            else if (lowerLabel.includes("dinheiro")) paymentMethod = "cash";
+            else if (lowerLabel.includes("credito")) paymentMethod = "card_credit";
+            else if (lowerLabel.includes("debito")) paymentMethod = "card_debit";
+            else paymentMethod = label;
+            continue;
+        }
+
+        // Extract address
+        if (line.includes("*Endereço:*")) {
+            deliveryAddress = line.replace("*Endereço:*", "").trim();
             continue;
         }
 
@@ -370,6 +392,8 @@ export function parseStructuredWhatsAppMessage<T extends { id: string; name: str
         scheduledTime,
         clientName,
         clientPhone,
+        paymentMethod,
+        deliveryAddress,
         notes: notesLines.join('\n').trim(),
     };
 }
@@ -393,6 +417,8 @@ export function parseWhatsAppMessage<T extends { id: string; name: string; base_
     let scheduledTime: Date | undefined;
     let clientName: string | undefined;
     let clientPhone: string | undefined;
+    let paymentMethod: string | undefined;
+    let deliveryAddress: string | undefined;
 
     for (const rawLine of lines) {
         const line = rawLine.trim();
@@ -438,6 +464,69 @@ export function parseWhatsAppMessage<T extends { id: string; name: string; base_
         scheduledTime,
         clientName,
         clientPhone,
+        paymentMethod,
+        deliveryAddress,
         notes: notesLines.join('\n').trim(),
     };
+}
+
+export interface ParsedAddress {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zipCode: string;
+}
+
+/**
+ * Attempt to parse a Brazilian address string into components.
+ * Format: "Street, Number - Neighborhood, City/State - CEP: 12345-678"
+ */
+export function parseBrazilianAddress(text: string): ParsedAddress | null {
+    if (!text) return null;
+    try {
+        // Pattern: Street, Number - Neighborhood, City/State - CEP: ZIP
+        const parts = text.split(" - ");
+        if (parts.length < 2) return null;
+
+        const streetAndNumberPart = parts[0];
+        const lastCommaIndex = streetAndNumberPart.lastIndexOf(",");
+        
+        let street = "";
+        let number = "";
+        
+        if (lastCommaIndex !== -1) {
+            street = streetAndNumberPart.substring(0, lastCommaIndex).trim();
+            number = streetAndNumberPart.substring(lastCommaIndex + 1).trim();
+        } else {
+            street = streetAndNumberPart;
+        }
+
+        const neighborhood = parts[1]?.trim() || "";
+        
+        let city = "";
+        let state = "";
+        if (parts[2]) {
+            const cityStatePart = parts[2].split(",")[0]; // Franca/SP
+            const cityStateInfo = cityStatePart.split("/");
+            city = cityStateInfo[0]?.trim() || "";
+            state = cityStateInfo[1]?.trim() || "";
+        }
+
+        const zipMatch = text.match(/CEP:\s*(\d{5}-?\d{3})/i);
+        const zipCode = zipMatch ? zipMatch[1] : "";
+
+        return {
+            street,
+            number,
+            neighborhood,
+            city,
+            state,
+            zipCode
+        };
+    } catch (e) {
+        return null;
+    }
 }
