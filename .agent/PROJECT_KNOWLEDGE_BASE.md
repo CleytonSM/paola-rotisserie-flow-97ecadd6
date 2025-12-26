@@ -1,6 +1,6 @@
 # Paola Gonçalves Rotisserie - Project Knowledge Base
 
-> **Last Updated**: 2025-12-16  
+> **Last Updated**: 2025-12-26  
 > **Purpose**: This document serves as the **single source of truth** for the project's architecture, design system, database schema, and development guidelines. **All new components and features must align with the standards defined here.**
 
 ---
@@ -30,17 +30,20 @@
 - ✅ **Authentication**: Email/password with role-based access control (Owner, Accountant, Viewer)
 - ✅ **Dashboard**: 7-day financial overview with key metrics
 - ✅ **PDV (Point of Sale)**: Complete sales workflow with barcode scanning, cart management, and payment processing
-- ✅ **Sales History**: Comprehensive tracking of all completed sales
+- ✅ **Orders & Delivery**: Full order lifecycle management with Kanban board (Received -> Preparing -> Ready -> Delivered/Cancelled). Supports scheduled pickups, home delivery with ad-hoc address support, and delivery fees.
+- ✅ **WhatsApp Integration**: Import orders directly from WhatsApp messages with intelligent parsing.
+- ✅ **Sales History**: Comprehensive tracking of all completed sales and orders
 - ✅ **Accounts Payable**: Payment tracking with supplier management
 - ✅ **Accounts Receivable**: Revenue tracking with client management and automatic card fee calculation
-- ✅ **Reports**: Comprehensive financial flow analysis
-- ✅ **Suppliers & Clients**: Full CRUD for business relationships
+- ✅ **Reports**: Comprehensive financial flow analysis, including detailed reports by product, day/hour, payment method, and transaction type.
+- ✅ **Suppliers & Clients**: Full CRUD for business relationships, including multiple address management for clients.
 - ✅ **Machines**: Payment terminal/card machine management with card flags and tax rates
 - ✅ **Pix Keys**: PIX key management with QR code generation
-- ✅ **Product Catalog**: Master product management with base pricing, shelf life, and unit types (kg/un)
+- ✅ **Product Catalog**: Master product management with base pricing, shelf life, unit types, and product images.
 - ✅ **Product Items**: Individual item tracking (weighed/unit) with barcode generation and expiration monitoring
 - ✅ **Partial Payments**: Support for multiple payment methods in a single transaction
 - ✅ **Printer Integration**: Zebra printer support for labels
+- ✅ **Global Settings**: App-wide configuration for store details, delivery fees, and sound notifications.
 
 ---
 
@@ -159,20 +162,22 @@ font-family: 'Cormorant Garamond', serif
 ```
 src/
 ├── components/          # Reusable UI components
-│   ├── features/       # Feature-specific components (13 domains)
-│   │   ├── clients/       # Client management (4 files)
-│   │   ├── dashboard/     # Dashboard widgets (8 files)
+│   ├── features/       # Feature-specific components (14 domains)
+│   │   ├── clients/       # Client management (6 files)
+│   │   ├── dashboard/     # Dashboard widgets (9 files)
 │   │   ├── machines/      # Machine management (4 files)
+│   │   ├── orders/        # Order & Kanban management (21 files)
+│   │   │   └── kanban/    # Kanban-specific components
 │   │   ├── partial-payment/ # Multi-payment support (2 files)
 │   │   ├── payable/       # Accounts payable (5 files)
 │   │   ├── pdv/           # Point of Sale (~20 files)
 │   │   │   ├── payment/   # Payment flow components (8 files)
 │   │   │   └── success/   # Success page components
 │   │   ├── pix-keys/      # Pix key management (5 files)
-│   │   ├── product-items/ # Item management (5 files)
+│   │   ├── product-items/ # Item management (6 files)
 │   │   ├── products/      # Product catalog (4 files)
 │   │   ├── receivable/    # Accounts receivable (5 files)
-│   │   ├── reports/       # Report components (9 files)
+│   │   ├── reports/       # Report components (10 files)
 │   │   ├── sales/         # Sales history (3 files)
 │   │   └── suppliers/     # Supplier management (6 files)
 │   ├── icons/          # Custom icons (PixIcon)
@@ -187,9 +192,15 @@ src/
 ├── pages/              # Route components
 │   ├── Auth.tsx
 │   ├── Dashboard.tsx
+│   ├── Orders.tsx      # Kanban board for orders
 │   ├── Payable.tsx
 │   ├── Receivable.tsx
-│   ├── Reports.tsx
+│   ├── Reports.tsx      # Financial reports main page
+│   ├── reports/         # Detailed report pages
+│   │   ├── ReportsDaily.tsx
+│   │   ├── ReportsPayments.tsx
+│   │   ├── ReportsProducts.tsx
+│   │   └── ReportsTypes.tsx
 │   ├── Suppliers.tsx
 │   ├── Clients.tsx
 │   ├── Products.tsx
@@ -197,6 +208,7 @@ src/
 │   ├── Machines.tsx
 │   ├── PixKeys.tsx
 │   ├── Sales.tsx
+│   ├── SettingsPage.tsx # App-wide settings
 │   ├── pdv/            # PDV flow pages
 │   │   ├── PDVPage.tsx     # Main sales screen
 │   │   ├── PaymentPage.tsx # Payment processing
@@ -205,7 +217,7 @@ src/
 ├── services/           # Backend abstraction layer
 │   ├── auth.ts        # Authentication service
 │   ├── database.ts    # Database service facade
-│   ├── database/      # Specific database operations (15 modules)
+│   ├── database/      # Specific database operations (18 modules)
 │   │   ├── analytics.ts
 │   │   ├── clients.ts
 │   │   ├── machines.ts
@@ -224,7 +236,7 @@ src/
 │       ├── PrinterInterface.ts
 │       ├── PrinterService.ts
 │       └── ZebraPrinterStrategy.ts
-├── hooks/              # Custom React hooks (25 files)
+├── hooks/              # Custom React hooks (31 files)
 │   ├── useAuth.ts
 │   ├── useBarcodeScanner.ts
 │   ├── useClients.tsx
@@ -349,6 +361,34 @@ Client management with tax ID validation
 - CHECK: cpf_cnpj format (11 or 14 digits)
 ```
 
+#### `client_addresses`
+Shipping addresses for clients
+```sql
+- id: UUID (PK)
+- client_id: UUID (FK to clients)
+- street: VARCHAR(255)
+- number: VARCHAR(50)
+- complement: VARCHAR(255)
+- neighborhood: VARCHAR(100)
+- city: VARCHAR(100)
+- state: VARCHAR(2)
+- zip_code: VARCHAR(10)
+- is_default: BOOLEAN
+- created_at: TIMESTAMP
+```
+
+#### `app_settings`
+Global application configuration
+```sql
+- id: UUID (PK)
+- store_name: VARCHAR(255)
+- store_cnpj: VARCHAR(20)
+- store_address_*: TEXT (multiple fields)
+- fixed_delivery_fee: DECIMAL(10,2)
+- sound_enabled: BOOLEAN DEFAULT true
+- updated_at: TIMESTAMP
+```
+
 #### `accounts_payable`
 Outgoing payments
 ```sql
@@ -437,6 +477,7 @@ Master product catalog (templates)
 - unit_type: TEXT DEFAULT 'kg' -- 'kg' or 'un'
 - is_internal: BOOLEAN DEFAULT true -- manufactured internally
 - quantity: INTEGER -- for non-internal products (stock count)
+- image_url: TEXT (Supabase Storage link)
 - created_at: TIMESTAMP
 - updated_at: TIMESTAMP
 ```
@@ -469,6 +510,13 @@ Sales hub with auto-incrementing display ID
 - total_amount: DECIMAL(10,2)
 - client_id: UUID (FK to clients)
 - status: VARCHAR(20) DEFAULT 'completed' -- 'completed', 'cancelled', 'refunded'
+- order_status: VARCHAR(20) -- 'received', 'preparing', 'ready', 'delivered', 'cancelled'
+- payment_status: VARCHAR(20) -- 'pending', 'paid', 'partial'
+- scheduled_pickup: TIMESTAMP WITH TIME ZONE
+- is_delivery: BOOLEAN DEFAULT false
+- delivery_address_id: UUID (FK to client_addresses)
+- delivery_fee: DECIMAL(10,2)
+- delivery_*: TEXT (ad-hoc address fields)
 - notes: TEXT
 - change_amount: DECIMAL(10,2) DEFAULT 0
 - created_at: TIMESTAMP
@@ -506,12 +554,15 @@ Payment methods for sales
 
 #### `complete_sale(p_sale_data, p_items_data, p_payments_data)`
 Transactional function that:
-1. Creates the sale record
+1. Creates the sale record (handles delivery & scheduling logic)
 2. Inserts sale items
 3. Updates stock (marks product_items as 'sold' or decrements quantity)
 4. Inserts sale payments
 5. Creates accounts_receivable record
 6. Creates receivable_payments for partial payments
+
+#### `update_order(p_sale_id, p_sale_data, p_items_data)`
+Advanced transactional update for existing orders. Handles item replacement and stock restoration.
 
 #### `get_product_catalog_stock(catalog_id)`
 Returns stock summary for a product catalog:
@@ -522,6 +573,9 @@ Returns stock summary for a product catalog:
 
 #### `get_all_catalog_stocks(catalog_ids)`
 Batch version of stock query for multiple catalogs.
+
+#### `get_top_selling_products(limit_count)`
+Returns the most sold products based on the `sale_items` table.
 
 ### Triggers
 - `trg_calculate_net_value`: Auto-calculates net_value for card payments
@@ -650,6 +704,7 @@ export const navigationGroups = {
     label: "Geral",
     items: [
       { title: "Dashboard", url: "/", icon: LayoutDashboard },
+      { title: "Pedidos", url: "/orders", icon: Clock },
       { title: "PDV", url: "/pdv", icon: ShoppingCart },
     ]
   },
@@ -659,7 +714,18 @@ export const navigationGroups = {
       { title: "Contas a Receber", url: "/receivable", icon: ArrowUpCircle },
       { title: "Histórico de Vendas", url: "/sales", icon: BookOpen },
       { title: "Contas a Pagar", url: "/payable", icon: ArrowDownCircle },
-      { title: "Relatórios", url: "/reports", icon: BarChart3 }
+      { 
+        title: "Relatórios", 
+        url: "/reports", 
+        icon: BarChart3,
+        items: [
+          { title: "Geral", url: "/reports" },
+          { title: "Por Produto", url: "/reports/products" },
+          { title: "Por Dia", url: "/reports/daily" },
+          { title: "Por Pagamento", url: "/reports/payments" },
+          { title: "Por Tipo", url: "/reports/types" }
+        ]
+      }
     ]
   },
   management: {
@@ -679,6 +745,7 @@ export const navigationGroups = {
         title: "Configurações",
         icon: Settings,
         items: [
+          { title: "Geral", url: "/settings", icon: Menu },
           { title: "Maquininhas", url: "/machines", icon: CreditCard },
           { title: "Chaves Pix", url: "/pix-keys", icon: PixIcon },
         ]
@@ -693,17 +760,23 @@ export const navigationGroups = {
 |-------|------|-------------|
 | `/` | Dashboard | Main overview |
 | `/auth` | Auth | Login/signup |
+| `/orders` | Orders | Kanban board for orders |
 | `/pdv` | PDVPage | Point of sale |
 | `/pdv/payment` | PaymentPage | Payment processing |
 | `/pdv/success` | SuccessPage | Transaction complete |
 | `/sales` | Sales | Sales history |
 | `/receivable` | Receivable | Accounts receivable |
 | `/payable` | Payable | Accounts payable |
-| `/reports` | Reports | Financial reports |
+| `/reports` | Reports | financial reports hub |
+| `/reports/products` | ReportsProducts | Report by product |
+| `/reports/daily` | ReportsDaily | Report by day/hour |
+| `/reports/payments` | ReportsPayments | Report by payment method |
+| `/reports/types` | ReportsTypes | Report by transaction type |
 | `/clients` | Clients | Client management |
 | `/suppliers` | Suppliers | Supplier management |
 | `/products` | Products | Product catalog |
 | `/product-items` | ItemProducts | Product items |
+| `/settings` | Settings | Global app settings |
 | `/machines` | Machines | Card machine setup |
 | `/pix-keys` | PixKeys | PIX key management |
 
@@ -723,7 +796,7 @@ Authentication abstraction
 Database facade (re-exports from database/)
 
 #### `src/services/database/[entity].ts`
-Entity-specific operations (15 modules)
+Entity-specific operations (18 modules)
 
 #### `src/services/printer/`
 Printer integration with strategy pattern:
