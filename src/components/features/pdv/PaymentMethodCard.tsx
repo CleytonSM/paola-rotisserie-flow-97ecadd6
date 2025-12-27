@@ -7,6 +7,7 @@ interface PaymentMethodCardProps {
     icon: React.ComponentType<{ className?: string }>;
     selected: boolean;
     onClick: () => void;
+    isLastUsed?: boolean;
     children?: React.ReactNode;
 }
 
@@ -16,6 +17,7 @@ export function PaymentMethodCard({
     icon: Icon,
     selected,
     onClick,
+    isLastUsed,
     children,
 }: PaymentMethodCardProps) {
     return (
@@ -28,6 +30,11 @@ export function PaymentMethodCard({
                     : "border-border bg-card hover:border-primary/50 hover:bg-accent"
             )}
         >
+            {isLastUsed && (
+                <div className="absolute -top-2 right-4 bg-[#D4AF37] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider animate-in fade-in zoom-in-50 duration-300">
+                    Usado por último
+                </div>
+            )}
             <div className="flex items-center gap-3 mb-2">
                 <div
                     className={cn(

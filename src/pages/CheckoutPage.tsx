@@ -36,10 +36,17 @@ const PixIcon = ({ className }: { className?: string }) => (
 );
 
 export function CheckoutPage() {
-    const { items, total, itemCount, clearCart, clientDetails, updateClientDetails, setLastOrderedProductIds } = useCatalogStore();
+    const { items, total, itemCount, clearCart, clientDetails, updateClientDetails, lastPaymentMethod, setLastPaymentMethod, setLastOrderedProductIds } = useCatalogStore();
     const { settings } = useAppSettings();
     const { hours, isLoading: isLoadingHours } = useStoreHours();
     const navigate = useNavigate();
+
+    // Ticker to update "now" time every minute
+    const [currentNow, setCurrentNow] = React.useState(new Date());
+    React.useEffect(() => {
+        const timer = setInterval(() => setCurrentNow(new Date()), 60000);
+        return () => clearInterval(timer);
+    }, []);
 
     const [clientName, setClientName] = React.useState("");
     const [phone, setPhone] = React.useState("");
@@ -49,6 +56,14 @@ export function CheckoutPage() {
     const [isDelivery, setIsDelivery] = React.useState(false);
     const [isTimeManuallySet, setIsTimeManuallySet] = React.useState(false);
     const [paymentMethod, setPaymentMethod] = React.useState<string | null>(null);
+    const [schedulingMode, setSchedulingMode] = React.useState<'now' | 'scheduled'>('now');
+
+    // Set initial payment method from stored preference
+    React.useEffect(() => {
+        if (lastPaymentMethod) {
+            setPaymentMethod(lastPaymentMethod);
+        }
+    }, [lastPaymentMethod]);
 
     // Detailed address state
     const [cep, setCep] = React.useState("");
@@ -82,29 +97,27 @@ export function CheckoutPage() {
         }
     }, [items, navigate]);
 
-    // Initialize with next opening if store is closed
+    // Initialize and monitor store status
     React.useEffect(() => {
         if (hours && hours.length > 0) {
             const status = isStoreOpenNow(hours);
             if (!status.isOpen) {
-                const next = getNextStoreOpeningDate(hours);
-                setDate(next.date);
-                setTime(next.time);
-            }
-        }
-    }, [hours]);
+                // If it was 'now', force to 'scheduled'
+                if (schedulingMode !== 'scheduled') {
+                    setSchedulingMode('scheduled');
+                }
 
-    // Auto-adjust delivery time for orders scheduled for today
-    React.useEffect(() => {
-        if (isDelivery && date && !isTimeManuallySet && hours) {
-            const today = new Date();
-            if (date.toDateString() === today.toDateString()) {
-                const now = new Date();
-                const marginTime = new Date(now.getTime() + 30 * 60000);
+                // If the user hasn't manually tweaked date/time, or if we just switched to scheduled
+                if (!isTimeManuallySet) {
+                    const next = getNextStoreOpeningDate(hours);
+                    setDate(next.date);
+                    setTime(next.time);
+                }
+            } else if (!isTimeManuallySet && schedulingMode === 'now') {
+                // If open and in 'now' mode, keep updating the +30min estimate
+                const marginTime = new Date(currentNow.getTime() + 30 * 60000);
                 let hrs = marginTime.getHours();
                 let mins = marginTime.getMinutes();
-
-                // Round up to nearest multiple of 5 (e.g., 12:02 -> 12:05)
                 const roundedMinutes = Math.ceil(mins / 5) * 5;
                 if (roundedMinutes >= 60) {
                     hrs = (hrs + 1) % 24;
@@ -112,25 +125,27 @@ export function CheckoutPage() {
                 } else {
                     mins = roundedMinutes;
                 }
+                setTime(`${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`);
+                setDate(currentNow);
+            }
+        }
+    }, [hours, currentNow, isTimeManuallySet, schedulingMode, items.length]);
 
-                // Check store hours for today
-                const jsDay = now.getDay();
-                const dbDay = jsDay === 0 ? 7 : jsDay;
-                const todayStoreHours = hours.find(h => h.day_of_week === dbDay);
-
-                if (todayStoreHours?.is_open) {
-                    const storeOpen = todayStoreHours.open_time.substring(0, 5);
-                    const currentTime = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-
-                    if (currentTime < storeOpen) {
-                        setTime(storeOpen);
-                    } else {
-                        setTime(currentTime);
-                    }
+    // Auto-adjust validation for today's hours if date changes
+    React.useEffect(() => {
+        if (date && !isTimeManuallySet && hours && schedulingMode === 'scheduled') {
+            const today = new Date();
+            if (date.toDateString() === today.toDateString()) {
+                const status = isStoreOpenNow(hours);
+                if (!status.isOpen) {
+                    // If today is closed but user picked today, suggest next opening
+                    const next = getNextStoreOpeningDate(hours);
+                    setDate(next.date);
+                    setTime(next.time);
                 }
             }
         }
-    }, [isDelivery, date, isTimeManuallySet, hours]);
+    }, [date, hours, isTimeManuallySet, schedulingMode]);
 
     const handleCepSearch = async (cepValue: string) => {
         const cleanCep = cepValue.replace(/\D/g, "");
@@ -185,10 +200,24 @@ export function CheckoutPage() {
                 return;
             }
 
-            const selectedTimeStr = `${time}:00`;
-            if (selectedTimeStr < dayStoreHours.open_time || selectedTimeStr > dayStoreHours.close_time) {
-                toast.error(`Para este dia, selecione um horário entre ${dayStoreHours.open_time.substring(0, 5)} e ${dayStoreHours.close_time.substring(0, 5)}.`);
-                return;
+            if (schedulingMode === 'now') {
+                const now = new Date();
+                const currentTimeStr = format(now, "HH:mm:ss");
+
+                if (currentTimeStr > dayStoreHours.close_time) {
+                    toast.error(`A loja fechou às ${dayStoreHours.close_time.substring(0, 5)}.`);
+                    return;
+                }
+                if (currentTimeStr < dayStoreHours.open_time) {
+                    toast.error(`A loja ainda não abriu. Abrimos às ${dayStoreHours.open_time.substring(0, 5)}.`);
+                    return;
+                }
+            } else {
+                const selectedTimeStr = `${time}:00`;
+                if (selectedTimeStr < dayStoreHours.open_time || selectedTimeStr > dayStoreHours.close_time) {
+                    toast.error(`Para este dia, selecione um horário entre ${dayStoreHours.open_time.substring(0, 5)} e ${dayStoreHours.close_time.substring(0, 5)}.`);
+                    return;
+                }
             }
         }
 
@@ -242,13 +271,18 @@ export function CheckoutPage() {
             card_debit: "Cartão de Débito",
         }[paymentMethod as string] || paymentMethod;
 
+        // For 'now' orders, we send the ACTUAL current time.
+        // The parser will add 30 minutes margin on import when it sees "(Para agora)"
+        const finalDateStr = schedulingMode === 'now' ? format(new Date(), "dd/MM/yyyy") : (date ? format(date, "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy"));
+        const finalTimeStr = schedulingMode === 'now' ? format(new Date(), "HH:mm") : time;
+
         const message = `*${settings?.store_name || "Paola Gonçalves Rotisseria"}*
 Novo pedido online
 
 *Cliente:* ${clientName}
 *Telefone:* ${phone}
 *Modalidade:* ${isDelivery ? "Entrega" : "Retirada"}
-${isDelivery ? `*Endereço:* ${fullAddress}\n` : ""}*Data:* ${dateStr} às ${time}
+${isDelivery ? `*Endereço:* ${fullAddress}\n` : ""}*Data:* ${finalDateStr} às ${finalTimeStr} ${schedulingMode === 'now' ? '(Para agora)' : '(Agendado)'}
 *Pagamento:* ${paymentMethodLabel}
 
 *Itens:*
@@ -279,6 +313,9 @@ Pedido enviado via Catálogo Virtual`;
 
         // Save last ordered product IDs
         setLastOrderedProductIds(items.map(i => i.id));
+
+        // Save last payment method
+        setLastPaymentMethod(paymentMethod);
 
         toast.success("Pedido enviado para o WhatsApp!");
         clearCart();
@@ -365,63 +402,109 @@ Pedido enviado via Catálogo Virtual`;
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Data da {isDelivery ? 'Entrega' : 'Retirada'}</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant={"outline"}
-                                                className={cn(
-                                                    "w-full h-12 justify-start text-left font-normal bg-card border-primary/10",
-                                                    !date && "text-muted-foreground"
-                                                )}
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                                                {date ? format(date, "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={date}
-                                                onSelect={setDate}
-                                                locale={ptBR}
-                                                disabled={(d) => {
-                                                    if (d < new Date(new Date().setHours(0, 0, 0, 0))) return true;
-                                                    if (!hours) return false;
-                                                    const jsDay = d.getDay();
-                                                    const dbDay = jsDay === 0 ? 7 : jsDay;
-                                                    const dayHours = hours.find(h => h.day_of_week === dbDay);
-                                                    if (!dayHours || !dayHours.is_open) return true;
-
-                                                    // If it's today and already passed closing time
-                                                    const now = new Date();
-                                                    if (d.toDateString() === now.toDateString()) {
-                                                        const currentTimeStr = format(now, "HH:mm:ss");
-                                                        if (currentTimeStr > dayHours.close_time) return true;
-                                                    }
-
-                                                    return false;
-                                                }}
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Horário Aproximado</Label>
-                                    <HourSelector
-                                        value={time}
-                                        onChange={(newTime) => {
-                                            setTime(newTime);
-                                            setIsTimeManuallySet(true);
-                                        }}
-                                        className="h-12 bg-card border-primary/10"
-                                    />
+                            <div className="space-y-4">
+                                <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quando deseja sua {isDelivery ? 'entrega' : 'retirada'}?</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {(!hours || isStoreOpenNow(hours).isOpen) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSchedulingMode('now')}
+                                            className={cn(
+                                                "flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left",
+                                                schedulingMode === 'now'
+                                                    ? "border-[#D4AF37] bg-[#D4AF37]/5 ring-1 ring-[#D4AF37]"
+                                                    : "border-border bg-card hover:border-primary/20"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Clock className={cn("h-5 w-5", schedulingMode === 'now' ? "text-[#D4AF37]" : "text-muted-foreground")} />
+                                                <span className={cn("font-bold", schedulingMode === 'now' ? "text-[#997B1E]" : "text-foreground")}>
+                                                    {isDelivery ? 'Entrega agora' : 'Retirada agora'}
+                                                </span>
+                                            </div>
+                                            <span className="text-sm text-muted-foreground font-medium">Previsão: até 30 min</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSchedulingMode('scheduled')}
+                                        className={cn(
+                                            "flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left",
+                                            schedulingMode === 'scheduled'
+                                                ? "border-[#D4AF37] bg-[#D4AF37]/5 ring-1 ring-[#D4AF37]"
+                                                : "border-border bg-card hover:border-primary/20"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <CalendarIcon className={cn("h-5 w-5", schedulingMode === 'scheduled' ? "text-[#D4AF37]" : "text-muted-foreground")} />
+                                            <span className={cn("font-bold", schedulingMode === 'scheduled' ? "text-[#997B1E]" : "text-foreground")}>
+                                                Agendar outro horário
+                                            </span>
+                                        </div>
+                                        <span className="text-sm text-muted-foreground font-medium">Escolha data e hora</span>
+                                    </button>
                                 </div>
                             </div>
+
+                            {schedulingMode === 'scheduled' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="grid gap-2">
+                                        <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Data</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full h-12 justify-start text-left font-normal bg-card border-primary/10",
+                                                        !date && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                                                    {date ? format(date, "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={date}
+                                                    onSelect={setDate}
+                                                    locale={ptBR}
+                                                    disabled={(d) => {
+                                                        if (d < new Date(new Date().setHours(0, 0, 0, 0))) return true;
+                                                        if (!hours) return false;
+                                                        const jsDay = d.getDay();
+                                                        const dbDay = jsDay === 0 ? 7 : jsDay;
+                                                        const dayHours = hours.find(h => h.day_of_week === dbDay);
+                                                        if (!dayHours || !dayHours.is_open) return true;
+
+                                                        // If it's today and already passed closing time
+                                                        const now = new Date();
+                                                        if (d.toDateString() === now.toDateString()) {
+                                                            const currentTimeStr = format(now, "HH:mm:ss");
+                                                            if (currentTimeStr > dayHours.close_time) return true;
+                                                        }
+
+                                                        return false;
+                                                    }}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Horário Aproximado</Label>
+                                        <HourSelector
+                                            value={time}
+                                            onChange={(newTime) => {
+                                                setTime(newTime);
+                                                setIsTimeManuallySet(true);
+                                            }}
+                                            className="h-12 bg-card border-primary/10"
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex items-center space-x-2 bg-primary/5 p-4 rounded-lg border border-primary/10 transition-colors hover:bg-primary/10">
                                 <Checkbox
@@ -544,6 +627,7 @@ Pedido enviado via Catálogo Virtual`;
                                         title="Pix"
                                         icon={PixIcon}
                                         selected={paymentMethod === "pix"}
+                                        isLastUsed={lastPaymentMethod === "pix"}
                                         onClick={() => setPaymentMethod("pix")}
                                     />
                                     <PaymentMethodCard
@@ -551,6 +635,7 @@ Pedido enviado via Catálogo Virtual`;
                                         title="Dinheiro"
                                         icon={Banknote}
                                         selected={paymentMethod === "cash"}
+                                        isLastUsed={lastPaymentMethod === "cash"}
                                         onClick={() => setPaymentMethod("cash")}
                                     />
                                     <PaymentMethodCard
@@ -558,6 +643,7 @@ Pedido enviado via Catálogo Virtual`;
                                         title="Cartão de Crédito"
                                         icon={CreditCard}
                                         selected={paymentMethod === "card_credit"}
+                                        isLastUsed={lastPaymentMethod === "card_credit"}
                                         onClick={() => setPaymentMethod("card_credit")}
                                     />
                                     <PaymentMethodCard
@@ -565,6 +651,7 @@ Pedido enviado via Catálogo Virtual`;
                                         title="Cartão de Débito"
                                         icon={CreditCard}
                                         selected={paymentMethod === "card_debit"}
+                                        isLastUsed={lastPaymentMethod === "card_debit"}
                                         onClick={() => setPaymentMethod("card_debit")}
                                     />
                                 </div>

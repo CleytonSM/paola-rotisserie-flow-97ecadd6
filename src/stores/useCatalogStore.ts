@@ -25,12 +25,14 @@ export interface ClientDetails {
 interface CatalogCartState {
     items: CatalogCartItem[];
     clientDetails: ClientDetails | null;
+    lastPaymentMethod: string | null;
     lastOrderedProductIds: string[];
     addItem: (product: { id: string; name: string; base_price: number; image_url?: string | null; unit_type?: string }) => void;
     removeItem: (productId: string) => void;
     updateQuantity: (productId: string, quantity: number) => void;
     clearCart: () => void;
     updateClientDetails: (details: ClientDetails | null) => void;
+    setLastPaymentMethod: (method: string | null) => void;
     setLastOrderedProductIds: (ids: string[]) => void;
     total: () => number;
     itemCount: () => number;
@@ -41,6 +43,7 @@ export const useCatalogStore = create<CatalogCartState>()(
         (set, get) => ({
             items: [],
             clientDetails: null,
+            lastPaymentMethod: null,
             lastOrderedProductIds: [],
 
             addItem: (product) => {
@@ -89,6 +92,10 @@ export const useCatalogStore = create<CatalogCartState>()(
 
             updateClientDetails: (details) => {
                 set({ clientDetails: details });
+            },
+            
+            setLastPaymentMethod: (method) => {
+                set({ lastPaymentMethod: method });
             },
 
             setLastOrderedProductIds: (ids) => {

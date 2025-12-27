@@ -337,6 +337,12 @@ export function parseStructuredWhatsAppMessage<T extends { id: string; name: str
                 const [day, month, year] = datePart.split('/').map(Number);
                 const [hours, minutes] = timePart.split(':').map(Number);
                 const d = new Date(year, month - 1, day, hours, minutes);
+                
+                // If it's a "now" order, add 30 minutes margin
+                if (line.includes("(Para agora)")) {
+                    d.setMinutes(d.getMinutes() + 30);
+                }
+                
                 scheduledTime = d;
             }
             continue;
