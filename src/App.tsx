@@ -27,6 +27,7 @@ import ReportsProducts from "./pages/reports/ReportsProducts";
 import ReportsDaily from "./pages/reports/ReportsDaily";
 import ReportsPayments from "./pages/reports/ReportsPayments";
 import ReportsTypes from "./pages/reports/ReportsTypes";
+import ReportsProjections from "./pages/reports/ReportsProjections";
 import { CatalogPage } from "./pages/CatalogPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="receivable" element={<Receivable />} />
               <Route path="reports" element={<Reports />} />
               <Route path="reports/products" element={<ReportsProducts />} />
+              <Route path="reports/projections" element={<ReportsProjections />} />
               <Route path="reports/daily" element={<ReportsDaily />} />
               <Route path="reports/payments" element={<ReportsPayments />} />
               <Route path="reports/types" element={<ReportsTypes />} />

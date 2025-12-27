@@ -67,6 +67,7 @@ export const navigationGroups = {
                 icon: BarChart3,
                 items: [
                     { title: "Geral", url: "/admin/reports" },
+                    { title: "Projeções", url: "/admin/reports/projections" },
                     { title: "Por Produto", url: "/admin/reports/products" },
                     { title: "Por Dia/Hora", url: "/admin/reports/daily" },
                     { title: "Por Pagamento", url: "/admin/reports/payments" },

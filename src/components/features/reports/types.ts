@@ -83,3 +83,35 @@ export type SalesTypeReport = {
     count: number;
     percentage: number;
 };
+
+export type ProjectionKPIs = {
+  currentBalance: number;
+  totalToPay: number;
+  totalToReceive: number;
+  estimatedBalance: number;
+  payablesOverdue: number;
+  payablesToday: number;
+  payables7: number;
+  payables15: number;
+  payables30: number;
+  receivablesOverdue: number;
+  receivablesToday: number;
+  receivables7: number;
+  receivables15: number;
+  receivables30: number;
+};
+
+export type DailyProjection = {
+  date: string;
+  balance: number;
+};
+
+export type DetailedProjectionRow = {
+  date: string;
+  total: number;
+  items: {
+    origin: string;
+    value: number;
+  }[];
+};
+

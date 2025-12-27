@@ -1,12 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DateRange } from "react-day-picker";
-import { endOfDay, startOfDay } from "date-fns";
+import { endOfDay, startOfDay, addDays, differenceInDays, format } from "date-fns";
 import { 
     ProductReportItem, 
     HourlySalesData, 
     DailySalesData, 
     PaymentMethodReport, 
-    SalesTypeReport 
+    SalesTypeReport,
+    ProjectionKPIs,
+    DailyProjection,
+    DetailedProjectionRow
 } from "@/components/features/reports/types";
 
 // Helper to format dates for Supabase query
@@ -16,6 +19,14 @@ const formatDates = (dateRange: { from: Date; to: Date }) => {
         to: endOfDay(dateRange.to).toISOString(),
     };
 };
+
+const formatDateToYYYYMMDD = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 
 export const reportsService = {
     // 1. Ranking Produtos
@@ -245,6 +256,182 @@ export const reportsService = {
             count: stats.count,
             percentage: grandTotal > 0 ? (stats.total / grandTotal) * 100 : 0
         })).sort((a, b) => b.total - a.total);
+    },
+
+    // 5. Projeções
+    getProjections: async (days: number): Promise<{
+        kpis: ProjectionKPIs,
+        chartData: DailyProjection[],
+        payablesTable: DetailedProjectionRow[],
+        receivablesTable: DetailedProjectionRow[]
+    }> => {
+        const today = startOfDay(new Date());
+        const endDate = endOfDay(addDays(today, days));
+        
+        const todayStr = formatDateToYYYYMMDD(today);
+        const endDateStr = formatDateToYYYYMMDD(endDate);
+
+        // Current Balance (Estimated from all history)
+        const { data: recBalance } = await supabase.from('accounts_receivable').select('net_value').eq('status', 'received');
+        const { data: payBalance } = await supabase.from('accounts_payable').select('value').eq('status', 'paid');
+        
+        const currentBalance = (recBalance?.reduce((a, b) => a + Number(b.net_value), 0) || 0) - 
+                             (payBalance?.reduce((a, b) => a + Number(b.value), 0) || 0);
+
+        // Pending Payables
+        const { data: payables, error: pError } = await supabase
+            .from('accounts_payable')
+            .select('id, value, due_date, supplier:suppliers(name)')
+            .neq('status', 'paid')
+            .lte('due_date', endDateStr)
+            .order('due_date', { ascending: true });
+
+        if (pError) throw pError;
+
+        // Pending Receivables
+        const { data: receivables, error: rError } = await supabase
+            .from('accounts_receivable')
+            .select('id, net_value, entry_date, client:clients(name)')
+            .neq('status', 'received')
+            .lte('entry_date', endDateStr)
+            .order('entry_date', { ascending: true });
+
+        if (rError) throw rError;
+
+        // Calculate KPIs
+        const kpis: ProjectionKPIs = {
+            currentBalance: currentBalance,
+            totalToPay: 0,
+            totalToReceive: 0,
+            estimatedBalance: 0,
+            payablesOverdue: 0,
+            payablesToday: 0,
+            payables7: 0,
+            payables15: 0,
+            payables30: 0,
+            receivablesOverdue: 0,
+            receivablesToday: 0,
+            receivables7: 0,
+            receivables15: 0,
+            receivables30: 0
+        };
+
+        const todayDateStr = formatDateToYYYYMMDD(today); // "2025-12-27" in local time
+
+        payables?.forEach(p => {
+            const val = Number(p.value);
+            // p.due_date is "YYYY-MM-DD" or ISO. We just need the date part.
+            const dueStr = p.due_date.split('T')[0];
+            const due = new Date(dueStr + 'T12:00:00'); // Treat as local midday
+            const diff = differenceInDays(due, today);
+            
+            // Overdue: strictly before today
+            if (dueStr < todayDateStr) kpis.payablesOverdue += val;
+            
+            // Today: exactly today string match
+            if (dueStr === todayDateStr) kpis.payablesToday += val;
+            
+            // Future buckets (include Today for "Next X days")
+            if (diff >= 0 && diff <= 7) kpis.payables7 += val;
+            if (diff >= 0 && diff <= 15) kpis.payables15 += val;
+            if (diff >= 0 && diff <= 30) kpis.payables30 += val;
+            
+            kpis.totalToPay += val;
+        });
+
+        receivables?.forEach(r => {
+            const val = Number(r.net_value);
+            const entryStr = r.entry_date.split('T')[0];
+            const entry = new Date(entryStr + 'T12:00:00');
+            const diff = differenceInDays(entry, today);
+            
+            if (entryStr < todayDateStr) kpis.receivablesOverdue += val;
+            if (entryStr === todayDateStr) kpis.receivablesToday += val;
+
+            if (diff >= 0 && diff <= 7) kpis.receivables7 += val;
+            if (diff >= 0 && diff <= 15) kpis.receivables15 += val;
+            if (diff >= 0 && diff <= 30) kpis.receivables30 += val;
+            
+            kpis.totalToReceive += val;
+        });
+
+        // Estimated Balance = Current Money + Total Pending (Overdue + Future)
+        // Wait, 'totalToReceive' is summing ALL fetched pending items?
+        // Yes, because fetch has .neq('status', 'paid') and .lte(endDateStr)
+        // The fetch includes OVERDUE items if they are <= endDateStr (which is true for past dates).
+        // Correct.
+        kpis.estimatedBalance = kpis.currentBalance + kpis.totalToReceive - kpis.totalToPay;
+
+        // Chart Data (Daily)
+        const chartData: DailyProjection[] = [];
+        
+        // Start running balance with REALIZED balance + OVERDUE pending items
+        // This answers: "If I cleared all my backlogs today, where would I stand?"
+        // and ensures past pending items influence the future trend line starting Day 0.
+        let runningBalance = kpis.currentBalance + kpis.receivablesOverdue - kpis.payablesOverdue;
+
+        // Create a map for faster lookup and date normalization
+        const payablesMap = new Map<string, number>();
+        payables?.forEach(p => {
+             const d = p.due_date.split('T')[0]; // Ensure YYYY-MM-DD
+             const current = payablesMap.get(d) || 0;
+             payablesMap.set(d, current + Number(p.value));
+        });
+
+        const receivablesMap = new Map<string, number>();
+        receivables?.forEach(r => {
+             const d = r.entry_date.split('T')[0];
+             const current = receivablesMap.get(d) || 0;
+             receivablesMap.set(d, current + Number(r.net_value));
+        });
+
+        for (let i = 0; i <= days; i++) {
+            const date = addDays(today, i);
+            const dateStr = formatDateToYYYYMMDD(date);
+            
+            const dayPayables = payablesMap.get(dateStr) || 0;
+            const dayReceivables = receivablesMap.get(dateStr) || 0;
+            
+            // For Day 0 (Today), we must handle carefully:
+            // kpis.payablesToday and kpis.receivablesToday are already SUMMED in the maps above via dateStr match.
+            // Our starting runningBalance includes OVERDUE (< Today) but EXCLUDES Today's pending.
+            // So adding (dayReceivables - dayPayables) here correctly adds Today's effect.
+            
+            runningBalance += (dayReceivables - dayPayables);
+            
+            chartData.push({
+                date: format(date, "dd/MM"),
+                balance: runningBalance
+            });
+        }
+
+        // Tables Data
+        const groupDetailed = (data: any[], dateField: string, valueField: string, originField: string): DetailedProjectionRow[] => {
+            const map = new Map<string, DetailedProjectionRow>();
+            data.forEach(item => {
+                const dateRaw = item[dateField];
+                if (!dateRaw) return;
+                
+                // Normalizing key to avoid duplication if times vary
+                const dateKey = dateRaw.split('T')[0];
+
+                if (!map.has(dateKey)) {
+                    map.set(dateKey, { date: dateKey, total: 0, items: [] });
+                }
+                const row = map.get(dateKey)!;
+                row.total += Number(item[valueField]);
+                row.items.push({
+                    origin: item[originField]?.name || "Desconhecido",
+                    value: Number(item[valueField])
+                });
+            });
+            return Array.from(map.values()).sort((a,b) => a.date.localeCompare(b.date));
+        };
+
+        const payablesTable = groupDetailed(payables || [], 'due_date', 'value', 'supplier');
+        const receivablesTable = groupDetailed(receivables || [], 'entry_date', 'net_value', 'client');
+
+        return { kpis, chartData, payablesTable, receivablesTable };
     }
 };
 

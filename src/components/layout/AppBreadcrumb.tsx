@@ -32,6 +32,7 @@ const routeNameMap: Record<string, string> = {
     "daily": "Diário",
     "payments": "Pagamentos",
     "types": "Tipos",
+    "projections": "Projeções",
 };
 
 export function AppBreadcrumb() {
