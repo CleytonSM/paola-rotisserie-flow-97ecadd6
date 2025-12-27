@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Badge } from "@/components/ui/badge";
 import { CatalogCartDrawer } from "@/components/features/catalog/CatalogCartDrawer";
 import { ScrollToTop } from "@/components/utils/ScrollToTop";
+import { StoreStatusBanner } from "@/components/features/catalog/StoreStatusBanner";
 
 export const CatalogLayout = ({ children }: { children: React.ReactNode }) => {
     const itemCount = useCatalogStore((state) => state.itemCount());
@@ -19,6 +20,7 @@ export const CatalogLayout = ({ children }: { children: React.ReactNode }) => {
             <ScrollToTop />
             {/* Branded Header */}
             <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
+                <StoreStatusBanner />
                 <div className="container flex h-20 items-center justify-between">
                     {/* Logo Section */}
                     <Link to="/cardapio" className="flex items-center">

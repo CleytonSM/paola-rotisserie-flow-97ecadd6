@@ -10,9 +10,10 @@ interface HourSelectorProps {
     value: string
     onChange: (value: string) => void
     className?: string
+    disabled?: boolean
 }
 
-export function HourSelector({ value, onChange, className }: HourSelectorProps) {
+export function HourSelector({ value, onChange, className, disabled }: HourSelectorProps) {
     const [open, setOpen] = React.useState(false)
 
     // Handle initial/empty values
@@ -69,6 +70,7 @@ export function HourSelector({ value, onChange, className }: HourSelectorProps) 
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
+                    disabled={disabled}
                     className={cn(
                         "w-full justify-start text-left font-normal px-3",
                         !value && "text-muted-foreground",

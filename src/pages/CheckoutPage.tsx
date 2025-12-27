@@ -23,6 +23,9 @@ import { useAppSettings } from "@/hooks/useAppSettings";
 import { PaymentMethodCard } from "@/components/features/pdv/PaymentMethodCard";
 import { upsertClientByPhone } from "@/services/database/clients";
 import { upsertClientAddressByCep } from "@/services/database/addresses";
+import { useStoreHours } from "@/hooks/useStoreHours";
+import { isStoreOpenNow, getNextStoreOpeningDate } from "@/lib/storeHours";
+import { AlertCircle } from "lucide-react";
 
 const PixIcon = ({ className }: { className?: string }) => (
     <img
@@ -35,6 +38,7 @@ const PixIcon = ({ className }: { className?: string }) => (
 export function CheckoutPage() {
     const { items, total, itemCount, clearCart, clientDetails, updateClientDetails, setLastOrderedProductIds } = useCatalogStore();
     const { settings } = useAppSettings();
+    const { hours, isLoading: isLoadingHours } = useStoreHours();
     const navigate = useNavigate();
 
     const [clientName, setClientName] = React.useState("");
@@ -78,31 +82,55 @@ export function CheckoutPage() {
         }
     }, [items, navigate]);
 
+    // Initialize with next opening if store is closed
+    React.useEffect(() => {
+        if (hours && hours.length > 0) {
+            const status = isStoreOpenNow(hours);
+            if (!status.isOpen) {
+                const next = getNextStoreOpeningDate(hours);
+                setDate(next.date);
+                setTime(next.time);
+            }
+        }
+    }, [hours]);
+
     // Auto-adjust delivery time for orders scheduled for today
     React.useEffect(() => {
-        if (isDelivery && date && !isTimeManuallySet) {
+        if (isDelivery && date && !isTimeManuallySet && hours) {
             const today = new Date();
             if (date.toDateString() === today.toDateString()) {
                 const now = new Date();
                 const marginTime = new Date(now.getTime() + 30 * 60000);
-                let hours = marginTime.getHours();
-                let minutes = marginTime.getMinutes();
+                let hrs = marginTime.getHours();
+                let mins = marginTime.getMinutes();
 
                 // Round up to nearest multiple of 5 (e.g., 12:02 -> 12:05)
-                const roundedMinutes = Math.ceil(minutes / 5) * 5;
+                const roundedMinutes = Math.ceil(mins / 5) * 5;
                 if (roundedMinutes >= 60) {
-                    hours = (hours + 1) % 24;
-                    minutes = 0;
+                    hrs = (hrs + 1) % 24;
+                    mins = 0;
                 } else {
-                    minutes = roundedMinutes;
+                    mins = roundedMinutes;
                 }
 
-                const hoursStr = hours.toString().padStart(2, '0');
-                const minutesStr = minutes.toString().padStart(2, '0');
-                setTime(`${hoursStr}:${minutesStr}`);
+                // Check store hours for today
+                const jsDay = now.getDay();
+                const dbDay = jsDay === 0 ? 7 : jsDay;
+                const todayStoreHours = hours.find(h => h.day_of_week === dbDay);
+
+                if (todayStoreHours?.is_open) {
+                    const storeOpen = todayStoreHours.open_time.substring(0, 5);
+                    const currentTime = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+
+                    if (currentTime < storeOpen) {
+                        setTime(storeOpen);
+                    } else {
+                        setTime(currentTime);
+                    }
+                }
             }
         }
-    }, [isDelivery, date, isTimeManuallySet]);
+    }, [isDelivery, date, isTimeManuallySet, hours]);
 
     const handleCepSearch = async (cepValue: string) => {
         const cleanCep = cepValue.replace(/\D/g, "");
@@ -144,6 +172,24 @@ export function CheckoutPage() {
         if (!paymentMethod) {
             toast.error("Por favor, selecione uma forma de pagamento.");
             return;
+        }
+
+        // Validate store hours
+        if (hours && date) {
+            const jsDay = date.getDay();
+            const dbDay = jsDay === 0 ? 7 : jsDay;
+            const dayStoreHours = hours.find(h => h.day_of_week === dbDay);
+
+            if (!dayStoreHours || !dayStoreHours.is_open) {
+                toast.error("A loja não abre no dia selecionado.");
+                return;
+            }
+
+            const selectedTimeStr = `${time}:00`;
+            if (selectedTimeStr < dayStoreHours.open_time || selectedTimeStr > dayStoreHours.close_time) {
+                toast.error(`Para este dia, selecione um horário entre ${dayStoreHours.open_time.substring(0, 5)} e ${dayStoreHours.close_time.substring(0, 5)}.`);
+                return;
+            }
         }
 
         try {
@@ -276,6 +322,21 @@ Pedido enviado via Catálogo Virtual`;
                             )}
                         </div>
 
+                        {hours && !isStoreOpenNow(hours).isOpen && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-amber-900">Loja Fechada Agora</p>
+                                    <p className="text-sm text-amber-700 leading-relaxed">
+                                        Estamos fora do horário de atendimento. Seu pedido será agendado para o próximo horário disponível:
+                                        <span className="font-bold underline ml-1">
+                                            {format(getNextStoreOpeningDate(hours).date, "dd/MM")} às {getNextStoreOpeningDate(hours).time}
+                                        </span>.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="name" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Nome Completo</Label>
@@ -326,6 +387,23 @@ Pedido enviado via Catálogo Virtual`;
                                                 selected={date}
                                                 onSelect={setDate}
                                                 locale={ptBR}
+                                                disabled={(d) => {
+                                                    if (d < new Date(new Date().setHours(0, 0, 0, 0))) return true;
+                                                    if (!hours) return false;
+                                                    const jsDay = d.getDay();
+                                                    const dbDay = jsDay === 0 ? 7 : jsDay;
+                                                    const dayHours = hours.find(h => h.day_of_week === dbDay);
+                                                    if (!dayHours || !dayHours.is_open) return true;
+
+                                                    // If it's today and already passed closing time
+                                                    const now = new Date();
+                                                    if (d.toDateString() === now.toDateString()) {
+                                                        const currentTimeStr = format(now, "HH:mm:ss");
+                                                        if (currentTimeStr > dayHours.close_time) return true;
+                                                    }
+
+                                                    return false;
+                                                }}
                                                 initialFocus
                                             />
                                         </PopoverContent>
@@ -538,7 +616,7 @@ Pedido enviado via Catálogo Virtual`;
                             </CardContent>
                             <CardFooter className="p-6 pt-0">
                                 <Button
-                                    className="w-full h-14 gap-2 text-lg font-bold shadow-lg shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white active:scale-95 transition-all"
+                                    className="w-full h-14 gap-2 text-lg font-bold  bg-green-600 hover:bg-green-700 text-white active:scale-95 transition-all"
                                     onClick={handleSendWhatsApp}
                                 >
                                     <MessageCircle className="h-6 w-6" />

@@ -13,14 +13,30 @@ import { Search, Save, Loader2, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { IMaskInput } from "react-imask";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
-import { AppSettings } from "@/types/entities";
+import { AppSettings, StoreHour } from "@/types/entities";
 import { Scaffolding } from "@/components/ui/Scaffolding";
 import { PageHeader } from "@/components/ui/common/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useStoreHours } from "@/hooks/useStoreHours";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Clock } from "lucide-react";
+import { HourSelector } from "@/components/ui/hour-selector";
+
+const DAYS_MAP: Record<number, string> = {
+    1: "Segunda-feira",
+    2: "Terça-feira",
+    3: "Quarta-feira",
+    4: "Quinta-feira",
+    5: "Sexta-feira",
+    6: "Sábado",
+    7: "Domingo"
+};
 
 export default function SettingsPage() {
     const { settings, isLoading, saveSettings, isSaving } = useAppSettings();
+    const { hours, isLoading: isLoadingHours, saveHours, isSaving: isSavingHours } = useStoreHours();
     const [isSearchingCep, setIsSearchingCep] = useState(false);
+    const [localHours, setLocalHours] = useState<StoreHour[]>([]);
 
     const form = useForm<AppSettingsFormValues>({
         resolver: zodResolver(appSettingsSchema),
@@ -59,6 +75,12 @@ export default function SettingsPage() {
         }
     }, [settings, form]);
 
+    useEffect(() => {
+        if (hours) {
+            setLocalHours(hours);
+        }
+    }, [hours]);
+
     const handleCepSearch = async () => {
         const cep = form.getValues("store_address_zip_code")?.replace(/\D/g, "");
         if (!cep || cep.length !== 8) {
@@ -90,10 +112,23 @@ export default function SettingsPage() {
     };
 
     const onSubmit = async (data: AppSettingsFormValues) => {
-        await saveSettings(data as unknown as Partial<AppSettings>);
+        try {
+            await Promise.all([
+                saveSettings(data as unknown as Partial<AppSettings>),
+                saveHours(localHours)
+            ]);
+        } catch (error) {
+            // Error is handled by mutations
+        }
     };
 
-    if (isLoading) {
+    const handleHourChange = (dayOfWeek: number, field: keyof StoreHour, value: any) => {
+        setLocalHours(prev => prev.map(h =>
+            h.day_of_week === dayOfWeek ? { ...h, [field]: value } : h
+        ));
+    };
+
+    if (isLoading || isLoadingHours) {
         return (
             <Scaffolding>
                 <PageHeader
@@ -420,17 +455,84 @@ export default function SettingsPage() {
                             />
                         </CardContent>
                     </Card>
+                </form>
+            </Form>
 
-                    <Button type="submit" size="lg" disabled={isSaving}>
-                        {isSaving ? (
+            <div className="mt-8 space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Clock className="h-5 w-5" />
+                            Horário de Funcionamento
+                        </CardTitle>
+                        <CardDescription>Defina os horários em que a loja está aberta para receber pedidos</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Dia</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Abertura</TableHead>
+                                    <TableHead>Fechamento</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {localHours.map((hour) => (
+                                    <TableRow key={hour.day_of_week}>
+                                        <TableCell className="font-medium">
+                                            {DAYS_MAP[hour.day_of_week]}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <Switch
+                                                    checked={hour.is_open}
+                                                    onCheckedChange={(checked) => handleHourChange(hour.day_of_week, 'is_open', checked)}
+                                                />
+                                                <span className="text-sm text-muted-foreground">
+                                                    {hour.is_open ? 'Aberto' : 'Fechado'}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <HourSelector
+                                                value={hour.open_time.substring(0, 5)}
+                                                onChange={(val) => handleHourChange(hour.day_of_week, 'open_time', val)}
+                                                className="w-32"
+                                                disabled={!hour.is_open}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <HourSelector
+                                                value={hour.close_time.substring(0, 5)}
+                                                onChange={(val) => handleHourChange(hour.day_of_week, 'close_time', val)}
+                                                className="w-32"
+                                                disabled={!hour.is_open}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+
+                <div className="flex justify-end pt-4">
+                    <Button
+                        onClick={form.handleSubmit(onSubmit)}
+                        size="lg"
+                        disabled={isSaving || isSavingHours}
+                        className="w-full md:w-auto min-w-[200px]"
+                    >
+                        {isSaving || isSavingHours ? (
                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         ) : (
                             <Save className="mr-2 h-5 w-5" />
                         )}
-                        Salvar Configurações
+                        Salvar Todas as Configurações
                     </Button>
-                </form>
-            </Form>
-        </Scaffolding>
+                </div>
+            </div>
+        </Scaffolding >
     );
 }

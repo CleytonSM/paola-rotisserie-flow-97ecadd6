@@ -73,6 +73,14 @@ export interface AppSettings {
   sound_enabled?: boolean;
 }
 
+export interface StoreHour {
+  id: string;
+  day_of_week: number;
+  is_open: boolean;
+  open_time: string;
+  close_time: string;
+}
+
 export type OrderStatus = 'received' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 
 
