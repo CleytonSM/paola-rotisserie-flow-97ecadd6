@@ -5,6 +5,7 @@ import { MethodPix } from "./methods/MethodPix";
 import { MethodCash } from "./methods/MethodCash";
 import { MethodCard } from "./methods/MethodCard";
 import { CardMachine } from "@/services/database/machines";
+import { PixIcon } from "@/components/icons/PixIcon";
 
 interface PaymentMethodsProps {
     selectedMethod: string | null;
@@ -54,7 +55,7 @@ export function PaymentMethods({
                 <PaymentMethodCard
                     id="pix"
                     title="Pix"
-                    icon={KeyRound}
+                    icon={PixIcon}
                     selected={selectedMethod === "pix"}
                     onClick={() => setSelectedMethod("pix")}
                 >
