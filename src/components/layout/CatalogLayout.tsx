@@ -7,6 +7,7 @@ import { useCatalogStore } from "@/stores/useCatalogStore";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { CatalogCartDrawer } from "@/components/features/catalog/CatalogCartDrawer";
+import { ScrollToTop } from "@/components/utils/ScrollToTop";
 
 export const CatalogLayout = ({ children }: { children: React.ReactNode }) => {
     const itemCount = useCatalogStore((state) => state.itemCount());
@@ -15,6 +16,7 @@ export const CatalogLayout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
+            <ScrollToTop />
             {/* Branded Header */}
             <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
                 <div className="container flex h-20 items-center justify-between">
