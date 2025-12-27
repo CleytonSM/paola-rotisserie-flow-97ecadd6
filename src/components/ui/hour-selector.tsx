@@ -83,7 +83,7 @@ export function HourSelector({ value, onChange, className, disabled }: HourSelec
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
                 <div className="flex h-64 w-48 bg-background">
-                    <ScrollArea className="w-1/2 border-r">
+                    <ScrollArea className="h-full w-1/2 border-r" onWheel={(e) => e.stopPropagation()}>
                         <div className="flex flex-col p-2 gap-1">
                             <span className="text-xs font-medium text-center text-muted-foreground mb-2">Horas</span>
                             {hoursList.map((hour) => (
@@ -100,7 +100,7 @@ export function HourSelector({ value, onChange, className, disabled }: HourSelec
                             ))}
                         </div>
                     </ScrollArea>
-                    <ScrollArea className="w-1/2">
+                    <ScrollArea className="h-full w-1/2" onWheel={(e) => e.stopPropagation()}>
                         <div className="flex flex-col p-2 gap-1">
                             <span className="text-xs font-medium text-center text-muted-foreground mb-2">Minutos</span>
                             {minutesList.map((minute) => (

@@ -54,12 +54,13 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
             if (hours > 0) {
                 setTimeLeft(`${hours}h ${minutes}min`);
             } else {
-                setTimeLeft(`${minutes}min`);
+                const ceilMinutes = Math.ceil(diffSecs / 60);
+                setTimeLeft(`${ceilMinutes}min`);
             }
         };
 
         tick(); // Initial run
-        const timer = setInterval(tick, 60000); // Update every minute
+        const timer = setInterval(tick, 30000); // Update every 30 seconds for better precision
         return () => clearInterval(timer);
     }, [pickupDate, isLate, order.order_status]);
 
@@ -192,7 +193,13 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
 
                 {/* Footer Actions - Compact */}
                 {nextStatus && (
-                    <div className="flex items-center gap-2 mt-auto pt-2 border-t border-dashed">
+                    <div className="flex flex-col gap-2 mt-auto pt-2 border-t border-dashed">
+                        {timeLeft && (
+                            <div className="flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20 rounded-md border border-amber-100/50 dark:border-amber-900/30">
+                                <Timer className="w-3.5 h-3.5 animate-pulse" />
+                                <span>Prepare em até {timeLeft}</span>
+                            </div>
+                        )}
                         <Button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -202,20 +209,13 @@ export function OrderCard({ order, onStatusChange, onClick, isUpdating }: OrderC
                             size="sm"
                             variant="outline"
                             className={cn(
-                                "flex-1 h-10 text-sm font-medium min-w-0", // Added flex-1 and min-w-0
+                                "h-10 text-sm font-medium w-full",
                                 getActionButtonStyle(nextStatus)
                             )}
                         >
                             <span className="truncate">{ORDER_STATUS_LABELS[nextStatus]}</span>
                             <ChevronRight className="w-3 h-3 opacity-50 shrink-0" />
                         </Button>
-
-                        {timeLeft && (
-                            <div className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 h-8 rounded border border-amber-200 dark:border-amber-800 min-w-fit shrink-0">
-                                <Timer className="w-3 h-3" />
-                                {timeLeft}
-                            </div>
-                        )}
                     </div>
                 )}
             </CardContent>
