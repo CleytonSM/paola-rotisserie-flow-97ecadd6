@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { CatalogCartDrawer } from "@/components/features/catalog/CatalogCartDrawer";
 import { ScrollToTop } from "@/components/utils/ScrollToTop";
 import { StoreStatusBanner } from "@/components/features/catalog/StoreStatusBanner";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export const CatalogLayout = ({ children }: { children: React.ReactNode }) => {
     const itemCount = useCatalogStore((state) => state.itemCount());
@@ -58,6 +59,8 @@ export const CatalogLayout = ({ children }: { children: React.ReactNode }) => {
                                 <CatalogCartDrawer />
                             </SheetContent>
                         </Sheet>
+
+                        <ThemeToggle />
                     </div>
 
                     {/* Mobile Actions */}
@@ -77,6 +80,8 @@ export const CatalogLayout = ({ children }: { children: React.ReactNode }) => {
                                 <CatalogCartDrawer />
                             </SheetContent>
                         </Sheet>
+
+                        <ThemeToggle />
 
                         <Button
                             variant="ghost"

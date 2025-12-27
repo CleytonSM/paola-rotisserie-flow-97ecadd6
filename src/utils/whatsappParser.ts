@@ -315,11 +315,9 @@ export function parseStructuredWhatsAppMessage<T extends { id: string; name: str
         if (line.includes("*Pagamento:*")) {
             const label = line.replace("*Pagamento:*", "").trim();
             const lowerLabel = label.toLowerCase();
-            if (lowerLabel.includes("pix")) paymentMethod = "pix";
-            else if (lowerLabel.includes("dinheiro")) paymentMethod = "cash";
-            else if (lowerLabel.includes("credito")) paymentMethod = "card_credit";
-            else if (lowerLabel.includes("debito")) paymentMethod = "card_debit";
-            else paymentMethod = label;
+            
+            // We keep the label because it might contain flag/machine info
+            paymentMethod = label;
             continue;
         }
 

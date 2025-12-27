@@ -9,6 +9,7 @@ import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentIcon } from 'react-svg-credit-card-payment-icons';
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
@@ -559,6 +560,29 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                                     <div key={index} className="flex justify-between items-center py-2 px-3 rounded-lg bg-muted/30">
                                         <div className="flex items-center gap-2">
                                             <p className="font-medium">{formatPaymentMethod(payment.payment_method)}</p>
+                                            {payment.card_flag && (
+                                                <div className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-border/40">
+                                                    <PaymentIcon
+                                                        type={(() => {
+                                                            const low = payment.card_flag.toLowerCase().trim();
+                                                            if (low.includes('visa')) return 'Visa';
+                                                            if (low.includes('master')) return 'Mastercard';
+                                                            if (low.includes('elo')) return 'Elo';
+                                                            if (low.includes('amex') || low.includes('american')) return 'AmericanExpress';
+                                                            if (low.includes('hipercard')) return 'Hipercard';
+                                                            if (low.includes('hiper')) return 'Hiper';
+                                                            if (low.includes('diners')) return 'DinersClub';
+                                                            if (low.includes('discover')) return 'Discover';
+                                                            return 'Generic';
+                                                        })()}
+                                                        format="flatRounded"
+                                                        width={20}
+                                                    />
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                                                        {payment.card_flag}
+                                                    </span>
+                                                </div>
+                                            )}
                                             {payment.payment_method === 'pix' && (payment.pix_keys?.key_value || pixKeys[0]?.key_value) && (
                                                 <Button
                                                     variant="ghost"

@@ -16,8 +16,8 @@ export interface PaymentEntry {
     details?: {
         pixKeyId?: string;
         machineId?: string;
-        flagId?: string;
         cardBrand?: string;
+        tax_rate?: number;
     };
 }
 
@@ -28,6 +28,7 @@ interface PartialPaymentBuilderProps {
     onRemoveEntry: (id: string) => void;
     disabled?: boolean;
     pixKeys?: PixKey[];
+    machines?: any[];
 }
 
 export function PartialPaymentBuilder({
@@ -36,11 +37,14 @@ export function PartialPaymentBuilder({
     onAddEntry,
     onRemoveEntry,
     disabled = false,
-    pixKeys = []
+    pixKeys = [],
+    machines = []
 }: PartialPaymentBuilderProps) {
     const [selectedMethod, setSelectedMethod] = useState<string>("");
     const [entryAmount, setEntryAmount] = useState<string>("");
     const [selectedPixKeyId, setSelectedPixKeyId] = useState<string>("");
+    const [selectedMachineId, setSelectedMachineId] = useState<string>("");
+    const [selectedCardBrand, setSelectedCardBrand] = useState<string>("");
 
     const getTotalAllocated = () => {
         return paymentEntries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -76,17 +80,27 @@ export function PartialPaymentBuilder({
             return; // Don't add if exceeds remaining (allow small floating point tolerance)
         }
 
+        const currentMachine = machines.find(m => m.id === selectedMachineId);
+        const currentFlag = currentMachine?.flags?.find((f: any) => f.brand === selectedCardBrand && f.type === (selectedMethod === 'card_credit' ? 'credit' : 'debit'));
+
         const entry: PaymentEntry = {
             id: crypto.randomUUID(),
             method: selectedMethod,
             amount: amount,
-            details: selectedMethod === 'pix' && selectedPixKeyId ? { pixKeyId: selectedPixKeyId } : undefined
+            details: {
+                pixKeyId: selectedMethod === 'pix' ? selectedPixKeyId : undefined,
+                machineId: (selectedMethod === 'card_credit' || selectedMethod === 'card_debit') ? selectedMachineId : undefined,
+                cardBrand: (selectedMethod === 'card_credit' || selectedMethod === 'card_debit') ? selectedCardBrand : undefined,
+                tax_rate: currentFlag?.tax_rate
+            }
         };
 
         onAddEntry(entry);
         setSelectedMethod("");
         setEntryAmount("");
         setSelectedPixKeyId("");
+        setSelectedMachineId("");
+        setSelectedCardBrand("");
     };
 
     const getMethodLabel = (method: string) => {
@@ -148,8 +162,22 @@ export function PartialPaymentBuilder({
                                 className="flex items-center justify-between bg-card border rounded-lg p-3"
                             >
                                 <div className="flex-1">
-                                    <div className="font-medium text-sm">{getMethodLabel(entry.method)}</div>
-                                    <div className="text-xs text-muted-foreground">{formatCurrency(entry.amount)}</div>
+                                    <div className="font-medium text-sm">
+                                        {getMethodLabel(entry.method)}
+                                        {entry.details?.cardBrand && (
+                                            <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold uppercase">
+                                                {entry.details.cardBrand}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {formatCurrency(entry.amount)}
+                                        {entry.details?.tax_rate ? (
+                                            <span className="ml-1 text-red-500">
+                                                (+{entry.details.tax_rate}%)
+                                            </span>
+                                        ) : null}
+                                    </div>
                                 </div>
                                 <Button
                                     type="button"
@@ -199,26 +227,54 @@ export function PartialPaymentBuilder({
                             </div>
                         </div>
 
-                        {/* Pix Key Selection - only shown when method is pix */}
-                        {selectedMethod === 'pix' && pixKeys.length > 0 && (
-                            <div className="space-y-1">
-                                <Label className="text-xs text-muted-foreground">Chave Pix</Label>
-                                <Select
-                                    value={selectedPixKeyId}
-                                    onValueChange={setSelectedPixKeyId}
-                                    disabled={disabled}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione a chave" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {pixKeys.map((key) => (
-                                            <SelectItem key={key.id} value={key.id}>
-                                                {formatPixKey(key.type, key.key_value)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                        {/* Card Machine Selection */}
+                        {(selectedMethod === 'card_credit' || selectedMethod === 'card_debit') && machines.length > 0 && (
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Maquininha</Label>
+                                    <Select
+                                        value={selectedMachineId}
+                                        onValueChange={(val) => {
+                                            setSelectedMachineId(val);
+                                            setSelectedCardBrand("");
+                                        }}
+                                        disabled={disabled}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {machines.map((m) => (
+                                                <SelectItem key={m.id} value={m.id}>
+                                                    {m.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Bandeira</Label>
+                                    <Select
+                                        value={selectedCardBrand}
+                                        onValueChange={setSelectedCardBrand}
+                                        disabled={!selectedMachineId || disabled}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {machines
+                                                .find(m => m.id === selectedMachineId)
+                                                ?.flags
+                                                ?.filter((f: any) => f.type === (selectedMethod === 'card_credit' ? 'credit' : 'debit'))
+                                                .map((f: any) => (
+                                                    <SelectItem key={f.id} value={f.brand}>
+                                                        {f.brand} ({f.tax_rate}%)
+                                                    </SelectItem>
+                                                ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         )}
 
@@ -228,7 +284,13 @@ export function PartialPaymentBuilder({
                             size="sm"
                             className="w-full"
                             onClick={handleAddEntry}
-                            disabled={!selectedMethod || !entryAmount || (selectedMethod === 'pix' && pixKeys.length > 0 && !selectedPixKeyId) || disabled}
+                            disabled={
+                                !selectedMethod ||
+                                !entryAmount ||
+                                (selectedMethod === 'pix' && pixKeys.length > 0 && !selectedPixKeyId) ||
+                                ((selectedMethod === 'card_credit' || selectedMethod === 'card_debit') && (!selectedMachineId || !selectedCardBrand)) ||
+                                disabled
+                            }
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Adicionar

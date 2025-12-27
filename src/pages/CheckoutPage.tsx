@@ -23,9 +23,11 @@ import { useAppSettings } from "@/hooks/useAppSettings";
 import { PaymentMethodCard } from "@/components/features/pdv/PaymentMethodCard";
 import { upsertClientByPhone } from "@/services/database/clients";
 import { upsertClientAddressByCep } from "@/services/database/addresses";
+import { AlertCircle, ChevronRight } from "lucide-react";
+import { getMachines, type CardMachine, type CardFlag } from "@/services/database/machines";
 import { useStoreHours } from "@/hooks/useStoreHours";
 import { isStoreOpenNow, getNextStoreOpeningDate } from "@/lib/storeHours";
-import { AlertCircle } from "lucide-react";
+import { PaymentIcon } from 'react-svg-credit-card-payment-icons';
 
 const PixIcon = ({ className }: { className?: string }) => (
     <img
@@ -57,6 +59,35 @@ export function CheckoutPage() {
     const [isTimeManuallySet, setIsTimeManuallySet] = React.useState(false);
     const [paymentMethod, setPaymentMethod] = React.useState<string | null>(null);
     const [schedulingMode, setSchedulingMode] = React.useState<'now' | 'scheduled'>('now');
+    const [machines, setMachines] = React.useState<CardMachine[]>([]);
+    const [selectedFlag, setSelectedFlag] = React.useState<CardFlag | null>(null);
+    const flagsRef = React.useRef<HTMLDivElement>(null);
+    const paymentSectionRef = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => {
+        getMachines().then(({ data }) => {
+            if (data) setMachines(data);
+        });
+    }, []);
+
+    // Auto-select lowest tax flag
+    React.useEffect(() => {
+        if ((paymentMethod === "card_credit" || paymentMethod === "card_debit") && machines.length > 0) {
+            // Only auto-select if no flag is currently selected
+            if (!selectedFlag) {
+                const availableFlags = machines.flatMap(m => m.flags || [])
+                    .filter(f => f.type === (paymentMethod === 'card_credit' ? 'credit' : 'debit'));
+
+                if (availableFlags.length > 0) {
+                    const lowestFeeFlag = availableFlags.reduce((prev, curr) =>
+                        prev.tax_rate < curr.tax_rate ? prev : curr
+                    );
+                    setSelectedFlag(lowestFeeFlag);
+                }
+            }
+        } else if (paymentMethod !== "card_credit" && paymentMethod !== "card_debit") {
+            setSelectedFlag(null);
+        }
+    }, [paymentMethod, machines, selectedFlag]);
 
     // Set initial payment method from stored preference
     React.useEffect(() => {
@@ -185,7 +216,17 @@ export function CheckoutPage() {
         }
 
         if (!paymentMethod) {
+            paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             toast.error("Por favor, selecione uma forma de pagamento.");
+            return;
+        }
+
+        if ((paymentMethod === "card_credit" || paymentMethod === "card_debit") && !selectedFlag) {
+            flagsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            toast("Escolha a bandeira do cartão 😊", {
+                description: "É necessário selecionar a bandeira para calcular a taxa.",
+                icon: "💳"
+            });
             return;
         }
 
@@ -262,14 +303,23 @@ export function CheckoutPage() {
             : "";
 
         const deliveryFee = settings?.fixed_delivery_fee || 0;
-        const currentTotal = total() + (isDelivery ? deliveryFee : 0);
 
-        const paymentMethodLabel = {
-            pix: "Pix",
-            cash: "Dinheiro",
-            card_credit: "Cartão de Crédito",
-            card_debit: "Cartão de Débito",
-        }[paymentMethod as string] || paymentMethod;
+        const paymentMethodLabel = (() => {
+            if (paymentMethod === "pix") return "Pix";
+            if (paymentMethod === "cash") return "Dinheiro";
+            if (selectedFlag) {
+                const typeLabel = selectedFlag.type === 'credit' ? 'Crédito' : 'Débito';
+                const taxLabel = selectedFlag.tax_rate > 0 ? ` (+${selectedFlag.tax_rate}%)` : ' (sem taxa)';
+                return `${selectedFlag.brand} ${typeLabel}${taxLabel}`;
+            }
+            return paymentMethod;
+        })();
+
+        const cardFee = (paymentMethod === "card_credit" || paymentMethod === "card_debit") && selectedFlag
+            ? total() * (selectedFlag.tax_rate / 100)
+            : 0;
+
+        const currentTotal = total() + (isDelivery ? deliveryFee : 0) + cardFee;
 
         // For 'now' orders, we send the ACTUAL current time.
         // The parser will add 30 minutes margin on import when it sees "(Para agora)"
@@ -288,7 +338,7 @@ ${isDelivery ? `*Endereço:* ${fullAddress}\n` : ""}*Data:* ${finalDateStr} às 
 *Itens:*
 ${itemsList}
 
-${isDelivery ? `*Subtotal:* ${formatCurrency(total())}\n*Taxa de Entrega:* ${formatCurrency(deliveryFee)}\n` : ""}*Total:* ${formatCurrency(currentTotal)}
+${isDelivery ? `*Subtotal:* ${formatCurrency(total())}\n*Taxa de Entrega:* ${formatCurrency(deliveryFee)}\n` : ""}${cardFee > 0 ? `*Taxa Cartão (${selectedFlag?.tax_rate}%):* ${formatCurrency(cardFee)}\n` : ""}*Total:* ${formatCurrency(currentTotal)}
 
 ${notes ? `*Observações:* ${notes}` : ""}
 
@@ -619,7 +669,7 @@ Pedido enviado via Catálogo Virtual`;
                                 />
                             </div>
 
-                            <div className="space-y-4 pt-4 border-t border-primary/10">
+                            <div ref={paymentSectionRef} className="space-y-4 pt-4 border-t border-primary/10">
                                 <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Forma de Pagamento</Label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <PaymentMethodCard
@@ -655,6 +705,82 @@ Pedido enviado via Catálogo Virtual`;
                                         onClick={() => setPaymentMethod("card_debit")}
                                     />
                                 </div>
+
+                                {(paymentMethod === "card_credit" || paymentMethod === "card_debit") && (
+                                    <div
+                                        ref={flagsRef}
+                                        className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-4 w-1 bg-primary rounded-full" />
+                                            <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                                                Escolha a Bandeira ({paymentMethod === 'card_credit' ? 'Crédito' : 'Débito'})
+                                            </Label>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {machines.flatMap(m => m.flags || [])
+                                                .filter(f => f.type === (paymentMethod === 'card_credit' ? 'credit' : 'debit'))
+                                                .map((flag) => (
+                                                    <button
+                                                        key={flag.id}
+                                                        type="button"
+                                                        onClick={() => setSelectedFlag(flag)}
+                                                        className={cn(
+                                                            "relative flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left group",
+                                                            selectedFlag?.id === flag.id
+                                                                ? "border-primary bg-primary/5 ring-1 ring-primary shadow-md"
+                                                                : "border-border bg-card hover:border-primary/20 hover:bg-primary/5"
+                                                        )}
+                                                    >
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <span className={cn(
+                                                                    "font-bold text-lg transition-colors",
+                                                                    selectedFlag?.id === flag.id ? "text-primary" : "text-foreground group-hover:text-primary"
+                                                                )}>
+                                                                    {flag.brand}
+                                                                </span>
+                                                                {selectedFlag?.id === flag.id && (
+                                                                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                                                                        <ChevronRight className="h-3 w-3 text-white" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <span className="text-muted-foreground">Taxa:</span>
+                                                                <span className={cn(
+                                                                    "font-bold",
+                                                                    flag.tax_rate > 0 ? "text-red-500/80" : "text-emerald-600"
+                                                                )}>
+                                                                    {flag.tax_rate > 0 ? `+${flag.tax_rate}%` : 'Grátis'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        {/* Flag Icon using react-svg-credit-card-payment-icons */}
+                                                        <div className="h-10 w-14 rounded bg-white flex items-center justify-center overflow-hidden border border-border/50">
+                                                            <PaymentIcon
+                                                                type={(() => {
+                                                                    const low = flag.brand.toLowerCase().trim();
+                                                                    if (low.includes('visa')) return 'Visa';
+                                                                    if (low.includes('master')) return 'Mastercard';
+                                                                    if (low.includes('elo')) return 'Elo';
+                                                                    if (low.includes('amex') || low.includes('american')) return 'AmericanExpress';
+                                                                    if (low.includes('hipercard')) return 'Hipercard';
+                                                                    if (low.includes('hiper')) return 'Hiper';
+                                                                    if (low.includes('diners')) return 'DinersClub';
+                                                                    if (low.includes('discover')) return 'Discover';
+                                                                    return 'Generic';
+                                                                })()}
+                                                                format="flatRounded"
+                                                                width={56}
+                                                            />
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -690,10 +816,20 @@ Pedido enviado via Catálogo Virtual`;
                                             <span>{formatCurrency(settings?.fixed_delivery_fee || 0)}</span>
                                         </div>
                                     )}
+                                    {selectedFlag && (
+                                        <div className="flex justify-between items-center text-sm text-muted-foreground animate-in fade-in duration-300">
+                                            <span>Taxa Cartão ({selectedFlag.tax_rate}%)</span>
+                                            <span className="text-red-500/80">{formatCurrency(total() * (selectedFlag.tax_rate / 100))}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center pt-2">
-                                        <span className="font-bold text-lg">Total estimado</span>
+                                        <span className="font-bold text-lg">Total</span>
                                         <span className="text-2xl font-bold text-primary">
-                                            {formatCurrency(total() + (isDelivery ? (settings?.fixed_delivery_fee || 0) : 0))}
+                                            {formatCurrency(
+                                                total() +
+                                                (isDelivery ? (settings?.fixed_delivery_fee || 0) : 0) +
+                                                ((paymentMethod === 'card_credit' || paymentMethod === 'card_debit') && selectedFlag ? (total() * (selectedFlag.tax_rate / 100)) : 0)
+                                            )}
                                         </span>
                                     </div>
                                     <p className="text-[10px] text-muted-foreground italic text-center uppercase tracking-wider mt-4">

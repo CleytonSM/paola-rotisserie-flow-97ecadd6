@@ -8,7 +8,7 @@ import { ClientAddress } from "@/types/entities";
 import { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 import { useAppSettings } from "./useAppSettings";
 import { useSoundNotifications } from "./useSoundNotifications";
-import { ParsedAddress } from "@/utils/whatsappParser";
+import { ParsedAddress, normalize } from "@/utils/whatsappParser";
 
 export interface NewOrderItem {
     id: string;
@@ -215,6 +215,12 @@ export function useNewOrder(onSuccess?: () => void) {
         clientName?: string;
         paymentMethod?: string;
         address?: ParsedAddress | null;
+        paymentDetails?: {
+            method: 'pix' | 'cash' | 'card_credit' | 'card_debit';
+            machineId?: string;
+            cardBrand?: string;
+            tax_rate?: number;
+        };
     }) => {
         reset();
         if (data.client) setSelectedClient(data.client);
@@ -249,15 +255,33 @@ export function useNewOrder(onSuccess?: () => void) {
         }
 
         // Calculate payment amount including delivery fee if applicable
-        if (data.paymentMethod) {
+        if (data.paymentMethod || data.paymentDetails) {
             setHasPartialPayment(true);
             const itemsTotal = data.items ? data.items.reduce((sum, i) => sum + i.totalPrice, 0) : 0;
-            const paymentAmount = isDeliveryOrder ? itemsTotal + defaultFee : itemsTotal;
+            const subtotal = isDeliveryOrder ? itemsTotal + defaultFee : itemsTotal;
+            
+            const cardFee = data.paymentDetails?.tax_rate ? subtotal * (data.paymentDetails.tax_rate / 100) : 0;
+            const paymentAmount = subtotal + cardFee;
+            
+            const normalizedMethodLabel = data.paymentMethod ? normalize(data.paymentMethod) : "";
+
+            const method = data.paymentDetails?.method || (
+                normalizedMethodLabel.includes("pix") ? "pix" :
+                normalizedMethodLabel.includes("dinheiro") ? "cash" :
+                normalizedMethodLabel.includes("credito") ? "card_credit" :
+                normalizedMethodLabel.includes("debito") ? "card_debit" :
+                "pix" // Default fallback
+            );
+
             setPaymentEntries([{
                 id: crypto.randomUUID(),
-                method: data.paymentMethod,
+                method: method as PaymentEntry['method'],
                 amount: paymentAmount,
-                details: {}
+                details: {
+                    machineId: data.paymentDetails?.machineId,
+                    cardBrand: data.paymentDetails?.cardBrand,
+                    tax_rate: data.paymentDetails?.tax_rate
+                }
             }]);
         }
 

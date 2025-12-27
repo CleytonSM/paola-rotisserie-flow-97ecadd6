@@ -32,6 +32,7 @@ import { ClientAddressDialog } from "@/components/features/clients/ClientAddress
 import { ClientAddress } from "@/types/entities";
 import { useQuery } from "@tanstack/react-query";
 import { getPixKeys } from "@/services/database/pix_keys";
+import { getMachines } from "@/services/database/machines";
 import { ProductItemSelectionDialog } from "@/components/features/pdv/ProductItemSelectionDialog";
 
 interface NewOrderModalProps {
@@ -109,8 +110,20 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
             if (error) throw error;
             return data || [];
         },
-        enabled: open && hasPartialPayment,
+        enabled: open, // Always fetch when modal is open
     });
+
+    // Fetch card machines
+    const { data: machinesRes } = useQuery({
+        queryKey: ["cardMachines"],
+        queryFn: async () => {
+            const { data, error } = await getMachines();
+            if (error) throw error;
+            return data || [];
+        },
+        enabled: open,
+    });
+    const machines = machinesRes || [];
 
     useEffect(() => {
         if (isDelivery && addresses.length > 0 && !deliveryAddressId) {
@@ -447,6 +460,7 @@ export function NewOrderModal({ open, onOpenChange, orderState }: NewOrderModalP
                                             onAddEntry={addPaymentEntry}
                                             onRemoveEntry={removePaymentEntry}
                                             pixKeys={pixKeys}
+                                            machines={machines}
                                         />
                                     </div>
                                 )}
