@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ReportLayout } from "@/components/features/reports/ReportLayout";
 import { useDetailedReports } from "@/hooks/useDetailedReports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency } from "@/components/features/reports/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import {
+    exportToPdf,
+    exportToCsv,
+    generateReportFilename,
+    generatePeriodLabel,
+    type CsvColumn,
+} from "@/utils/exportUtils";
+import { toast } from "sonner";
+
+interface ProductCsvRow {
+    name: string;
+    quantity: number;
+    totalValue: number;
+    avgPrice: number;
+}
 
 export default function ReportsProducts() {
     const {
@@ -14,6 +29,7 @@ export default function ReportsProducts() {
         setFilter,
         customDateRange,
         setCustomDateRange,
+        dateRange,
         topProducts,
         fetchTopProducts
     } = useDetailedReports();
@@ -22,13 +38,48 @@ export default function ReportsProducts() {
         fetchTopProducts();
     }, [filter, customDateRange]);
 
-    // Top 5 for chart - shorter names on mobile
+    const periodLabel = useMemo(() => {
+        return generatePeriodLabel(dateRange);
+    }, [dateRange]);
+
     const chartData = topProducts.slice(0, 5).map(p => ({
         name: p.name.length > 12 ? p.name.substring(0, 12) + "..." : p.name,
         full_name: p.name,
         quantity: p.quantity,
         total: p.totalValue
     }));
+
+    const handleExportPdf = async () => {
+        toast.info("Gerando PDF...");
+        try {
+            const filename = generateReportFilename("produtos", "pdf", dateRange);
+            await exportToPdf("report-content", filename, "Relatório por Produto", periodLabel);
+            toast.success("PDF exportado com sucesso!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao exportar PDF");
+        }
+    };
+
+    const handleExportCsv = () => {
+        const data: ProductCsvRow[] = topProducts.map(p => ({
+            name: p.name,
+            quantity: p.quantity,
+            totalValue: p.totalValue,
+            avgPrice: p.totalValue / p.quantity,
+        }));
+
+        const columns: CsvColumn<ProductCsvRow>[] = [
+            { header: "Produto", accessor: "name" },
+            { header: "Quantidade", accessor: "quantity" },
+            { header: "Total (R$)", accessor: (item) => item.totalValue.toFixed(2) },
+            { header: "Preço Médio (R$)", accessor: (item) => item.avgPrice.toFixed(2) },
+        ];
+
+        const filename = generateReportFilename("produtos", "csv", dateRange);
+        exportToCsv(data, columns, filename);
+        toast.success("CSV exportado com sucesso!");
+    };
 
     return (
         <ReportLayout
@@ -38,8 +89,11 @@ export default function ReportsProducts() {
             setFilter={setFilter}
             customDateRange={customDateRange}
             setCustomDateRange={setCustomDateRange}
+            onExportPdf={handleExportPdf}
+            onExportCsv={handleExportCsv}
+            loading={loading}
+            periodLabel={periodLabel}
         >
-            {/* Charts - stack on mobile, 2 cols on desktop */}
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                 <Card>
                     <CardHeader className="pb-2">
@@ -86,7 +140,6 @@ export default function ReportsProducts() {
                 </Card>
             </div>
 
-            {/* Details Table */}
             <Card className="mt-4">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base md:text-lg">Detalhamento</CardTitle>
@@ -142,4 +195,3 @@ export default function ReportsProducts() {
         </ReportLayout>
     );
 }
-

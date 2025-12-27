@@ -1,10 +1,24 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ReportLayout } from "@/components/features/reports/ReportLayout";
 import { useDetailedReports } from "@/hooks/useDetailedReports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/components/features/reports/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts";
+import {
+    exportToPdf,
+    exportToCsv,
+    generateReportFilename,
+    generatePeriodLabel,
+    type CsvColumn,
+} from "@/utils/exportUtils";
+import { toast } from "sonner";
+
+interface DailyCsvRow {
+    periodo: string;
+    faturamento: number;
+    vendas: number;
+}
 
 export default function ReportsDaily() {
     const {
@@ -13,6 +27,7 @@ export default function ReportsDaily() {
         setFilter,
         customDateRange,
         setCustomDateRange,
+        dateRange,
         salesByTime,
         fetchSalesByTime
     } = useDetailedReports();
@@ -21,10 +36,52 @@ export default function ReportsDaily() {
         fetchSalesByTime();
     }, [filter, customDateRange]);
 
+    const periodLabel = useMemo(() => {
+        return generatePeriodLabel(dateRange);
+    }, [dateRange]);
+
     const hourlyData = salesByTime.hourly.map(h => ({
         ...h,
         label: `${h.hour}h`
     }));
+
+    const handleExportPdf = async () => {
+        toast.info("Gerando PDF...");
+        try {
+            const filename = generateReportFilename("diario", "pdf", dateRange);
+            await exportToPdf("report-content", filename, "Relatório por Dia/Hora", periodLabel);
+            toast.success("PDF exportado com sucesso!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao exportar PDF");
+        }
+    };
+
+    const handleExportCsv = () => {
+        const hourlyRows: DailyCsvRow[] = salesByTime.hourly.map(h => ({
+            periodo: `${h.hour}:00`,
+            faturamento: h.value,
+            vendas: h.count,
+        }));
+
+        const dailyRows: DailyCsvRow[] = salesByTime.daily.map(d => ({
+            periodo: d.dayOfWeek,
+            faturamento: d.value,
+            vendas: d.count,
+        }));
+
+        const allData = [...hourlyRows, ...dailyRows];
+
+        const columns: CsvColumn<DailyCsvRow>[] = [
+            { header: "Período", accessor: "periodo" },
+            { header: "Faturamento (R$)", accessor: (item) => item.faturamento.toFixed(2) },
+            { header: "Vendas", accessor: "vendas" },
+        ];
+
+        const filename = generateReportFilename("diario", "csv", dateRange);
+        exportToCsv(allData, columns, filename);
+        toast.success("CSV exportado com sucesso!");
+    };
 
     return (
         <ReportLayout
@@ -34,8 +91,11 @@ export default function ReportsDaily() {
             setFilter={setFilter}
             customDateRange={customDateRange}
             setCustomDateRange={setCustomDateRange}
+            onExportPdf={handleExportPdf}
+            onExportCsv={handleExportCsv}
+            loading={loading}
+            periodLabel={periodLabel}
         >
-            {/* Sales by Hour */}
             <Card>
                 <CardHeader>
                     <CardTitle>Vendas por Hora do Dia</CardTitle>
@@ -62,7 +122,6 @@ export default function ReportsDaily() {
                 </CardContent>
             </Card>
 
-            {/* Sales by Day of Week */}
             <Card>
                 <CardHeader>
                     <CardTitle>Vendas por Dia da Semana</CardTitle>

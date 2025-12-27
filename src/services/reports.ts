@@ -206,19 +206,10 @@ export const reportsService = {
             const amount = Number(sale.total_amount);
             let type = "Balcão"; 
             
-            // Prioritize explicit columns over notes
-            if (sale.scheduled_pickup) {
-                type = "Agendado";
-            } else if (sale.is_delivery) {
+            if (sale.is_delivery) {
                 type = "Entrega";
-            } else {
-                // Fallback to notes for older records or external integrations
-                const notesLower = sale.notes?.toLowerCase() || "";
-                if (notesLower.includes("entrega") || notesLower.includes("delivery")) {
-                    type = "Entrega";
-                } else if (notesLower.includes("agendado") || notesLower.includes("encomenda") || notesLower.includes("retirada agendada")) {
-                    type = "Agendado";
-                }
+            } else if (sale.scheduled_pickup) {
+                type = "Agendado";
             }
 
             const existing = typeMap.get(type) || { total: 0, count: 0 };

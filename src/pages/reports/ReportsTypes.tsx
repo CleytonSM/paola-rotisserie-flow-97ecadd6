@@ -1,15 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ReportLayout } from "@/components/features/reports/ReportLayout";
 import { useDetailedReports } from "@/hooks/useDetailedReports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/components/features/reports/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import {
+    exportToPdf,
+    exportToCsv,
+    generateReportFilename,
+    generatePeriodLabel,
+    type CsvColumn,
+} from "@/utils/exportUtils";
+import { toast } from "sonner";
 
 const TYPE_COLORS: Record<string, string> = {
     "Balcão": "hsl(var(--primary))",
-    "Entrega": "#3b82f6",  // Blue
-    "Agendado": "#1ab12eff", // Green
+    "Entrega": "#3b82f6",
+    "Agendado": "#1ab12eff",
 };
 
 const FALLBACK_COLORS = [
@@ -24,6 +32,13 @@ const getColor = (type: string, index: number) => {
     return TYPE_COLORS[type] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 };
 
+interface TypeCsvRow {
+    tipo: string;
+    total: number;
+    vendas: number;
+    percentual: number;
+}
+
 export default function ReportsTypes() {
     const {
         loading,
@@ -31,6 +46,7 @@ export default function ReportsTypes() {
         setFilter,
         customDateRange,
         setCustomDateRange,
+        dateRange,
         salesByType,
         fetchSalesByType
     } = useDetailedReports();
@@ -38,6 +54,42 @@ export default function ReportsTypes() {
     useEffect(() => {
         fetchSalesByType();
     }, [filter, customDateRange]);
+
+    const periodLabel = useMemo(() => {
+        return generatePeriodLabel(dateRange);
+    }, [dateRange]);
+
+    const handleExportPdf = async () => {
+        toast.info("Gerando PDF...");
+        try {
+            const filename = generateReportFilename("tipos", "pdf", dateRange);
+            await exportToPdf("report-content", filename, "Relatório por Tipo", periodLabel);
+            toast.success("PDF exportado com sucesso!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao exportar PDF");
+        }
+    };
+
+    const handleExportCsv = () => {
+        const data: TypeCsvRow[] = salesByType.map(t => ({
+            tipo: t.type,
+            total: t.total,
+            vendas: t.count,
+            percentual: t.percentage,
+        }));
+
+        const columns: CsvColumn<TypeCsvRow>[] = [
+            { header: "Tipo", accessor: "tipo" },
+            { header: "Total (R$)", accessor: (item) => item.total.toFixed(2) },
+            { header: "Vendas", accessor: "vendas" },
+            { header: "Percentual (%)", accessor: (item) => item.percentual.toFixed(1) },
+        ];
+
+        const filename = generateReportFilename("tipos", "csv", dateRange);
+        exportToCsv(data, columns, filename);
+        toast.success("CSV exportado com sucesso!");
+    };
 
     return (
         <ReportLayout
@@ -47,6 +99,10 @@ export default function ReportsTypes() {
             setFilter={setFilter}
             customDateRange={customDateRange}
             setCustomDateRange={setCustomDateRange}
+            onExportPdf={handleExportPdf}
+            onExportCsv={handleExportCsv}
+            loading={loading}
+            periodLabel={periodLabel}
         >
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>

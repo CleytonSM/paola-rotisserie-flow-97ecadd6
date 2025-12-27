@@ -7,8 +7,10 @@ import type {
   BarChartData,
   PieChartData,
   TopItem,
+  ProductReportItem,
 } from "@/components/features/reports/types";
-import { getReceivablesForReports, getPayablesForReports } from "@/services/database";
+import { getReceivablesForReports, getPayablesForReports} from "@/services/database";
+import { reportsService } from "@/services/reports";
 import { getCurrentSession } from "@/services/auth";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -16,11 +18,20 @@ import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { getStartDateFromFilter } from "@/components/features/reports/utils";
 
+export interface WhatsAppSummaryData {
+  faturamento: number;
+  pedidos: number;
+  entregas: number;
+  topProduto?: { name: string; quantity: number };
+}
+
 export const useReports = () => {
     const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [receivables, setReceivables] = useState<AccountReceivable[]>([]);
   const [payables, setPayables] = useState<AccountPayable[]>([]);
+  const [topProducts, setTopProducts] = useState<ProductReportItem[]>([]);
+  const [salesSummary, setSalesSummary] = useState<{ totalOrders: number; deliveries: number }>({ totalOrders: 0, deliveries: 0 });
   const [filter, setFilter] = useState<ReportsFilter>("monthly");
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
 
@@ -75,23 +86,38 @@ export const useReports = () => {
     if (!dateRange.from || !dateRange.to) return;
 
     setLoading(true);
-    const [recResult, payResult] = await Promise.all([
-      getReceivablesForReports(dateRange),
-      getPayablesForReports(dateRange),
-    ]);
+    
+    try {
+      const [recResult, payResult, productsResult, salesByTypeResult] = await Promise.all([
+        getReceivablesForReports(dateRange),
+        getPayablesForReports(dateRange),
+        reportsService.getTopProducts(dateRange),
+        reportsService.getSalesByType(dateRange),
+      ]);
 
-    if (recResult.error) {
-      toast.error("Erro ao carregar entradas");
-      setReceivables([]);
-    } else if (recResult.data) {
-      setReceivables(recResult.data as AccountReceivable[]);
-    }
+      if (recResult.error) {
+        toast.error("Erro ao carregar entradas");
+        setReceivables([]);
+      } else if (recResult.data) {
+        setReceivables(recResult.data as AccountReceivable[]);
+      }
 
-    if (payResult.error) {
-      toast.error("Erro ao carregar saídas");
-      setPayables([]);
-    } else if (payResult.data) {
-      setPayables(payResult.data as AccountPayable[]);
+      if (payResult.error) {
+        toast.error("Erro ao carregar saídas");
+        setPayables([]);
+      } else if (payResult.data) {
+        setPayables(payResult.data as AccountPayable[]);
+      }
+
+      setTopProducts(productsResult);
+
+      const totalOrders = salesByTypeResult.reduce((sum, t) => sum + t.count, 0);
+      const deliveries = salesByTypeResult.find(t => t.type === "Entrega")?.count || 0;
+      setSalesSummary({ totalOrders, deliveries });
+
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      toast.error("Erro ao carregar dados");
     }
 
     setLoading(false);
@@ -190,9 +216,18 @@ export const useReports = () => {
     }));
   }, [payables]);
 
-  const exportToPDF = () => {
-    toast.info("Export PDF será implementado em breve");
-  };
+  const whatsAppSummary = useMemo((): WhatsAppSummaryData => {
+    const topProduct = topProducts[0]
+      ? { name: topProducts[0].name, quantity: Math.round(topProducts[0].quantity) }
+      : undefined;
+
+    return {
+      faturamento: kpiData.totalReceived,
+      pedidos: salesSummary.totalOrders,
+      entregas: salesSummary.deliveries,
+      topProduto: topProduct,
+    };
+  }, [kpiData, topProducts, salesSummary]);
 
   return {
     loading,
@@ -201,10 +236,12 @@ export const useReports = () => {
     pieChartData,
     topClients,
     topSuppliers,
+    topProducts,
+    whatsAppSummary,
     filter,
     setFilter,
     customDateRange,
-    exportToPDF,
-    setCustomDateRange
+    setCustomDateRange,
+    dateRange,
   };
 }
