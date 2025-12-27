@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FileDown, MessageSquare, ChevronDown } from "lucide-react";
+import { FileText, Download, MessageSquare, ChevronDown, FileDown } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ReportExportActionsProps {
     onExportPdf: () => void;
@@ -24,7 +25,7 @@ export function ReportExportActions({
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="outline"
-                        className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary"
+                        className="bg-background text-foreground hover:bg-muted"
                         disabled={loading}
                     >
                         <FileDown className="mr-2 h-4 w-4" />
@@ -34,11 +35,11 @@ export function ReportExportActions({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={onExportPdf} disabled={loading}>
-                        <FileDown className="mr-2 h-4 w-4" />
+                        <FileText className="mr-2 h-4 w-4" />
                         Exportar PDF
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={onExportCsv} disabled={loading}>
-                        <FileDown className="mr-2 h-4 w-4" />
+                        <Download className="mr-2 h-4 w-4" />
                         Exportar CSV
                     </DropdownMenuItem>
                     {onShareWhatsApp && (
@@ -54,34 +55,39 @@ export function ReportExportActions({
 
     return (
         <div className="flex items-center gap-2">
-            <Button
-                variant="outline"
-                onClick={onExportPdf}
-                disabled={loading}
-                className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary"
-            >
-                <FileDown className="mr-2 h-4 w-4" />
-                PDF
-            </Button>
-            <Button
-                variant="outline"
-                onClick={onExportCsv}
-                disabled={loading}
-                className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary"
-            >
-                <FileDown className="mr-2 h-4 w-4" />
-                CSV
-            </Button>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={onExportPdf} disabled={loading}>
+                        <FileText className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Exportar PDF</p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={onExportCsv} disabled={loading}>
+                        <Download className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Exportar CSV</p>
+                </TooltipContent>
+            </Tooltip>
+
             {onShareWhatsApp && (
-                <Button
-                    variant="outline"
-                    onClick={onShareWhatsApp}
-                    disabled={loading}
-                    className="border-secondary/30 bg-secondary/5 text-secondary hover:bg-secondary/10 hover:text-secondary"
-                >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    WhatsApp
-                </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={onShareWhatsApp} disabled={loading}>
+                            <MessageSquare className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Enviar WhatsApp</p>
+                    </TooltipContent>
+                </Tooltip>
             )}
         </div>
     );

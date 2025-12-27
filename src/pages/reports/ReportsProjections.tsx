@@ -5,15 +5,14 @@ import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { ProjectionKPIs } from "@/components/features/reports/ProjectionKPIs";
 import { ProjectionChart } from "@/components/features/reports/ProjectionChart";
 import { ProjectionTable } from "@/components/features/reports/ProjectionTable";
-import { Button } from "@/components/ui/button";
-import { FileText, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { exportToPdf, exportToCsv, generateReportFilename } from "@/utils/exportUtils";
 import { format } from "date-fns";
+import { ReportExportActions } from "@/components/features/reports/ReportExportActions";
 
 export default function ReportsProjections() {
-    const { data, loading, days, setDays, refresh } = useProjections();
+    const { data, loading, days, setDays } = useProjections();
 
     const handleExportPdf = async () => {
         toast.info("Gerando PDF...");
@@ -86,12 +85,11 @@ export default function ReportsProjections() {
                                 <SelectItem value="30">Próximos 30 dias</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button variant="outline" size="icon" onClick={handleExportPdf} disabled={loading}>
-                            <FileText className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" onClick={handleExportCsv} disabled={loading}>
-                            <Download className="h-4 w-4" />
-                        </Button>
+                        <ReportExportActions
+                            onExportPdf={handleExportPdf}
+                            onExportCsv={handleExportCsv}
+                            loading={loading}
+                        />
                     </div>
                 }
             />

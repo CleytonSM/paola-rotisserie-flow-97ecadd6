@@ -87,9 +87,6 @@ export function ProjectionTable({ title, data, loading, type }: ProjectionTableP
                                                 {row.items.map((item, idx) => (
                                                     <div key={idx} className="text-sm flex justify-between items-start gap-4">
                                                         <span className="text-foreground/80 truncate">{item.origin}</span>
-                                                        <span className="font-sans text-xs text-muted-foreground whitespace-nowrap hidden sm:inline-block">
-                                                            {formatCurrency(item.value)}
-                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>

@@ -103,14 +103,25 @@ export const reportsService = {
         const daysMap = new Map<number, { value: number, count: number }>(); 
 
         data?.forEach((sale: any) => {
-            const date = new Date(sale.accounts_receivable.payment_date);
+            // accounts_receivable is joined as an inner join, but since it's a relation, Supabase/PostgREST returns an array unless single() is used,
+            // or if it's a one-to-one which might still be array if not explicitly flattened. 
+            // The JSON shows it is an array: [{"payment_date": "..."}]
+            const ar = Array.isArray(sale.accounts_receivable) ? sale.accounts_receivable[0] : sale.accounts_receivable;
+            
+            if (!ar?.payment_date) return;
+
+            const date = new Date(ar.payment_date);
+            if (isNaN(date.getTime())) return;
+
             const hour = date.getHours();
             const day = date.getDay();
             const amount = Number(sale.total_amount);
 
             // Hourly
-            hoursMap[hour].value += amount;
-            hoursMap[hour].count += 1;
+            if (hoursMap[hour]) {
+                hoursMap[hour].value += amount;
+                hoursMap[hour].count += 1;
+            }
 
             // Daily
             const currentDay = daysMap.get(day) || { value: 0, count: 0 };
