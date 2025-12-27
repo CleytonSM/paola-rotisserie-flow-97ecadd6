@@ -205,7 +205,14 @@ export function CheckoutPage() {
     };
 
     const handleSendWhatsApp = async () => {
-        if (!clientName || !phone) {
+        const trimmedName = clientName.trim();
+        const trimmedStreet = street.trim();
+        const trimmedNumber = number.trim();
+        const trimmedNeighborhood = neighborhood.trim();
+        const trimmedCity = city.trim();
+        const trimmedComplement = complement.trim();
+
+        if (!trimmedName || !phone) {
             toast.error("Por favor, preencha nome e telefone.");
             return;
         }
@@ -265,7 +272,7 @@ export function CheckoutPage() {
         try {
             // 1. Create or update client automatically
             const { data: client, error: clientError } = await upsertClientByPhone({
-                name: clientName,
+                name: trimmedName,
                 phone: phone
             });
 
@@ -275,11 +282,11 @@ export function CheckoutPage() {
                 // 2. Create or update address if it's delivery
                 const { error: addressError } = await upsertClientAddressByCep({
                     client_id: client.id,
-                    street,
-                    number,
-                    complement,
-                    neighborhood,
-                    city,
+                    street: trimmedStreet,
+                    number: trimmedNumber,
+                    complement: trimmedComplement,
+                    neighborhood: trimmedNeighborhood,
+                    city: trimmedCity,
                     state,
                     zip_code: cep.replace(/\D/g, ""),
                     is_default: true
@@ -299,7 +306,7 @@ export function CheckoutPage() {
             .join("\n");
 
         const fullAddress = isDelivery
-            ? `${street}, ${number}${complement ? ` (${complement})` : ""} - ${neighborhood}, ${city}/${state} - CEP: ${cep}`
+            ? `${trimmedStreet}, ${trimmedNumber}${trimmedComplement ? ` (${trimmedComplement})` : ""} - ${trimmedNeighborhood}, ${trimmedCity}/${state} - CEP: ${cep}`
             : "";
 
         const deliveryFee = settings?.fixed_delivery_fee || 0;
@@ -329,7 +336,7 @@ export function CheckoutPage() {
         const message = `*${settings?.store_name || "Paola Gonçalves Rotisseria"}*
 Novo pedido online
 
-*Cliente:* ${clientName}
+*Cliente:* ${trimmedName}
 *Telefone:* ${phone}
 *Modalidade:* ${isDelivery ? "Entrega" : "Retirada"}
 ${isDelivery ? `*Endereço:* ${fullAddress}\n` : ""}*Data:* ${finalDateStr} às ${finalTimeStr} ${schedulingMode === 'now' ? '(Para agora)' : '(Agendado)'}
@@ -350,14 +357,14 @@ Pedido enviado via Catálogo Virtual`;
 
         // Save details for next time
         updateClientDetails({
-            name: clientName,
+            name: trimmedName,
             phone,
             cep: isDelivery ? cep : undefined,
-            street: isDelivery ? street : undefined,
-            number: isDelivery ? number : undefined,
-            complement: isDelivery ? complement : undefined,
-            neighborhood: isDelivery ? neighborhood : undefined,
-            city: isDelivery ? city : undefined,
+            street: isDelivery ? trimmedStreet : undefined,
+            number: isDelivery ? trimmedNumber : undefined,
+            complement: isDelivery ? trimmedComplement : undefined,
+            neighborhood: isDelivery ? trimmedNeighborhood : undefined,
+            city: isDelivery ? trimmedCity : undefined,
             state: isDelivery ? state : undefined,
         });
 
@@ -433,6 +440,7 @@ Pedido enviado via Catálogo Virtual`;
                                     className="h-12 bg-card border-primary/10"
                                     value={clientName}
                                     onChange={(e) => setClientName(e.target.value)}
+                                    onBlur={() => setClientName(prev => prev.trim())}
                                     autoComplete="name"
                                     required
                                 />

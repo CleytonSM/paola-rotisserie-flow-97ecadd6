@@ -34,8 +34,12 @@ export function generateClientReplyMessage(params: WhatsAppReplyParams): string 
         return `Seu pedido #${displayId} foi entregue! Obrigada e volte sempre!`;
     }
 
+    if (orderStatus === 'received') {
+        return `Olá ${name}! Seu pedido #${displayId} foi recebido. Qualquer dúvida é só chamar!`;
+    }
+
     const statusLabel = ORDER_STATUS_LABELS[orderStatus] || orderStatus;
-    return `Olá ${name}! Seu pedido #${displayId} está ${statusLabel.toLowerCase()}. Qualquer dúvida é só chamar!`;
+    return `Olá ${name}! Seu pedido #${displayId} está ${statusLabel.toLowerCase()}.`;
 }
 
 export function buildWhatsAppClientReplyUrl(params: WhatsAppReplyParams): string | null {
