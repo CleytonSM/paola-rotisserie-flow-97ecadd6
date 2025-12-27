@@ -9,9 +9,10 @@ import { ReceiptSummary } from "@/components/features/pdv/success/ReceiptSummary
 import { printerService } from "@/services/printer/PrinterService";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { useClientAddresses } from "@/hooks/useClientAddresses";
-import { MessageSquare } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { formatCurrency } from "@/utils/format";
 import { useSoundNotifications } from "@/hooks/useSoundNotifications";
+import { buildWhatsAppClientReplyUrl, generateClientReplyMessage, cleanPhoneNumber } from "@/utils/whatsappClientReply";
 
 interface SuccessPageState {
     saleId?: string;
@@ -143,6 +144,37 @@ export default function SuccessPage() {
                 />
 
                 <div className="space-y-3">
+                    {(() => {
+                        const hasPhone = !!clientPhone;
+                        const parsedDisplayId = typeof numericId === 'string' ? parseInt(numericId, 10) : (numericId || 0);
+                        const replyUrl = hasPhone
+                            ? buildWhatsAppClientReplyUrl({
+                                displayId: parsedDisplayId,
+                                clientName: clientName,
+                                clientPhone: clientPhone,
+                                orderStatus: 'received',
+                                isDelivery: isDelivery || false,
+                                scheduledPickup: null
+                            })
+                            : null;
+                        return (
+                            <Button
+                                size="lg"
+                                onClick={() => replyUrl && window.open(replyUrl, '_blank')}
+                                disabled={!hasPhone}
+                                title={!hasPhone ? "Cliente sem telefone" : undefined}
+                                className={
+                                    hasPhone
+                                        ? "w-full h-12 bg-[#6B7A4D] hover:bg-[#5A6840] text-white font-medium"
+                                        : "w-full h-12 bg-muted text-muted-foreground cursor-not-allowed"
+                                }
+                            >
+                                <WhatsAppIcon className="mr-2 h-5 w-5" />
+                                Responder cliente
+                            </Button>
+                        );
+                    })()}
+
                     {pixKey && (method === 'pix' || method === 'multiple') && (
                         <Button
                             variant="outline"
@@ -170,7 +202,7 @@ export default function SuccessPage() {
                             onClick={handleWhatsApp}
                             disabled={!deliveryAddress}
                         >
-                            <MessageSquare className="mr-2 h-4 w-4" />
+                            <WhatsAppIcon className="mr-2 h-4 w-4" />
                             Enviar para Motoboy
                         </Button>
                     )}

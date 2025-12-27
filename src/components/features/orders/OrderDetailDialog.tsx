@@ -4,7 +4,8 @@ import { addPaymentToOrder, deleteOrder } from "@/services/database/sales";
 import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode, Truck, MapPin, Printer, MessageCircle, ExternalLink, Pencil, Trash2, Plus, QrCode } from "lucide-react";
+import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode, Truck, MapPin, Printer, ExternalLink, Pencil, Trash2, Plus, QrCode } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,6 +33,7 @@ import { getPixKeys } from "@/services/database/pix_keys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNewOrder } from "@/hooks/useNewOrder";
 import { NewOrderModal } from "./NewOrderModal";
+import { buildWhatsAppClientReplyUrl, getWhatsAppReplyParamsFromOrder } from "@/utils/whatsappClientReply";
 
 interface OrderDetailDialogProps {
     order: Order | null;
@@ -437,7 +439,7 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                                             size="sm"
                                             className="bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-sm h-8 flex-1"
                                         >
-                                            <MessageCircle className="w-3.5 h-3.5 mr-2" />
+                                            <WhatsAppIcon className="w-3.5 h-3.5 mr-2" />
                                             Enviar p/ Motoboy
                                         </Button>
                                         <Button
@@ -659,9 +661,30 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                     </div>
                 </ScrollArea>
 
-                {/* Action Button */}
-                {nextStatus && onStatusChange && (
-                    <div className="p-4 border-t bg-muted/20">
+                {/* Action Buttons */}
+                <div className="p-4 border-t bg-muted/20 space-y-3">
+                    {(() => {
+                        const replyUrl = buildWhatsAppClientReplyUrl(getWhatsAppReplyParamsFromOrder(order));
+                        const hasPhone = !!order.clients?.phone;
+                        return (
+                            <Button
+                                onClick={() => replyUrl && window.open(replyUrl, '_blank')}
+                                disabled={!hasPhone}
+                                title={!hasPhone ? "Cliente sem telefone" : undefined}
+                                className={cn(
+                                    "w-full h-12 text-base font-medium",
+                                    hasPhone
+                                        ? "bg-[#6B7A4D] hover:bg-[#5A6840] text-white"
+                                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                                )}
+                            >
+                                <WhatsAppIcon className="w-5 h-5 mr-2" />
+                                Responder cliente
+                            </Button>
+                        );
+                    })()}
+
+                    {nextStatus && onStatusChange && (
                         <Button
                             onClick={() => {
                                 onStatusChange(order.id, nextStatus);
@@ -676,8 +699,8 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                             Marcar como {ORDER_STATUS_LABELS[nextStatus]}
                             <ChevronRight className="w-5 h-5 ml-2" />
                         </Button>
-                    </div>
-                )}
+                    )}
+                </div>
             </DialogContent>
 
             {selectedItem && (
