@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
 import { useState, useEffect } from "react";
+import { PaymentIcon } from 'react-svg-credit-card-payment-icons';
 import { useQuery } from "@tanstack/react-query";
 import { getPixKeys } from "@/services/database";
 
@@ -127,8 +128,28 @@ export function SalesDetailsDialog({
                                                 {getPaymentMethodLabel(payment.payment_method)}
                                             </div>
                                             {payment.card_flag && (
-                                                <div className="text-xs text-muted-foreground">
-                                                    {payment.card_flag}
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <div className="bg-white rounded p-0.5 border border-border/50">
+                                                        <PaymentIcon
+                                                            type={(() => {
+                                                                const low = payment.card_flag.toLowerCase().trim();
+                                                                if (low.includes('visa')) return 'Visa';
+                                                                if (low.includes('master')) return 'Mastercard';
+                                                                if (low.includes('elo')) return 'Elo';
+                                                                if (low.includes('amex') || low.includes('american')) return 'AmericanExpress';
+                                                                if (low.includes('hipercard')) return 'Hipercard';
+                                                                if (low.includes('hiper')) return 'Hiper';
+                                                                if (low.includes('diners')) return 'DinersClub';
+                                                                if (low.includes('discover')) return 'Discover';
+                                                                return 'Generic';
+                                                            })()}
+                                                            format="flatRounded"
+                                                            width={24}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground uppercase font-medium">
+                                                        {payment.card_flag}
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>

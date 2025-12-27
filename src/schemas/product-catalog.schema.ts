@@ -16,6 +16,7 @@ export const catalogSchema = z.object({
     quantity: z.number().int("Quantidade deve ser um número inteiro").min(0, "Quantidade não pode ser negativa").optional(),
     is_active: z.boolean().default(true),
     image_url: z.string().nullable().optional(),
+    description: z.string().max(500, "Descrição deve ter no máximo 500 caracteres").optional().nullable(),
 });
 
 /**

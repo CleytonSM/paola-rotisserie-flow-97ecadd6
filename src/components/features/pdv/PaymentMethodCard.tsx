@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 interface PaymentMethodCardProps {
     id: string;
     title: string;
-    icon: LucideIcon;
+    icon: React.ComponentType<{ className?: string }>;
     selected: boolean;
     onClick: () => void;
+    isLastUsed?: boolean;
     children?: React.ReactNode;
 }
 
@@ -16,6 +17,7 @@ export function PaymentMethodCard({
     icon: Icon,
     selected,
     onClick,
+    isLastUsed,
     children,
 }: PaymentMethodCardProps) {
     return (
@@ -28,6 +30,11 @@ export function PaymentMethodCard({
                     : "border-border bg-card hover:border-primary/50 hover:bg-accent"
             )}
         >
+            {isLastUsed && (
+                <div className="absolute -top-2 right-4 bg-[#D4AF37] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider animate-in fade-in zoom-in-50 duration-300">
+                    Usado por último
+                </div>
+            )}
             <div className="flex items-center gap-3 mb-2">
                 <div
                     className={cn(
@@ -37,12 +44,14 @@ export function PaymentMethodCard({
                 >
                     <Icon className="h-6 w-6" />
                 </div>
-                <h3 className={cn("font-medium text-lg", selected ? "text-primary" : "text-foreground")}>
+                <h3 className={cn("font-medium text-lg flex-1", selected ? "text-primary" : "text-foreground")}>
                     {title}
                 </h3>
-                {selected && (
-                    <CheckCircle2 className="ml-auto h-6 w-6 text-green-500 fill-green-100 dark:fill-green-900" />
-                )}
+                <div className="w-6 h-6 shrink-0 ml-auto flex items-center justify-center">
+                    {selected && (
+                        <CheckCircle2 className="h-6 w-6 text-green-500 fill-green-100 dark:fill-green-900 animate-in zoom-in-50 duration-200" />
+                    )}
+                </div>
             </div>
 
             {children && (

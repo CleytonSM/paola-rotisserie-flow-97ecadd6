@@ -8,6 +8,8 @@ export const formatCurrency = (value: number) => {
 export const getStartDateFromFilter = (filter: ReportsFilter) => {
   const today = startOfToday();
   switch (filter) {
+    case "today":
+      return today;
     case "weekly":
       return subDays(today, 7);
     case "monthly":

@@ -1,15 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ReportLayout } from "@/components/features/reports/ReportLayout";
 import { useDetailedReports } from "@/hooks/useDetailedReports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/components/features/reports/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import {
+    exportToPdf,
+    exportToCsv,
+    generateReportFilename,
+    generatePeriodLabel,
+    type CsvColumn,
+} from "@/utils/exportUtils";
+import { toast } from "sonner";
 
 const PAYMENT_COLORS: Record<string, string> = {
-    "Dinheiro": "#22c55e", // Green
-    "Crédito": "#3b82f6",  // Blue
-    "Débito": "#ef4444",   // Red
+    "Dinheiro": "#22c55e",
+    "Crédito": "#3b82f6",
+    "Débito": "#ef4444",
 };
 
 const FALLBACK_COLORS = [
@@ -24,6 +32,13 @@ const getColor = (method: string, index: number) => {
     return PAYMENT_COLORS[method] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 };
 
+interface PaymentCsvRow {
+    metodo: string;
+    total: number;
+    transacoes: number;
+    percentual: number;
+}
+
 export default function ReportsPayments() {
     const {
         loading,
@@ -31,6 +46,7 @@ export default function ReportsPayments() {
         setFilter,
         customDateRange,
         setCustomDateRange,
+        dateRange,
         salesByPayment,
         fetchSalesByPayment
     } = useDetailedReports();
@@ -38,6 +54,42 @@ export default function ReportsPayments() {
     useEffect(() => {
         fetchSalesByPayment();
     }, [filter, customDateRange]);
+
+    const periodLabel = useMemo(() => {
+        return generatePeriodLabel(dateRange);
+    }, [dateRange]);
+
+    const handleExportPdf = async () => {
+        toast.info("Gerando PDF...");
+        try {
+            const filename = generateReportFilename("pagamentos", "pdf", dateRange);
+            await exportToPdf("report-content", filename, "Relatório por Pagamento", periodLabel);
+            toast.success("PDF exportado com sucesso!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao exportar PDF");
+        }
+    };
+
+    const handleExportCsv = () => {
+        const data: PaymentCsvRow[] = salesByPayment.map(p => ({
+            metodo: p.method,
+            total: p.total,
+            transacoes: p.count,
+            percentual: p.percentage,
+        }));
+
+        const columns: CsvColumn<PaymentCsvRow>[] = [
+            { header: "Método", accessor: "metodo" },
+            { header: "Total (R$)", accessor: (item) => item.total.toFixed(2) },
+            { header: "Transações", accessor: "transacoes" },
+            { header: "Percentual (%)", accessor: (item) => item.percentual.toFixed(1) },
+        ];
+
+        const filename = generateReportFilename("pagamentos", "csv", dateRange);
+        exportToCsv(data, columns, filename);
+        toast.success("CSV exportado com sucesso!");
+    };
 
     return (
         <ReportLayout
@@ -47,6 +99,10 @@ export default function ReportsPayments() {
             setFilter={setFilter}
             customDateRange={customDateRange}
             setCustomDateRange={setCustomDateRange}
+            onExportPdf={handleExportPdf}
+            onExportCsv={handleExportCsv}
+            loading={loading}
+            periodLabel={periodLabel}
         >
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>

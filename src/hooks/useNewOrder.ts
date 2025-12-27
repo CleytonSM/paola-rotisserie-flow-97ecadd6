@@ -8,6 +8,7 @@ import { ClientAddress } from "@/types/entities";
 import { PaymentEntry } from "@/components/features/partial-payment/PartialPaymentBuilder";
 import { useAppSettings } from "./useAppSettings";
 import { useSoundNotifications } from "./useSoundNotifications";
+import { ParsedAddress, normalize } from "@/utils/whatsappParser";
 
 export interface NewOrderItem {
     id: string;
@@ -62,7 +63,8 @@ export function useNewOrder(onSuccess?: () => void) {
         scheduledPickup: boolean;
         notes: boolean;
         clientName: boolean;
-    }>({ items: false, scheduledPickup: false, notes: false, clientName: false });
+        paymentMethod: boolean;
+    }>({ items: false, scheduledPickup: false, notes: false, clientName: false, paymentMethod: false });
 
     // Edit Mode State
     const [existingOrderId, setExistingOrderId] = useState<string | null>(null);
@@ -86,7 +88,7 @@ export function useNewOrder(onSuccess?: () => void) {
         setDeliveryFee(0);
         setHasPartialPayment(false);
         setPaymentEntries([]);
-        setImportedFields({ items: false, scheduledPickup: false, notes: false, clientName: false });
+        setImportedFields({ items: false, scheduledPickup: false, notes: false, clientName: false, paymentMethod: false });
         setExistingOrderId(null);
         setExistingDisplayId(null);
         setManualAddress({
@@ -211,6 +213,14 @@ export function useNewOrder(onSuccess?: () => void) {
         scheduledPickup?: Date;
         notes?: string;
         clientName?: string;
+        paymentMethod?: string;
+        address?: ParsedAddress | null;
+        paymentDetails?: {
+            method: 'pix' | 'cash' | 'card_credit' | 'card_debit';
+            machineId?: string;
+            cardBrand?: string;
+            tax_rate?: number;
+        };
     }) => {
         reset();
         if (data.client) setSelectedClient(data.client);
@@ -228,12 +238,59 @@ export function useNewOrder(onSuccess?: () => void) {
         
         const defaultFee = settings?.fixed_delivery_fee ?? 0;
         setDeliveryFee(defaultFee);
+        
+        const isDeliveryOrder = !!data.address;
+
+        if (data.address) {
+            setIsDelivery(true);
+            setManualAddress({
+                zipCode: data.address.zipCode,
+                street: data.address.street,
+                number: data.address.number,
+                complement: data.address.complement || "",
+                neighborhood: data.address.neighborhood,
+                city: data.address.city,
+                state: data.address.state
+            });
+        }
+
+        // Calculate payment amount including delivery fee if applicable
+        if (data.paymentMethod || data.paymentDetails) {
+            setHasPartialPayment(true);
+            const itemsTotal = data.items ? data.items.reduce((sum, i) => sum + i.totalPrice, 0) : 0;
+            const subtotal = isDeliveryOrder ? itemsTotal + defaultFee : itemsTotal;
+            
+            const cardFee = data.paymentDetails?.tax_rate ? subtotal * (data.paymentDetails.tax_rate / 100) : 0;
+            const paymentAmount = subtotal + cardFee;
+            
+            const normalizedMethodLabel = data.paymentMethod ? normalize(data.paymentMethod) : "";
+
+            const method = data.paymentDetails?.method || (
+                normalizedMethodLabel.includes("pix") ? "pix" :
+                normalizedMethodLabel.includes("dinheiro") ? "cash" :
+                normalizedMethodLabel.includes("credito") ? "card_credit" :
+                normalizedMethodLabel.includes("debito") ? "card_debit" :
+                "pix" // Default fallback
+            );
+
+            setPaymentEntries([{
+                id: crypto.randomUUID(),
+                method: method as PaymentEntry['method'],
+                amount: paymentAmount,
+                details: {
+                    machineId: data.paymentDetails?.machineId,
+                    cardBrand: data.paymentDetails?.cardBrand,
+                    tax_rate: data.paymentDetails?.tax_rate
+                }
+            }]);
+        }
 
         setImportedFields({
             items: !!(data.items && data.items.length > 0),
             scheduledPickup: !!data.scheduledPickup,
             notes: !!(data.notes || data.clientName),
             clientName: !!data.clientName,
+            paymentMethod: !!data.paymentMethod,
         });
         
         setIsOpen(true);
@@ -441,7 +498,7 @@ export function useNewOrder(onSuccess?: () => void) {
         deliveryFee, setDeliveryFee, hasPartialPayment, setHasPartialPayment,
         paymentEntries, addPaymentEntry, removePaymentEntry, subtotal, total,
         isSubmitting, canSubmit, submit: saveOrder, reset, editOrder, isEditing: !!existingOrderId,
-        existingDisplayId, importedFields, clearImportedFields: () => setImportedFields({ items: false, scheduledPickup: false, notes: false, clientName: false }),
+        existingDisplayId, importedFields, clearImportedFields: () => setImportedFields({ items: false, scheduledPickup: false, notes: false, clientName: false, paymentMethod: false }),
         selectionOpen, setSelectionOpen, selectedProductForSelection, handleProductSelect, handleAddInternalItem,
         
         manualAddress, setManualAddress

@@ -20,6 +20,7 @@ export interface ProductCatalog {
     created_at?: string;
     updated_at?: string;
     image_url?: string | null;
+    description?: string | null;
 }
 
 export interface ProductCatalogInput {
@@ -33,6 +34,7 @@ export interface ProductCatalogInput {
     quantity?: number | null;
     is_active?: boolean;
     image_url?: string | null;
+    description?: string | null;
 }
 
 export const getProductCatalog = async (

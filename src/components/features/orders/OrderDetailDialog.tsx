@@ -4,12 +4,15 @@ import { addPaymentToOrder, deleteOrder } from "@/services/database/sales";
 import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode, Truck, MapPin, Printer, MessageCircle, ExternalLink, Pencil, Trash2, Plus } from "lucide-react";
+import { Clock, User, Package, CreditCard, Calendar, FileText, X, ChevronRight, ScanBarcode, Truck, MapPin, Printer, ExternalLink, Pencil, Trash2, Plus, QrCode } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentIcon } from 'react-svg-credit-card-payment-icons';
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { QRCodeModal } from "@/components/features/pdv/QRCodeModal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { OrderItemLinkingFlow } from "./OrderItemLinkingFlow";
@@ -31,6 +34,7 @@ import { getPixKeys } from "@/services/database/pix_keys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNewOrder } from "@/hooks/useNewOrder";
 import { NewOrderModal } from "./NewOrderModal";
+import { buildWhatsAppClientReplyUrl, getWhatsAppReplyParamsFromOrder } from "@/utils/whatsappClientReply";
 
 interface OrderDetailDialogProps {
     order: Order | null;
@@ -68,6 +72,8 @@ export function OrderDetailDialog({
     const [showAddPayment, setShowAddPayment] = useState(false);
     const [newPaymentEntries, setNewPaymentEntries] = useState<PaymentEntry[]>([]);
     const [isAddingPayment, setIsAddingPayment] = useState(false);
+    const [showPixModal, setShowPixModal] = useState(false);
+    const [pixModalData, setPixModalData] = useState<{ key: string, amount: number } | null>(null);
 
     const { data: pixKeys = [] } = useQuery({
         queryKey: ["pixKeys", "active"],
@@ -76,7 +82,7 @@ export function OrderDetailDialog({
             if (error) throw error;
             return data || [];
         },
-        enabled: showAddPayment,
+        enabled: open, // Always fetch when dialog is open
     });
 
     const handleAddPayment = async () => {
@@ -164,6 +170,11 @@ export function OrderDetailDialog({
             'multiple': 'Múltiplos'
         };
         return methods[method] || method;
+    };
+
+    const handleOpenPixModal = (key: string, amount: number) => {
+        setPixModalData({ key, amount });
+        setShowPixModal(true);
     };
 
     // Format addresses
@@ -429,7 +440,7 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                                             size="sm"
                                             className="bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-sm h-8 flex-1"
                                         >
-                                            <MessageCircle className="w-3.5 h-3.5 mr-2" />
+                                            <WhatsAppIcon className="w-3.5 h-3.5 mr-2" />
                                             Enviar p/ Motoboy
                                         </Button>
                                         <Button
@@ -547,7 +558,42 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                             <div className="space-y-2">
                                 {order.sale_payments?.map((payment, index) => (
                                     <div key={index} className="flex justify-between items-center py-2 px-3 rounded-lg bg-muted/30">
-                                        <p className="font-medium">{formatPaymentMethod(payment.payment_method)}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-medium">{formatPaymentMethod(payment.payment_method)}</p>
+                                            {payment.card_flag && (
+                                                <div className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-border/40">
+                                                    <PaymentIcon
+                                                        type={(() => {
+                                                            const low = payment.card_flag.toLowerCase().trim();
+                                                            if (low.includes('visa')) return 'Visa';
+                                                            if (low.includes('master')) return 'Mastercard';
+                                                            if (low.includes('elo')) return 'Elo';
+                                                            if (low.includes('amex') || low.includes('american')) return 'AmericanExpress';
+                                                            if (low.includes('hipercard')) return 'Hipercard';
+                                                            if (low.includes('hiper')) return 'Hiper';
+                                                            if (low.includes('diners')) return 'DinersClub';
+                                                            if (low.includes('discover')) return 'Discover';
+                                                            return 'Generic';
+                                                        })()}
+                                                        format="flatRounded"
+                                                        width={20}
+                                                    />
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                                                        {payment.card_flag}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {payment.payment_method === 'pix' && (payment.pix_keys?.key_value || pixKeys[0]?.key_value) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 w-6 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                                                    onClick={() => handleOpenPixModal(payment.pix_keys?.key_value || pixKeys[0]?.key_value, payment.amount)}
+                                                >
+                                                    <QrCode className="w-3.5 h-3.5" />
+                                                </Button>
+                                            )}
+                                        </div>
                                         <p className="font-semibold text-emerald-600">{formatCurrency(payment.amount)}</p>
                                     </div>
                                 ))}
@@ -639,9 +685,30 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                     </div>
                 </ScrollArea>
 
-                {/* Action Button */}
-                {nextStatus && onStatusChange && (
-                    <div className="p-4 border-t bg-muted/20">
+                {/* Action Buttons */}
+                <div className="p-4 border-t bg-muted/20 space-y-3">
+                    {(() => {
+                        const replyUrl = buildWhatsAppClientReplyUrl(getWhatsAppReplyParamsFromOrder(order));
+                        const hasPhone = !!order.clients?.phone;
+                        return (
+                            <Button
+                                onClick={() => replyUrl && window.open(replyUrl, '_blank')}
+                                disabled={!hasPhone}
+                                title={!hasPhone ? "Cliente sem telefone" : undefined}
+                                className={cn(
+                                    "w-full h-12 text-base font-medium",
+                                    hasPhone
+                                        ? "bg-[#6B7A4D] hover:bg-[#5A6840] text-white"
+                                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                                )}
+                            >
+                                <WhatsAppIcon className="w-5 h-5 mr-2" />
+                                Responder cliente
+                            </Button>
+                        );
+                    })()}
+
+                    {nextStatus && onStatusChange && (
                         <Button
                             onClick={() => {
                                 onStatusChange(order.id, nextStatus);
@@ -656,8 +723,8 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                             Marcar como {ORDER_STATUS_LABELS[nextStatus]}
                             <ChevronRight className="w-5 h-5 ml-2" />
                         </Button>
-                    </div>
-                )}
+                    )}
+                </div>
             </DialogContent>
 
             {selectedItem && (
@@ -695,6 +762,15 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                 onOpenChange={(open) => !open && editOrderState.close()}
                 orderState={editOrderState}
             />
+
+            {pixModalData && (
+                <QRCodeModal
+                    open={showPixModal}
+                    onOpenChange={setShowPixModal}
+                    pixKey={pixModalData.key}
+                    amount={pixModalData.amount}
+                />
+            )}
         </Dialog>
     );
 }

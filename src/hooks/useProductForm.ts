@@ -23,6 +23,7 @@ const formSchema = z.object({
     quantity: z.string().optional(),
     is_active: z.boolean().default(true),
     image_url: z.string().nullable().optional(),
+    description: z.string().max(500, "Descrição deve ter no máximo 500 caracteres").optional().nullable(),
 }).superRefine((data, ctx) => {
     if (data.is_internal) {
         if (!data.shelf_life_days || parseInt(data.shelf_life_days) < 1) {
@@ -61,6 +62,7 @@ const INITIAL_VALUES: FormSchemaType = {
     quantity: "",
     is_active: true,
     image_url: null,
+    description: "",
 };
 
 /**
@@ -93,6 +95,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             quantity: data.quantity ? parseInt(data.quantity) : undefined,
             is_active: data.is_active,
             image_url: data.image_url,
+            description: data.description || undefined,
         };
     };
 
@@ -138,6 +141,7 @@ export const useProductForm = ({ onSuccess }: UseProductFormProps) => {
             quantity: product.quantity?.toString() || "",
             is_active: product.is_active,
             image_url: product.image_url || null,
+            description: product.description || "",
         });
         setDialogOpen(true);
     };

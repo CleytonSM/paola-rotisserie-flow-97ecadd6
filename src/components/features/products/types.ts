@@ -16,6 +16,7 @@ export interface ProductCatalog {
     created_at?: string;
     updated_at?: string;
     image_url?: string | null;
+    description?: string | null;
 }
 
 export interface FormData {

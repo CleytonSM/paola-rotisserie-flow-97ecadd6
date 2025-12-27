@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
 import { ReportsFilters } from "./ReportsFilters";
 import { PageHeader } from "@/components/ui/common/PageHeader";
-import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb"; // Using global one or specific? The existing Reports.tsx used AppBreadcrumb.
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { Scaffolding } from "@/components/ui/Scaffolding";
+import { ReportPrintHeader } from "./ReportPrintHeader";
 import type { ReportsFilter } from "./types";
 import type { DateRange } from "react-day-picker";
 
@@ -14,6 +15,12 @@ interface ReportLayoutProps {
     setFilter: (f: ReportsFilter) => void;
     customDateRange: DateRange | undefined;
     setCustomDateRange: (range: DateRange | undefined) => void;
+    onExportPdf?: () => void;
+    onExportCsv?: () => void;
+    onShareWhatsApp?: () => void;
+    loading?: boolean;
+    periodLabel?: string;
+    reportContentId?: string;
     onExport?: () => void;
 }
 
@@ -25,7 +32,12 @@ export function ReportLayout({
     setFilter,
     customDateRange,
     setCustomDateRange,
-    onExport
+    onExportPdf,
+    onExportCsv,
+    onShareWhatsApp,
+    loading,
+    periodLabel = "",
+    reportContentId = "report-content",
 }: ReportLayoutProps) {
     return (
         <Scaffolding>
@@ -38,13 +50,17 @@ export function ReportLayout({
                         onFilterChange={setFilter}
                         customDateRange={customDateRange}
                         onCustomDateRangeChange={setCustomDateRange}
-                        onExport={onExport || (() => { })}
+                        onExportPdf={onExportPdf}
+                        onExportCsv={onExportCsv}
+                        onShareWhatsApp={onShareWhatsApp}
+                        loading={loading}
                     />
                 }
                 children={<AppBreadcrumb />}
             />
 
-            <div className="space-y-6">
+            <div id={reportContentId} className="space-y-6">
+                <ReportPrintHeader title={title} periodLabel={periodLabel} />
                 {children}
             </div>
         </Scaffolding>

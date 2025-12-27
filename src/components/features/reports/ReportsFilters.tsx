@@ -1,9 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import type { DateRange } from "react-day-picker";
-import { Download } from "lucide-react";
 import type { ReportsFilter } from "./types";
+import { ReportExportActions } from "./ReportExportActions";
 
 const filterOptions: { label: string; value: ReportsFilter }[] = [
   { label: "Hoje", value: "today" },
@@ -21,7 +20,11 @@ interface ReportsFiltersProps {
   onFilterChange: (filter: ReportsFilter) => void;
   customDateRange: DateRange | undefined;
   onCustomDateRangeChange: (range: DateRange | undefined) => void;
-  onExport: () => void;
+  onExportPdf?: () => void;
+  onExportCsv?: () => void;
+  onShareWhatsApp?: () => void;
+  loading?: boolean;
+  onExport?: () => void;
 }
 
 export function ReportsFilters({
@@ -29,10 +32,15 @@ export function ReportsFilters({
   onFilterChange,
   customDateRange,
   onCustomDateRangeChange,
-  onExport,
+  onExportPdf,
+  onExportCsv,
+  onShareWhatsApp,
+  loading = false,
 }: ReportsFiltersProps) {
+  const hasExportActions = onExportPdf || onExportCsv;
+
   return (
-    <div className="flex w-full flex-col gap-2 md:flex-row md:w-auto">
+    <div className="flex w-full flex-col gap-2 md:flex-row md:w-auto md:items-center">
       <Select
         value={filter}
         onValueChange={(v) => {
@@ -60,11 +68,14 @@ export function ReportsFilters({
           className="w-full md:w-auto"
         />
       )}
-      <Button onClick={onExport} variant="outline">
-        <Download className="mr-2 h-4 w-4" />
-        Exportar
-      </Button>
+      {hasExportActions && (
+        <ReportExportActions
+          onExportPdf={onExportPdf || (() => { })}
+          onExportCsv={onExportCsv || (() => { })}
+          onShareWhatsApp={onShareWhatsApp}
+          loading={loading}
+        />
+      )}
     </div>
   );
 }
-
