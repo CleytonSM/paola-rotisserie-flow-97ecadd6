@@ -219,7 +219,10 @@ export const updateAccountReceivableStatus = async (
 ): Promise<DatabaseResult<any>> => {
   const { data, error } = await supabase
     .from('accounts_receivable')
-    .update({ status })
+    .update({ 
+      status,
+      payment_date: status === 'received' ? new Date().toISOString() : null
+    })
     .eq('id', id)
     .select()
     .single();
@@ -242,12 +245,14 @@ export const getReceivablesForReports = async (
       id,
       net_value,
       entry_date,
+      payment_date,
       client:clients(name)
     `)
-    .not('entry_date', 'is', null)
-    .gte('entry_date', fromDateStr)
-    .lt('entry_date', nextDayStr)
-    .order('entry_date', { ascending: false })
+    .eq('status', 'received')
+    .not('payment_date', 'is', null)
+    .gte('payment_date', fromDateStr)
+    .lt('payment_date', nextDayStr)
+    .order('payment_date', { ascending: false })
     .order('created_at', { ascending: false });
 
   return { data, error };

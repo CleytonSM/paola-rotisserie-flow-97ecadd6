@@ -278,6 +278,29 @@ export function PartialPaymentBuilder({
                             </div>
                         )}
 
+                        {/* Pix Key Selection */}
+                        {selectedMethod === 'pix' && pixKeys.length > 0 && (
+                            <div className="space-y-1">
+                                <Label className="text-xs text-muted-foreground">Chave Pix</Label>
+                                <Select
+                                    value={selectedPixKeyId}
+                                    onValueChange={setSelectedPixKeyId}
+                                    disabled={disabled}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione a chave Pix" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {pixKeys.map((key) => (
+                                            <SelectItem key={key.id} value={key.id}>
+                                                <span className="capitalize">{key.type}</span>: {formatPixKey(key.type, key.key_value)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
                         <Button
                             type="button"
                             variant="outline"

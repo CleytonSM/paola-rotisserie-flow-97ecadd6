@@ -27,6 +27,7 @@ export interface AccountReceivable {
   card_brand?: string;
   tax_rate?: number;
   entry_date: string;
+  payment_date?: string;
   status: "pending" | "received";
   client?: Client;
 }

@@ -2,6 +2,7 @@ export type AccountReceivable = {
   id: string;
   net_value: number;
   entry_date: string | null;
+  payment_date: string | null;
   created_at: string;
   client?: { name: string };
 };

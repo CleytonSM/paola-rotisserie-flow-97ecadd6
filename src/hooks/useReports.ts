@@ -143,13 +143,13 @@ export const useReports = () => {
     > = new Map();
 
     receivables.forEach((r) => {
-      if (!r.entry_date) return;
-      const entryDate = parseISO(r.entry_date);
-      const name = format(entryDate, formatType, { locale });
-      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: entryDate };
+      if (!r.payment_date) return;
+      const paymentDate = parseISO(r.payment_date);
+      const name = format(paymentDate, formatType, { locale });
+      const entry = dataMap.get(name) || { name, Entradas: 0, Saídas: 0, date: paymentDate };
       entry.Entradas += Number(r.net_value);
-      if (entryDate < entry.date) {
-        entry.date = entryDate;
+      if (paymentDate < entry.date) {
+        entry.date = paymentDate;
       }
       dataMap.set(name, entry);
     });

@@ -33,13 +33,17 @@ export const reportsService = {
                     name
                 ),
                 sales!inner (
-                    created_at,
-                    status
+                    status,
+                    payment_status,
+                    accounts_receivable!inner (
+                        payment_date
+                    )
                 )
             `)
             .eq("sales.status", "completed")
-            .gte("sales.created_at", from)
-            .lte("sales.created_at", to);
+            .eq("sales.payment_status", "paid")
+            .gte("sales.accounts_receivable.payment_date", from)
+            .lte("sales.accounts_receivable.payment_date", to);
 
         if (error) throw error;
 
@@ -71,18 +75,24 @@ export const reportsService = {
 
         const { data, error } = await supabase
             .from("sales")
-            .select("created_at, total_amount")
+            .select(`
+                total_amount,
+                accounts_receivable!inner (
+                    payment_date
+                )
+            `)
             .eq("status", "completed")
-            .gte("created_at", from)
-            .lte("created_at", to);
+            .eq("payment_status", "paid")
+            .gte("accounts_receivable.payment_date", from)
+            .lte("accounts_receivable.payment_date", to);
 
         if (error) throw error;
 
         const hoursMap = new Array(24).fill(0).map((_, i) => ({ hour: i, value: 0, count: 0 }));
-        const daysMap = new Map<number, { value: number, count: number }>(); // 0-6 (Sun-Sat)
+        const daysMap = new Map<number, { value: number, count: number }>(); 
 
-        data?.forEach((sale) => {
-            const date = new Date(sale.created_at);
+        data?.forEach((sale: any) => {
+            const date = new Date(sale.accounts_receivable.payment_date);
             const hour = date.getHours();
             const day = date.getDay();
             const amount = Number(sale.total_amount);
@@ -120,13 +130,17 @@ export const reportsService = {
                 amount,
                 payment_method,
                 sales!inner (
-                    created_at,
-                    status
+                    status,
+                    payment_status,
+                    accounts_receivable!inner (
+                        payment_date
+                    )
                 )
             `)
             .eq("sales.status", "completed")
-            .gte("sales.created_at", from)
-            .lte("sales.created_at", to);
+            .eq("sales.payment_status", "paid")
+            .gte("sales.accounts_receivable.payment_date", from)
+            .lte("sales.accounts_receivable.payment_date", to);
 
         if (error) throw error;
 
@@ -192,10 +206,16 @@ export const reportsService = {
         
         const { data, error } = await supabase
             .from("sales")
-            .select("id, total_amount, client_id, notes, is_delivery, scheduled_pickup") 
+            .select(`
+                id, total_amount, client_id, notes, is_delivery, scheduled_pickup,
+                accounts_receivable!inner (
+                    payment_date
+                )
+            `) 
             .eq("status", "completed")
-            .gte("created_at", from)
-            .lte("created_at", to);
+            .eq("payment_status", "paid")
+            .gte("accounts_receivable.payment_date", from)
+            .lte("accounts_receivable.payment_date", to);
 
         if (error) throw error;
 
