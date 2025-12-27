@@ -53,7 +53,7 @@ export function TodayOrdersWidget() {
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => navigate('/orders')}
+                    onClick={() => navigate('/admin/orders')}
                     className="text-primary hover:bg-primary/10"
                 >
                     Ver todos
@@ -77,7 +77,7 @@ export function TodayOrdersWidget() {
                                 <div
                                     key={order.id}
                                     className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                                    onClick={() => navigate('/orders')}
+                                    onClick={() => navigate('/admin/orders')}
                                 >
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">

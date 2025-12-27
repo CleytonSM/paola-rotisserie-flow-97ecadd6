@@ -28,17 +28,17 @@ export const navigationGroups = {
         items: [
             {
                 title: "Dashboard",
-                url: "/",
+                url: "/admin",
                 icon: LayoutDashboard,
             },
             {
                 title: "Pedidos",
-                url: "/orders",
+                url: "/admin/orders",
                 icon: Clock,
             },
             {
                 title: "PDV",
-                url: "/pdv",
+                url: "/admin/pdv",
                 icon: ShoppingCart,
             },
         ],
@@ -48,29 +48,29 @@ export const navigationGroups = {
         items: [
             {
                 title: "Contas a Receber",
-                url: "/receivable",
+                url: "/admin/receivable",
                 icon: ArrowUpCircle,
             },
             {
                 title: "Histórico de Vendas",
-                url: "/sales",
+                url: "/admin/sales",
                 icon: BookOpen,
             },
             {
                 title: "Contas a Pagar",
-                url: "/payable",
+                url: "/admin/payable",
                 icon: ArrowDownCircle,
             },
             {
                 title: "Relatórios",
-                url: "/reports",
+                url: "/admin/reports",
                 icon: BarChart3,
                 items: [
-                    { title: "Geral", url: "/reports" },
-                    { title: "Por Produto", url: "/reports/products" },
-                    { title: "Por Dia/Hora", url: "/reports/daily" },
-                    { title: "Por Pagamento", url: "/reports/payments" },
-                    { title: "Por Tipo", url: "/reports/types" },
+                    { title: "Geral", url: "/admin/reports" },
+                    { title: "Por Produto", url: "/admin/reports/products" },
+                    { title: "Por Dia/Hora", url: "/admin/reports/daily" },
+                    { title: "Por Pagamento", url: "/admin/reports/payments" },
+                    { title: "Por Tipo", url: "/admin/reports/types" },
                 ]
             },
         ],
@@ -82,19 +82,19 @@ export const navigationGroups = {
                 title: "Cadastros",
                 icon: Database,
                 items: [
-                    { title: "Clientes", url: "/clients", icon: Users },
-                    { title: "Fornecedores", url: "/suppliers", icon: Truck },
-                    { title: "Produtos", url: "/products", icon: Package },
-                    { title: "Itens", url: "/product-items", icon: Tag },
+                    { title: "Clientes", url: "/admin/clients", icon: Users },
+                    { title: "Fornecedores", url: "/admin/suppliers", icon: Truck },
+                    { title: "Produtos", url: "/admin/products", icon: Package },
+                    { title: "Itens", url: "/admin/product-items", icon: Tag },
                 ] as NavItem[],
             },
             {
                 title: "Configurações",
                 icon: Settings,
                 items: [
-                    { title: "Geral", url: "/settings", icon: Menu },
-                    { title: "Maquininhas", url: "/machines", icon: CreditCard },
-                    { title: "Chaves Pix", url: "/pix-keys", icon: PixIcon },
+                    { title: "Geral", url: "/admin/settings", icon: Menu },
+                    { title: "Maquininhas", url: "/admin/machines", icon: CreditCard },
+                    { title: "Chaves Pix", url: "/admin/pix-keys", icon: PixIcon },
                 ] as NavItem[],
             },
         ],

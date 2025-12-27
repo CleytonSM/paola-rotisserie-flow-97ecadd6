@@ -21,7 +21,7 @@ export function useAuthPage() {
     useEffect(() => {
         getCurrentSession().then(({ session }) => {
             if (session) {
-                navigate("/");
+                navigate("/admin");
             }
         });
     }, [navigate]);
@@ -41,7 +41,7 @@ export function useAuthPage() {
                 }
             } else if (session) {
                 toast.success("Login realizado!");
-                navigate("/");
+                navigate("/admin");
             }
         } catch (err) {
             toast.error("Ocorreu um erro inesperado");

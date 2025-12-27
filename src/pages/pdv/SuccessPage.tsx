@@ -105,7 +105,7 @@ export default function SuccessPage() {
 
     useEffect(() => {
         if (!saleId && !orderId) {
-            navigate("/pdv");
+            navigate("/admin/pdv");
         } else {
             clearCart();
             // Play success sound for new order
@@ -189,7 +189,7 @@ export default function SuccessPage() {
                     <Button
                         size="lg"
                         className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 rounded-xl text-lg font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
-                        onClick={() => navigate("/pdv")}
+                        onClick={() => navigate("/admin/pdv")}
                     >
                         Nova Venda
                         <ArrowRight className="ml-2 h-5 w-5 opacity-90" />

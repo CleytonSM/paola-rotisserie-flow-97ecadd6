@@ -50,7 +50,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
         {/* ATUALIZADO: Logo de texto "Paola Gonçalves" com fonte Cormorant */}
-        <Link to="/" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
+        <Link to="/admin" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
           <span className="font-display text-2xl font-bold tracking-wide text-foreground">
             Paola Gonçalves
           </span>
@@ -58,12 +58,12 @@ export const Header = () => {
 
         {/* Navegação Desktop */}
         <nav className="hidden items-center gap-6 md:flex">
-          <NavLink to="/">Dashboard</NavLink>
-          <NavLink to="/payable">Contas a Pagar</NavLink>
-          <NavLink to="/receivable">Contas a Receber</NavLink>
-          <NavLink to="/suppliers">Fornecedores</NavLink>
-          <NavLink to="/clients">Clientes</NavLink>
-          <NavLink to="/reports">Relatórios</NavLink>
+          <NavLink to="/admin">Dashboard</NavLink>
+          <NavLink to="/admin/payable">Contas a Pagar</NavLink>
+          <NavLink to="/admin/receivable">Contas a Receber</NavLink>
+          <NavLink to="/admin/suppliers">Fornecedores</NavLink>
+          <NavLink to="/admin/clients">Clientes</NavLink>
+          <NavLink to="/admin/reports">Relatórios</NavLink>
           <Button
             variant="ghost"
             size="sm"
@@ -107,12 +107,12 @@ export const Header = () => {
             <div className="border-t border-border bg-background py-4">
               <nav className="container flex flex-col gap-2">
                 {[
-                  { to: "/", label: "Dashboard" },
-                  { to: "/payable", label: "Contas a Pagar" },
-                  { to: "/receivable", label: "Contas a Receber" },
-                  { to: "/suppliers", label: "Fornecedores" },
-                  { to: "/clients", label: "Clientes" },
-                  { to: "/reports", label: "Relatórios" },
+                  { to: "/admin", label: "Dashboard" },
+                  { to: "/admin/payable", label: "Contas a Pagar" },
+                  { to: "/admin/receivable", label: "Contas a Receber" },
+                  { to: "/admin/suppliers", label: "Fornecedores" },
+                  { to: "/admin/clients", label: "Clientes" },
+                  { to: "/admin/reports", label: "Relatórios" },
                 ].map((item) => (
                   <Link
                     key={item.to}

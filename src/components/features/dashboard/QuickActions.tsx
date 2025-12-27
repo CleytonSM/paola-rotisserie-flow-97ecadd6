@@ -14,14 +14,14 @@ export function QuickActions({ navigate }: QuickActionsProps) {
             </CardHeader>
             <CardContent className="flex flex-col space-y-4">
                 <ActionButton
-                    onClick={() => navigate("/receivable")}
+                    onClick={() => navigate("/admin/receivable")}
                     icon={TrendingUp}
                     title="Adicionar Entrada"
                     description="Registrar novo recebimento"
                     variant="secondary"
                 />
                 <ActionButton
-                    onClick={() => navigate("/payable")}
+                    onClick={() => navigate("/admin/payable")}
                     icon={TrendingDown}
                     title="Adicionar Saída"
                     description="Registrar novo pagamento"

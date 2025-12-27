@@ -67,7 +67,7 @@ export function usePayment() {
 
     useEffect(() => {
         if (items.length === 0) {
-            navigate("/pdv");
+            navigate("/admin/pdv");
         }
         loadPaymentData();
     }, [items, navigate]);
@@ -260,7 +260,7 @@ export function usePayment() {
                 ? pixKeys.find(k => k.id === pixEntry.details?.pixKeyId)
                 : (selectedMethod === 'pix' ? pixKeys.find(k => k.id === selectedPixKey) : null);
 
-            navigate('/pdv/success', {
+            navigate('/admin/pdv/success', {
                 state: {
                     saleId: data?.sale_id,
                     displayId: data?.display_id,

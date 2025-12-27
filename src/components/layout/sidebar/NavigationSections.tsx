@@ -77,9 +77,9 @@ export function NavigationSections({ isActive }: NavigationSectionsProps) {
                                         {item.icon && (
                                             <item.icon
                                                 className={
-                                                    item.url === "/receivable"
+                                                    item.url === "/admin/receivable"
                                                         ? "text-secondary"
-                                                        : item.url === "/payable"
+                                                        : item.url === "/admin/payable"
                                                             ? "text-destructive"
                                                             : "text-foreground/70"
                                                 }

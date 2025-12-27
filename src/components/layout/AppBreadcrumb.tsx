@@ -11,9 +11,12 @@ import { Fragment } from "react";
 
 const routeNameMap: Record<string, string> = {
     "": "Home",
+    "admin": "Dashboard",
     "dashboard": "Dashboard",
     "orders": "Pedidos",
     "pdv": "PDV",
+    "payment": "Pagamento",
+    "success": "Sucesso",
     "payable": "Contas a Pagar",
     "sales": "Histórico de Vendas",
     "receivable": "Contas a Receber",
@@ -33,18 +36,19 @@ const routeNameMap: Record<string, string> = {
 
 export function AppBreadcrumb() {
     const location = useLocation();
-    const pathnames = location.pathname.split("/").filter((x) => x);
+    const isAdmin = location.pathname.startsWith("/admin");
+    const pathnames = location.pathname.split("/").filter((x) => x && x !== "admin");
 
     return (
         <Breadcrumb className="mt-4">
             <BreadcrumbList>
                 <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                        <Link to="/">Home</Link>
+                        <Link to={isAdmin ? "/admin" : "/"}>{isAdmin ? "Dashboard" : "Home"}</Link>
                     </BreadcrumbLink>
                 </BreadcrumbItem>
                 {pathnames.map((value, index) => {
-                    const to = `/${pathnames.slice(0, index + 1).join("/")}`;
+                    const to = `${isAdmin ? "/admin" : ""}/${pathnames.slice(0, index + 1).join("/")}`;
                     const isLast = index === pathnames.length - 1;
                     const name = routeNameMap[value] || value;
 

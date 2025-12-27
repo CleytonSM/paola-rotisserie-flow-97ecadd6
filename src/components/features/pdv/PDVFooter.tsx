@@ -49,7 +49,7 @@ export function PDVFooter({ total, hasItems, onToggleProducts }: PDVFooterProps)
                                     size="icon"
                                     className="h-12 w-12 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl transition-all active:scale-95"
                                     disabled={!hasItems}
-                                    onClick={() => navigate("/pdv/payment")}
+                                    onClick={() => navigate("/admin/pdv/payment")}
                                 >
                                     <ArrowRight className="h-6 w-6" />
                                 </Button>
@@ -64,7 +64,7 @@ export function PDVFooter({ total, hasItems, onToggleProducts }: PDVFooterProps)
                         size="lg"
                         className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl transition-all active:scale-95"
                         disabled={!hasItems}
-                        onClick={() => navigate("/pdv/payment")}
+                        onClick={() => navigate("/admin/pdv/payment")}
                     >
                         Finalizar Pedido
                         <ArrowRight className="ml-2 h-5 w-5" />
