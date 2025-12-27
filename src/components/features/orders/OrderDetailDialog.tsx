@@ -698,7 +698,7 @@ ${order.notes ? `\n*Obs:* ${order.notes}` : ''}
                                 className={cn(
                                     "w-full h-12 text-base font-medium",
                                     hasPhone
-                                        ? "bg-[#6B7A4D] hover:bg-[#5A6840] text-white"
+                                        ? "bg-[#25D366] hover:bg-[#128C7E] text-white"
                                         : "bg-muted text-muted-foreground cursor-not-allowed"
                                 )}
                             >

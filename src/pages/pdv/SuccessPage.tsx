@@ -165,7 +165,7 @@ export default function SuccessPage() {
                                 title={!hasPhone ? "Cliente sem telefone" : undefined}
                                 className={
                                     hasPhone
-                                        ? "w-full h-12 bg-[#6B7A4D] hover:bg-[#5A6840] text-white font-medium"
+                                        ? "w-full h-12 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium"
                                         : "w-full h-12 bg-muted text-muted-foreground cursor-not-allowed"
                                 }
                             >
@@ -197,12 +197,12 @@ export default function SuccessPage() {
 
                     {isDelivery && (
                         <Button
-                            variant="outline"
-                            className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                            size="lg"
+                            className="w-full h-12 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium"
                             onClick={handleWhatsApp}
                             disabled={!deliveryAddress}
                         >
-                            <WhatsAppIcon className="mr-2 h-4 w-4" />
+                            <WhatsAppIcon className="mr-2 h-5 w-5" />
                             Enviar para Motoboy
                         </Button>
                     )}
